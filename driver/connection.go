@@ -43,7 +43,10 @@ func (connection *connection) submit(traversalString string) (response string, e
 		Path:   path,
 	}
 
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	dialer := websocket.DefaultDialer
+	// TODO: make this configurable from client; this currently does nothing since 4096 is the default
+	dialer.WriteBufferSize = 4096
+	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
 		fmt.Println("Connecting failed!")
 		return
@@ -56,20 +59,12 @@ func (connection *connection) submit(traversalString string) (response string, e
 		return
 	}
 
-	_, reader, err := conn.NextReader()
+	_, responseMessage, err := conn.ReadMessage()
 	if err != nil {
-		fmt.Println("Getting reader failed!")
+		fmt.Println("Reading message failed!")
 		return
 	}
 
-	var buf []byte
-	buf = make([]byte, 1024)
-	_, err = reader.Read(buf)
-	if err != nil {
-		fmt.Println("Reading failed!")
-		return
-	}
-
-	response = string(buf)
+	response = string(responseMessage)
 	return
 }
