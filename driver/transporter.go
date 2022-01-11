@@ -19,38 +19,16 @@ under the License.
 
 package gremlingo
 
-import (
-	"fmt"
-)
-
-// TODO: make sure these are constants
-const scheme = "ws"
-const path = "gremlin"
-
-type connection struct {
-	host 			string
-	port 			int
-	transporterType TransporterType
+type Transporter interface {
+	Connect()		error
+	Write(string)	error
+	Read() 			([]byte, error)
+	Close() 		error
+	IsClosed() 		bool
 }
 
-// TODO: refactor this when implementing full connection
-func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := GetTransportLayer(connection.transporterType, connection.host, connection.port)
-	defer transporter.Close()
-
-	err = transporter.Write(traversalString)
-	if err != nil {
-		fmt.Println("Writing request failed!")
-		return
-	}
-
-	bytes, err := transporter.Read()
-	if err != nil {
-		fmt.Println("Reading message failed!")
-		return
-	}
-
-	response = string(bytes)
-	transporter.Close()
-	return
+type websocketConn interface {
+	WriteJSON(interface{}) 	error
+	ReadMessage() 			(int, []byte, error)
+	Close() 				error
 }

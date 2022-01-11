@@ -28,7 +28,7 @@ import (
 func TestDriver(t *testing.T) {
 
 	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182)
+		client := NewClient("localhost", 8182, Gorilla)
 
 		response, err := client.Submit("1 + 1")
 		if err != nil {

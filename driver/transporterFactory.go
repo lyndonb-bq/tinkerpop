@@ -19,38 +19,17 @@ under the License.
 
 package gremlingo
 
-import (
-	"fmt"
+type TransporterType int
+
+const (
+	Gorilla TransporterType = iota
 )
 
-// TODO: make sure these are constants
-const scheme = "ws"
-const path = "gremlin"
-
-type connection struct {
-	host 			string
-	port 			int
-	transporterType TransporterType
-}
-
-// TODO: refactor this when implementing full connection
-func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := GetTransportLayer(connection.transporterType, connection.host, connection.port)
-	defer transporter.Close()
-
-	err = transporter.Write(traversalString)
-	if err != nil {
-		fmt.Println("Writing request failed!")
-		return
+func GetTransportLayer(transporterType TransporterType, host string, port int) Transporter {
+	switch transporterType {
+	case Gorilla:
+		return &gorillaTransporter{host: host, port: port}
+	default:
+		return nil
 	}
-
-	bytes, err := transporter.Read()
-	if err != nil {
-		fmt.Println("Reading message failed!")
-		return
-	}
-
-	response = string(bytes)
-	transporter.Close()
-	return
 }

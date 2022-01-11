@@ -20,16 +20,18 @@ under the License.
 package gremlingo
 
 type Client struct {
-	host string
-	port int
+	host 			string
+	port 			int
+	transporterType TransporterType
 }
 
-func NewClient(host string, port int) *Client {
-	client := &Client{host, port}
+func NewClient(host string, port int, transporterType TransporterType) *Client {
+	client := &Client{host, port, transporterType}
 	return client
 }
 
 func (client *Client) Submit(traversalString string) (string, error) {
-	connection := &connection{client.host, client.port}
+	// TODO AN-982: Obtain connection from pool of connections held by the client.
+	connection := &connection{client.host, client.port, client.transporterType}
 	return connection.submit(traversalString)
 }
