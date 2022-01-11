@@ -28,8 +28,8 @@ const scheme = "ws"
 const path = "gremlin"
 
 type connection struct {
-	host 			string
-	port 			int
+	host            string
+	port            int
 	transporterType TransporterType
 }
 

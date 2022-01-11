@@ -26,10 +26,10 @@ import (
 )
 
 type gorillaTransporter struct {
-	host 		string
-	port 		int
-	connection 	websocketConn
-	isClosed 	bool
+	host       string
+	port       int
+	connection websocketConn
+	isClosed   bool
 }
 
 func (transporter *gorillaTransporter) Connect() (err error) {

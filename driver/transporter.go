@@ -20,15 +20,15 @@ under the License.
 package gremlingo
 
 type Transporter interface {
-	Connect()		error
-	Write(string)	error
-	Read() 			([]byte, error)
-	Close() 		error
-	IsClosed() 		bool
+	Connect() error
+	Write(string) error
+	Read() ([]byte, error)
+	Close() error
+	IsClosed() bool
 }
 
 type websocketConn interface {
-	WriteJSON(interface{}) 	error
-	ReadMessage() 			(int, []byte, error)
-	Close() 				error
+	WriteJSON(interface{}) error
+	ReadMessage() (int, []byte, error)
+	Close() error
 }

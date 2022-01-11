@@ -20,8 +20,8 @@ under the License.
 package gremlingo
 
 type Client struct {
-	host 			string
-	port 			int
+	host            string
+	port            int
 	transporterType TransporterType
 }
 
