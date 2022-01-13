@@ -35,7 +35,7 @@ type connection struct {
 
 // TODO: refactor this when implementing full connection
 func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := GetTransportLayer(connection.transporterType, connection.host, connection.port)
+	transporter := getTransportLayer(connection.transporterType, connection.host, connection.port)
 	defer transporter.Close()
 
 	err = transporter.Write(traversalString)

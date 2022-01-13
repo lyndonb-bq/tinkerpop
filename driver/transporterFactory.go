@@ -19,13 +19,15 @@ under the License.
 
 package gremlingo
 
+// TransporterType is an alias for valid transport protocols.
 type TransporterType int
 
 const (
+	// Gorilla transport layer: github.com/gorilla/websocket
 	Gorilla TransporterType = iota
 )
 
-func GetTransportLayer(transporterType TransporterType, host string, port int) Transporter {
+func getTransportLayer(transporterType TransporterType, host string, port int) transporter {
 	switch transporterType {
 	case Gorilla:
 		return &gorillaTransporter{host: host, port: port}
