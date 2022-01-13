@@ -27,14 +27,14 @@ const processor = ""
 const graphType = "g:Map"
 
 type request struct {
-	RequestId string                 `json:"requestId"`
+	RequestId uuid.UUID              `json:"requestId"`
 	Op        string                 `json:"op"`
 	Processor string                 `json:"processor"`
 	Args      map[string]interface{} `json:"args"`
 }
 
 func makeStringRequest(requestString string) (req request) {
-	req.RequestId = uuid.New().String()
+	req.RequestId = uuid.New()
 	req.Op = op
 	req.Processor = processor
 	req.Args = make(map[string]interface{})
