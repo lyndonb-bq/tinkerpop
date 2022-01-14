@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"reflect"
 )
 
@@ -36,28 +37,6 @@ func (dataType DataType) getCodeBytes() []byte {
 	return []byte{dataType.getCodeByte()}
 }
 
-type graphBinarySerializer interface {
-	// change type of value for each specific serializer?
-	write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error)
-	writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error)
-	getDataType() DataType
-	// read()
-	// readValue()
-}
-
-// map for different types of serializers used in writing to graphbinary
-var graphBinSerializerMap = map[interface{}]graphBinarySerializer{
-	// simple types
-	"int32":  &intSerializer{},
-	"int64":  &longSerializer{},
-	"int":    &longSerializer{}, // go int can be 32 or 64-bit
-	"string": &stringSerializer{},
-	"UUID":   &uuidSerializer{},
-
-	// complex types
-	reflect.Map: &mapSerializer{},
-}
-
 type graphBinaryWriter struct {
 }
 
@@ -66,26 +45,24 @@ const (
 	valueFlagNone byte = 0
 )
 
-// instead of using the map, use type assertion?
-// these are basic types
-func (writer *graphBinaryWriter) getSerializer(t reflect.Type) graphBinarySerializer {
-	switch t.Kind() {
-	case reflect.String:
-		return &stringSerializer{}
-	case reflect.Int64, reflect.Int, reflect.Uint32:
-		return &longSerializer{}
-	case reflect.Int32, reflect.Int8, reflect.Uint16:
-		return &intSerializer{}
-	case reflect.Array:
-		if t.Name() == "UUID" {
-			return &uuidSerializer{}
-		} else {
-			return nil
-		}
-	case reflect.Map:
-		return &mapSerializer{}
+// gets the type of the serializer based on the value
+func (writer *graphBinaryWriter) getSerializer(val interface{}) (graphBinarySerializer, error) {
+	switch val.(type) {
+	case string:
+		return &stringSerializer{}, nil
+	case int64, int, uint32:
+		return &longSerializer{}, nil
+	case int32, int8, uint16:
+		return &intSerializer{}, nil
+	case uuid.UUID:
+		return &uuidSerializer{}, nil
 	default:
-		return nil
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Map:
+			return &mapSerializer{}, nil
+		default:
+			return nil, errors.New("unknown data type")
+		}
 	}
 }
 
@@ -104,21 +81,8 @@ func (writer *graphBinaryWriter) writeObject(valueObject interface{}, buffer *by
 		buffer.Write(nullBytes)
 		return buffer.Bytes()
 	}
-	//objectTypeName := reflect.TypeOf(valueObject).Name()
-	//objectTypeKind := reflect.TypeOf(valueObject).Kind()
-	//if serializer, found := graphBinSerializerMap[objectTypeName]; found {
-	//	buffer.Write(serializer.getDataType().getCodeBytes())
-	//	message, _ := serializer.write(valueObject, buffer, writer)
-	//	return message
-	//} else if serializer, found := graphBinSerializerMap[objectTypeKind]; found {
-	//	buffer.Write(serializer.getDataType().getCodeBytes())
-	//	message, _ := serializer.write(valueObject, buffer, writer)
-	//	return message
-	//} else {
-	//	return nil
-	//}
 
-	serializer := writer.getSerializer(reflect.TypeOf(valueObject))
+	serializer, _ := writer.getSerializer(valueObject)
 	buffer.Write(serializer.getDataType().getCodeBytes())
 	message, _ := serializer.write(valueObject, buffer, writer)
 	return message
@@ -134,21 +98,7 @@ func (writer *graphBinaryWriter) writeValue(value interface{}, buffer *bytes.Buf
 		return buffer.Bytes(), nil
 	}
 
-	//objectTypeName := reflect.TypeOf(value).Name()
-	//objectTypeKind := reflect.TypeOf(value).Kind()
-	//if serializer, ok := graphBinSerializerMap[objectTypeName]; ok {
-	//	buffer.Write(serializer.getDataType().getCodeBytes())
-	//	message, _ := serializer.writeValue(value, buffer, writer, nullable)
-	//	return message, nil
-	//} else if serializer, found := graphBinSerializerMap[objectTypeKind]; found {
-	//	buffer.Write(serializer.getDataType().getCodeBytes())
-	//	message, _ := serializer.writeValue(value, buffer, writer, nullable)
-	//	return message, nil
-	//} else {
-	//	return nil, errors.New("encountered unknown data type")
-	//}
-
-	serializer := writer.getSerializer(reflect.TypeOf(value))
+	serializer, _ := writer.getSerializer(value)
 	buffer.Write(serializer.getDataType().getCodeBytes())
 	message, _ := serializer.writeValue(value, buffer, writer, nullable)
 	return message, nil
@@ -163,6 +113,15 @@ func (writer *graphBinaryWriter) writeValueFlagNone(buffer *bytes.Buffer) {
 }
 
 type graphBinaryReader struct {
+}
+
+type graphBinarySerializer interface {
+	// change type of value for each specific serializer?
+	write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error)
+	writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error)
+	getDataType() DataType
+	// read()
+	// readValue()
 }
 
 type simpleTypeSerializer struct{}
