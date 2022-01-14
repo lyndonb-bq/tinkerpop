@@ -29,8 +29,13 @@ jobs:
     - name: Build
       run: go build -v ./...
     
-    - name: Unit and Integration Tests
-      run: go test -v ./...
+    - name: Test annd generate coverage
+      run: go test -v ./... -race -covermode=atomic -coverprofile="coverage.out"
+
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
   
   imports:
     name: Imports
