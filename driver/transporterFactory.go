@@ -19,22 +19,19 @@ under the License.
 
 package gremlingo
 
-import (
-	"fmt"
-	"testing"
+// TransporterType is an alias for valid transport protocols.
+type TransporterType int
+
+const (
+	// Gorilla transport layer: github.com/gorilla/websocket
+	Gorilla TransporterType = iota
 )
 
-// TODO: remove this file when sandbox is no longer needed
-func TestDriver(t *testing.T) {
-
-	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182, Gorilla)
-
-		response, err := client.Submit("1 + 1")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(response)
-	})
+func getTransportLayer(transporterType TransporterType, host string, port int) transporter {
+	switch transporterType {
+	case Gorilla:
+		return &gorillaTransporter{host: host, port: port}
+	default:
+		return nil
+	}
 }

@@ -19,17 +19,22 @@ under the License.
 
 package gremlingo
 
+// Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
-	host string
-	port int
+	host            string
+	port            int
+	transporterType TransporterType
 }
 
-func NewClient(host string, port int) *Client {
-	client := &Client{host, port}
+// NewClient creates a Client and configures it with the given parameters.
+func NewClient(host string, port int, transporterType TransporterType) *Client {
+	client := &Client{host, port, transporterType}
 	return client
 }
 
+// Submit a Gremlin traversal string to execute.
 func (client *Client) Submit(traversalString string) (string, error) {
-	connection := &connection{client.host, client.port}
+	// TODO AN-982: Obtain connection from pool of connections held by the client.
+	connection := &connection{client.host, client.port, client.transporterType}
 	return connection.submit(traversalString)
 }

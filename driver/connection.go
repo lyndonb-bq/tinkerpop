@@ -21,9 +21,6 @@ package gremlingo
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
-	"net/url"
-	"strconv"
 )
 
 // TODO: make sure these are constants
@@ -31,40 +28,29 @@ const scheme = "ws"
 const path = "gremlin"
 
 type connection struct {
-	host string
-	port int
+	host            string
+	port            int
+	transporterType TransporterType
 }
 
 // TODO: refactor this when implementing full connection
 func (connection *connection) submit(traversalString string) (response string, err error) {
-	u := url.URL{
-		Scheme: scheme,
-		Host:   connection.host + ":" + strconv.Itoa(connection.port),
-		Path:   path,
-	}
+	transporter := getTransportLayer(connection.transporterType, connection.host, connection.port)
+	defer transporter.Close()
 
-	dialer := websocket.DefaultDialer
-	// TODO: make this configurable from client; this currently does nothing since 4096 is the default
-	dialer.WriteBufferSize = 4096
-	conn, _, err := dialer.Dial(u.String(), nil)
-	if err != nil {
-		fmt.Println("Connecting failed!")
-		return
-	}
-	defer conn.Close()
-
-	err = conn.WriteJSON(makeStringRequest(traversalString))
+	err = transporter.Write(traversalString)
 	if err != nil {
 		fmt.Println("Writing request failed!")
 		return
 	}
 
-	_, responseMessage, err := conn.ReadMessage()
+	bytes, err := transporter.Read()
 	if err != nil {
 		fmt.Println("Reading message failed!")
 		return
 	}
 
-	response = string(responseMessage)
+	response = string(bytes)
+	transporter.Close()
 	return
 }

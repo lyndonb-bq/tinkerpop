@@ -19,22 +19,16 @@ under the License.
 
 package gremlingo
 
-import (
-	"fmt"
-	"testing"
-)
+type transporter interface {
+	Connect() error
+	Write(string) error
+	Read() ([]byte, error)
+	Close() error
+	IsClosed() bool
+}
 
-// TODO: remove this file when sandbox is no longer needed
-func TestDriver(t *testing.T) {
-
-	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182, Gorilla)
-
-		response, err := client.Submit("1 + 1")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(response)
-	})
+type websocketConn interface {
+	WriteJSON(interface{}) error
+	ReadMessage() (int, []byte, error)
+	Close() error
 }
