@@ -66,7 +66,7 @@ func (gs *graphBinMessageSerializer) buildMessage(message *request, mimeLen byte
 
 	// Args
 	args := message.Args
-	binary.Write(&byteBuffer, binary.BigEndian, len(args))
+	binary.Write(&byteBuffer, binary.BigEndian, int32(len(args)))
 	//binary.Write(&byteBuffer, binary.BigEndian, args)
 	for k, v := range args {
 		gs.writerClass.writeObject(k, &byteBuffer)
