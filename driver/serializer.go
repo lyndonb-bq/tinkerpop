@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"bytes"
 	"encoding/binary"
+
 	"github.com/google/uuid"
 )
 
