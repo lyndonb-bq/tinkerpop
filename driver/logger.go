@@ -93,6 +93,12 @@ func (logHandler *logHandler) logf(verbosity LogVerbosity, errorKey errorKey, v 
 type errorKey string
 
 const (
-	readFailed  errorKey = "READ_FAILED"
-	writeFailed errorKey = "WRITE_FAILED"
+	readFailed               errorKey = "READ_FAILED"
+	writeFailed              errorKey = "WRITE_FAILED"
+	serializeDataTypeError   errorKey = "UNKNOWN_SER_DATATYPE"
+	deserializeDataTypeError errorKey = "UNKNOWN_DESER_DATATYPE"
+	nullInput                errorKey = "NULL_INPUT"
+	unmatchedDataType        errorKey = "UNMATCHED_DATATYPE"
+	unexpectedNull           errorKey = "UNEXPECTED_NULL_VALUE"
+	notMap                   errorKey = "NOT_MAP_TYPE"
 )
