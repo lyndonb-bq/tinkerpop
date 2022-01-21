@@ -21,14 +21,17 @@ package gremlingo
 
 import (
 	"bytes"
+
 	"github.com/google/uuid"
 )
 
+// Serializer interface for serializers
 type Serializer interface {
 	SerializeMessage(request *Request) ([]byte, error)
 	DeserializeMessage(message []byte) (Response, error)
 }
 
+// GraphBinarySerializer serializes/deserializes message to/from GraphBinary
 type GraphBinarySerializer struct {
 	ReaderClass GraphBinaryReader
 	WriterClass GraphBinaryWriter
@@ -37,11 +40,7 @@ type GraphBinarySerializer struct {
 
 const versionByte byte = 0x81
 
-func (gs *GraphBinarySerializer) getProcessor(processor string) string {
-	return processor
-}
-
-// SerializeMessage serializes a request message
+// SerializeMessage serializes a request message into GraphBinary
 func (gs *GraphBinarySerializer) SerializeMessage(request *Request) ([]byte, error) {
 	gs.MimeType = "application/vnd.graphbinary-v1.0"
 	finalMessage, err := gs.buildMessage(request, 0x20, gs.MimeType)
@@ -94,7 +93,7 @@ func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Res
 		return msg, err
 	}
 	// UUID
-	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UuidType), true)
+	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UUIDType), true)
 	if err != nil {
 		return msg, err
 	}
@@ -146,7 +145,7 @@ func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte
 	if err != nil {
 		return msg, err
 	}
-	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UuidType), false)
+	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UUIDType), false)
 	if err != nil {
 		return msg, err
 	}
@@ -171,6 +170,7 @@ func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte
 	return msg, nil
 }
 
+// SerializeResponseMessage serialize a response message into GraphBinary
 func (gs *GraphBinarySerializer) SerializeResponseMessage(response *Response) ([]byte, error) {
 	buffer := bytes.Buffer{}
 

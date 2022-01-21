@@ -33,6 +33,7 @@ import (
 // DataType graphbinary types
 type DataType int
 
+// DataType defined as constants
 const (
 	NullType    DataType = 0xFE
 	IntType     DataType = 0x01
@@ -42,7 +43,7 @@ const (
 	FloatType   DataType = 0x08
 	ListType    DataType = 0x09
 	MapType     DataType = 0x0a
-	UuidType    DataType = 0x0c
+	UUIDType    DataType = 0x0c
 	ByteType    DataType = 0x24
 	ShortType   DataType = 0x26
 	BooleanType DataType = 0x27
@@ -50,9 +51,9 @@ const (
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
 
-func (dataType DataType) getCode() int {
-	return int(dataType)
-}
+//func (dataType DataType) getCode() int {
+//	return int(dataType)
+//}
 
 func (dataType DataType) getCodeByte() byte {
 	return byte(dataType)
@@ -87,7 +88,10 @@ type mapSerializer struct{}
 // Format: 16 bytes representing the uuid.
 type uuidSerializer struct{}
 
+// GraphBinaryWriter writes an object to byte array
 type GraphBinaryWriter struct{}
+
+// GraphBinaryReader reads a byte array into an object
 type GraphBinaryReader struct{}
 
 const (
@@ -125,7 +129,7 @@ func (reader *GraphBinaryReader) getSerializerToRead(typ byte) (GraphBinaryTypeS
 		return &longSerializer{}, nil
 	case IntType.getCodeByte():
 		return &intSerializer{}, nil
-	case UuidType.getCodeByte():
+	case UUIDType.getCodeByte():
 		return &uuidSerializer{}, nil
 	case MapType.getCodeByte():
 		return &mapSerializer{}, nil
@@ -359,8 +363,11 @@ func (stringSerializer *stringSerializer) writeValue(value interface{}, buffer *
 	}
 
 	val := value.(string)
-	binary.Write(buffer, binary.BigEndian, int32(len(val)))
-	_, err := buffer.WriteString(value.(string))
+	err := binary.Write(buffer, binary.BigEndian, int32(len(val)))
+	if err != nil {
+		return nil, err
+	}
+	_, err = buffer.WriteString(value.(string))
 	if err != nil {
 		return nil, err
 	}
@@ -378,7 +385,7 @@ func (stringSerializer *stringSerializer) readValue(buffer *bytes.Buffer, reader
 			return "", nil
 		}
 	}
-	var size uint32
+	var size int32
 	err := binary.Read(buffer, binary.BigEndian, &size)
 	if err != nil {
 		return nil, errors.New("error in reading string length from byte buffer")
@@ -418,14 +425,23 @@ func (mapSerializer *mapSerializer) writeValue(value interface{}, buffer *bytes.
 	}
 
 	keys := v.MapKeys()
-	binary.Write(buffer, binary.BigEndian, int32(len(keys)))
+	err := binary.Write(buffer, binary.BigEndian, int32(len(keys)))
+	if err != nil {
+		return nil, err
+	}
 	for _, k := range keys {
 		convKey := k.Convert(v.Type().Key())
 		// serialize k
-		writer.write(k.Interface(), buffer)
+		_, err := writer.write(k.Interface(), buffer)
+		if err != nil {
+			return nil, err
+		}
 		// serialize v.MapIndex(c_key)
 		val := v.MapIndex(convKey)
-		writer.write(val.Interface(), buffer)
+		_, err = writer.write(val.Interface(), buffer)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 	return buffer.Bytes(), nil
@@ -442,7 +458,7 @@ func (mapSerializer *mapSerializer) readValue(buffer *bytes.Buffer, reader *Grap
 			return nil, nil
 		}
 	}
-	var size uint32
+	var size int32
 	err := binary.Read(buffer, binary.BigEndian, &size)
 	if err != nil {
 		return nil, errors.New("error in reading map length from byte buffer")
@@ -463,7 +479,7 @@ func (mapSerializer *mapSerializer) readValue(buffer *bytes.Buffer, reader *Grap
 }
 
 func (uuidSerializer *uuidSerializer) getDataType() DataType {
-	return UuidType
+	return UUIDType
 }
 
 func (uuidSerializer *uuidSerializer) write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error) {

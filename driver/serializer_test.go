@@ -20,9 +20,10 @@ under the License.
 package gremlingo
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSerializer(t *testing.T) {

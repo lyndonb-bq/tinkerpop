@@ -26,6 +26,7 @@ const op = "eval"
 const processor = ""
 const graphType = "g:Map"
 
+// Request represents a request to the server
 type Request struct {
 	RequestID uuid.UUID                   `json:"requestId"`
 	Op        string                      `json:"op"`
