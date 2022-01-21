@@ -19,22 +19,20 @@ under the License.
 
 package transport
 
-import "gremlin-go/driver/net"
+import (
+	"net/url"
+	"strconv"
 
-<<<<<<< Updated upstream:driver/gorillaTransporter.go
-====== =
-"github.com/gorilla/websocket"
-"gremlin-go/driver/results"
->>>>>>> Stashed changes:driver/net/gorillaTransporter.go
-"net/url"
-"strconv"
-
-"github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
 )
+
+const scheme = "ws"
+const path = "gremlin"
+
 type gorillaTransporter struct {
 	host       string
 	port       int
-	connection net.websocketConn
+	connection websocketConn
 	isClosed   bool
 }
 
@@ -44,9 +42,9 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 	}
 
 	u := url.URL{
-		Scheme: net.scheme,
+		Scheme: scheme,
 		Host:   transporter.host + ":" + strconv.Itoa(transporter.port),
-		Path:   net.path,
+		Path:   path,
 	}
 
 	dialer := websocket.DefaultDialer
@@ -59,7 +57,7 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 	return
 }
 
-func (transporter *gorillaTransporter) Write(traversal string) (err error) {
+func (transporter *gorillaTransporter) Write(data []byte) (err error) {
 	if transporter.connection == nil {
 		err = transporter.Connect()
 		if err != nil {
@@ -67,7 +65,7 @@ func (transporter *gorillaTransporter) Write(traversal string) (err error) {
 		}
 	}
 
-	err = transporter.connection.WriteJSON(results.makeStringRequest(traversal))
+	err = transporter.connection.WriteMessage(websocket.BinaryMessage, data)
 	return err
 }
 

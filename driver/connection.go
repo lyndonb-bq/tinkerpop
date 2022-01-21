@@ -17,17 +17,13 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package driver
+package gremlingo
 
 import (
 	"fmt"
 	"gremlin-go/driver/transport"
 	transport2 "gremlin-go/driver/transport"
 )
-
-// TODO: make sure these are constants
-const scheme = "ws"
-const path = "gremlin"
 
 type connection struct {
 	host            string
@@ -51,6 +47,7 @@ func (connection *connection) submit(traversalString string) (response string, e
 		fmt.Println("Reading message failed!")
 		return
 	}
+	uj
 
 	response = string(bytes)
 	transporter.Close()

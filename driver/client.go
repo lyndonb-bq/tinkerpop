@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package driver
+package gremlingo
 
 import (
 	"gremlin-go/driver/transport"

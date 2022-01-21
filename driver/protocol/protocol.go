@@ -76,12 +76,14 @@ func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSet
 		// TODO AN-989: Implement authentication (including handshaking).
 		return 0, errors.New("authentication is not currently supported")
 	} else if statusCode == http.StatusNoContent {
-		// TODO: AN-968: Insert empty list into resultSet.
+		// Add empty slice to result.
+		resultSet.AddResult(results.NewResult(make([]interface{}, 0)))
 		return statusCode, nil
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
+		// Add data to the ResultSet.
 		resultSet.AddResult(results.NewResult(data))
 		if statusCode == http.StatusOK {
-			resultSet.SetStatusAttributes(response.Attributes)
+			resultSet.SetStatusAttributes(response.ResponseStatus.Attributes)
 		}
 		return statusCode, nil
 	} else {
@@ -89,79 +91,12 @@ func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSet
 	}
 }
 
-func CheckAndSet(key string, funcToSet func(interface{}), dictionary map[interface{}]interface{}) {
-	if value, ok := dictionary[key]; ok {
-		funcToSet(value.(string))
+func (protocol *GremlinServerWSProtocol) Write(requestMessage *codec.Request) error {
+	message, err := (*protocol.serializer).SerializeMessage(requestMessage)
+	if err == nil {
+		err = protocol.transporter.Write(message)
 	}
-}
-
-func (protocol *GremlinServerWSProtocol) ParseResult(message map[string]interface{}, resultSets map[string]results.ResultSet) (int, error) {
-	if message == nil {
-		return 0, errors.New("malformed ws or wss URL")
-	}
-
-	// Deserialize
-
-	msg := map[string]interface{}{
-		"requestId": "request_id",
-		"status": map[interface{}]interface{}{
-			"code":       "status_code",
-			"message":    "status_msg",
-			"attributes": "status_attrs",
-		},
-		"result": map[interface{}]interface{}{
-			"meta": "",
-			"data": "result",
-		},
-	}
-
-	requestId, statusCode, aggregateTo, data := unpackMessage(msg)
-	resultSet := resultSets[requestId]
-	if resultSet == nil {
-		resultSet = results.NewChannelResultSet()
-		// TODO: Add resultset to resultSets
-	}
-	resultSet.SetAggregateTo(aggregateTo)
-	if statusCode == http.StatusProxyAuthRequired {
-		// TODO AN-989: Implement authentication (including handshaking).
-		return 0, errors.New("authentication is not currently supported")
-	} else if statusCode == http.StatusNoContent {
-		// TODO: AN-968: Insert empty list into resultSet.
-		return statusCode, nil
-	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
-		// TODO AN-968: Insert data into resultSet.
-		if statusCode == http.StatusOK {
-			// resultSet.SetStatusAttributes(msg["status"].(map[string]interface{})["attributes"])
-			removeResultSetsKey(resultSets, requestId)
-		}
-		return statusCode, nil
-	} else {
-		return 0, errors.New(fmt.Sprint("statusCode: ", statusCode, ", message: ", msg))
-	}
-}
-
-func removeResultSetsKey(resultSets map[string]results.ResultSet, key string) {
-	// Need to check if exists before removal, otherwise we might cause a panic.
-	if _, ok := resultSets[key]; ok {
-		delete(resultSets, key)
-	}
-}
-
-func unpackMessage(message map[string]interface{}) (string, int, string, interface{}) {
-	requestId := message["requestId"].(string)
-	statusCode := message["status"].(map[string]interface{})["code"].(int)
-	aggregateTo := message["result"].(map[string]interface{})["meta"].(map[string]interface{})["aggregateTo"]
-	if aggregateTo == nil {
-		aggregateTo = "list"
-	}
-	data := message["result"].(map[string]interface{})["data"]
-	return requestId, statusCode, aggregateTo.(string), data
-}
-
-func (protocol *GremlinServerWSProtocol) Write(requestId int, requestMessage *string) {
-	// TODO: Fix.
-	// var message string = protocol.serializer.serialize_message(requestId, requestMessage)
-	// protocol.transport.write(message)
+	return err
 }
 
 func NewGremlinServerWSProtocol() *GremlinServerWSProtocol {

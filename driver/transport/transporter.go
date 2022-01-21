@@ -21,13 +21,14 @@ package transport
 
 type Transporter interface {
 	Connect() error
-	Write(string) error
+	Write(data []byte) error
 	Read() ([]byte, error)
 	Close() error
 	IsClosed() bool
 }
 
 type websocketConn interface {
+	WriteMessage(int, []byte) error
 	WriteJSON(interface{}) error
 	ReadMessage() (int, []byte, error)
 	Close() error

@@ -41,6 +41,11 @@ func (conn *mockWebsocketConn) WriteJSON(v interface{}) error {
 	return args.Error(0)
 }
 
+func (conn *mockWebsocketConn) WriteMessage(messageType int, data []byte) error {
+	args := conn.Called(messageType, data)
+	return args.Error(0)
+}
+
 func (conn *mockWebsocketConn) ReadMessage() (int, []byte, error) {
 	args := conn.Called()
 	return args.Get(0).(int), args.Get(1).([]byte), args.Error(2)
@@ -63,7 +68,7 @@ func TestGorillaTransporter(t *testing.T) {
 
 		t.Run("Write", func(t *testing.T) {
 			mockConn.On("WriteJSON", mock.Anything).Return(nil)
-			err := transporter.Write("mockTraversal")
+			err := transporter.Write(make([]byte, 10))
 			assert.Nil(t, err)
 		})
 
@@ -96,7 +101,7 @@ func TestGorillaTransporter(t *testing.T) {
 
 		t.Run("Write", func(t *testing.T) {
 			mockConn.On("WriteJSON", mock.Anything).Return(errors.New(mockWriteErrMessage))
-			err := transporter.Write("mockTraversal")
+			err := transporter.Write(make([]byte, 10))
 			assert.NotNil(t, err)
 			assert.Equal(t, mockWriteErrMessage, err.Error())
 		})
