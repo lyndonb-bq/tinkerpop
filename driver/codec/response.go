@@ -17,25 +17,23 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package driver
+package codec
 
-import (
-	"fmt"
-	"gremlin-go/driver/transport"
-	"testing"
-)
+import "github.com/google/uuid"
 
-// TODO: remove this file when sandbox is no longer needed
-func TestDriver(t *testing.T) {
+type ResponseStatus struct {
+	Code       uint32                      `json:"code"`
+	Message    string                      `json:"message"`
+	Attributes map[interface{}]interface{} `json:"attributes"`
+}
 
-	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182, transport.Gorilla)
+type ResponseResult struct {
+	Data interface{}                 `json:"data"`
+	Meta map[interface{}]interface{} `json:"meta"`
+}
 
-		response, err := client.Submit("1 + 1")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(response)
-	})
+type Response struct {
+	RequestID      uuid.UUID      `json:"requestId"`
+	ResponseStatus responseStatus `json:"responseStatus"`
+	ResponseResult responseResult `json:"responseResult"`
 }

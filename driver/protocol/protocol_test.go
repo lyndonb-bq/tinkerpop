@@ -17,25 +17,31 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package driver
+package protocol
 
 import (
-	"fmt"
-	"gremlin-go/driver/transport"
+	"github.com/stretchr/testify/assert"
+	"gremlin-go/driver/results"
 	"testing"
 )
 
 // TODO: remove this file when sandbox is no longer needed
-func TestDriver(t *testing.T) {
+func Test(t *testing.T) {
 
-	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182, transport.Gorilla)
+	t.Run("Test DataReceived nil message", func(t *testing.T) {
+		protocol := NewGremlinServerWSProtocol()
+		statusCode, err := protocol.DataReceived(nil, map[string]results.ResultSet{})
+		assert.Equal(t, 0, statusCode)
+		assert.Nil(t, err)
+	})
 
-		response, err := client.Submit("1 + 1")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(response)
+	t.Run("Test DataReceived nil message", func(t *testing.T) {
+		protocol := NewGremlinServerWSProtocol()
+		protocol.DataReceived(nil, nil)
+	})
+
+	t.Run("Test Protocol Connection Made", func(t *testing.T) {
+		protocol := NewGremlinServerWSProtocol()
+		protocol.DataReceived(nil, nil)
 	})
 }

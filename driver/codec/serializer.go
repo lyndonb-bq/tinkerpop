@@ -17,12 +17,11 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package codec
 
 import (
 	"bytes"
 	"encoding/binary"
-
 	"github.com/google/uuid"
 )
 

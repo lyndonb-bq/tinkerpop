@@ -17,10 +17,12 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package driver
 
 import (
 	"fmt"
+	"gremlin-go/driver/transport"
+	transport2 "gremlin-go/driver/transport"
 )
 
 // TODO: make sure these are constants
@@ -30,12 +32,12 @@ const path = "gremlin"
 type connection struct {
 	host            string
 	port            int
-	transporterType TransporterType
+	transporterType transport2.TransporterType
 }
 
 // TODO: refactor this when implementing full connection
 func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := getTransportLayer(connection.transporterType, connection.host, connection.port)
+	transporter := transport.GetTransportLayer(connection.transporterType, connection.host, connection.port)
 	defer transporter.Close()
 
 	err = transporter.Write(traversalString)

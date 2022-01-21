@@ -17,17 +17,21 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package driver
+
+import (
+	"gremlin-go/driver/transport"
+)
 
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
 	host            string
 	port            int
-	transporterType TransporterType
+	transporterType transport.TransporterType
 }
 
 // NewClient creates a Client and configures it with the given parameters.
-func NewClient(host string, port int, transporterType TransporterType) *Client {
+func NewClient(host string, port int, transporterType transport.TransporterType) *Client {
 	client := &Client{host, port, transporterType}
 	return client
 }

@@ -17,25 +17,35 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package driver
+package results
 
 import (
-	"fmt"
-	"gremlin-go/driver/transport"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-// TODO: remove this file when sandbox is no longer needed
-func TestDriver(t *testing.T) {
+func TestResult(t *testing.T) {
 
-	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182, transport.Gorilla)
+	t.Run("Test Result.AsString() string", func(t *testing.T) {
+		r := Result{"foo"}
+		assert.Equal(t, r.AsString(), "foo")
+	})
 
-		response, err := client.Submit("1 + 1")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(response)
+	t.Run("Test Result.AsString() slice", func(t *testing.T) {
+		r := Result{[]int{1, 2, 3}}
+		assert.Equal(t, r.AsString(), "[1 2 3]")
+
+	})
+
+	t.Run("Test Result.AsString() int", func(t *testing.T) {
+		r := Result{1}
+		assert.Equal(t, r.AsString(), "1")
+
+	})
+
+	t.Run("Test Result.AsString() float", func(t *testing.T) {
+		r := Result{1.2}
+		assert.Equal(t, r.AsString(), "1.2")
+
 	})
 }

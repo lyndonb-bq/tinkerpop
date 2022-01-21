@@ -17,19 +17,24 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package transport
 
-import (
-	"net/url"
-	"strconv"
+import "gremlin-go/driver/net"
 
-	"github.com/gorilla/websocket"
+<<<<<<< Updated upstream:driver/gorillaTransporter.go
+====== =
+"github.com/gorilla/websocket"
+"gremlin-go/driver/results"
+>>>>>>> Stashed changes:driver/net/gorillaTransporter.go
+"net/url"
+"strconv"
+
+"github.com/gorilla/websocket"
 )
-
 type gorillaTransporter struct {
 	host       string
 	port       int
-	connection websocketConn
+	connection net.websocketConn
 	isClosed   bool
 }
 
@@ -39,9 +44,9 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 	}
 
 	u := url.URL{
-		Scheme: scheme,
+		Scheme: net.scheme,
 		Host:   transporter.host + ":" + strconv.Itoa(transporter.port),
-		Path:   path,
+		Path:   net.path,
 	}
 
 	dialer := websocket.DefaultDialer
@@ -62,7 +67,7 @@ func (transporter *gorillaTransporter) Write(traversal string) (err error) {
 		}
 	}
 
-	err = transporter.connection.WriteJSON(makeStringRequest(traversal))
+	err = transporter.connection.WriteJSON(results.makeStringRequest(traversal))
 	return err
 }
 

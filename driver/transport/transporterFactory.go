@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package transport
 
 // TransporterType is an alias for valid transport protocols.
 type TransporterType int
@@ -27,7 +27,7 @@ const (
 	Gorilla TransporterType = iota
 )
 
-func getTransportLayer(transporterType TransporterType, host string, port int) transporter {
+func GetTransportLayer(transporterType TransporterType, host string, port int) Transporter {
 	switch transporterType {
 	case Gorilla:
 		return &gorillaTransporter{host: host, port: port}

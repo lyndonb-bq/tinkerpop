@@ -17,9 +17,9 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package transport
 
-type transporter interface {
+type Transporter interface {
 	Connect() error
 	Write(string) error
 	Read() ([]byte, error)

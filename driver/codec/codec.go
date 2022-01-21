@@ -17,23 +17,21 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package gremlingo
+package codec
 
-import "github.com/google/uuid"
-
-type responseStatus struct {
-	Code       uint32                      `json:"code"`
-	Message    string                      `json:"message"`
-	Attributes map[interface{}]interface{} `json:"attributes"`
+type Codec struct {
+	serializer   *Serializer
+	deserializer *Deserializer
 }
 
-type responseResult struct {
-	Data interface{}                 `json:"data"`
-	Meta map[interface{}]interface{} `json:"meta"`
+type Serializer interface {
+	SerializeMessage(request *request)
 }
 
-type response struct {
-	RequestID      uuid.UUID      `json:"requestId"`
-	ResponseStatus responseStatus `json:"responseStatus"`
-	ResponseResult responseResult `json:"responseResult"`
+type Deserializer interface {
+	DeserializerMessage(message []byte) *response
+}
+
+func () GetGraphBinaryCodec() *Codec {
+	return &Codec{&Serializer(), &Deserializer()}
 }
