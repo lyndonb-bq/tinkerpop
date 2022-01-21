@@ -21,84 +21,192 @@ package gremlingo
 
 import (
 	"bytes"
-	"encoding/binary"
-
 	"github.com/google/uuid"
 )
 
-type graphBinMessageSerializer struct {
-	readerClass graphBinaryReader
-	writerClass graphBinaryWriter
-	mimeType    string `default:"application/vnd.graphbinary-v1.0"`
+type Serializer interface {
+	SerializeMessage(request *Request) ([]byte, error)
+	DeserializeMessage(message []byte) (Response, error)
+}
+
+type GraphBinarySerializer struct {
+	ReaderClass GraphBinaryReader
+	WriterClass GraphBinaryWriter
+	MimeType    string `default:"application/vnd.graphbinary-v1.0"`
 }
 
 const versionByte byte = 0x81
 
-func (gs *graphBinMessageSerializer) getProcessor(processor string) string {
+func (gs *GraphBinarySerializer) getProcessor(processor string) string {
 	return processor
 }
 
-func (gs *graphBinMessageSerializer) serializeMessage(request *request) []byte {
-	finalMessage, _ := gs.buildMessage(request, 0x20, gs.mimeType)
-	return finalMessage
+// SerializeMessage serializes a request message
+func (gs *GraphBinarySerializer) SerializeMessage(request *Request) ([]byte, error) {
+	gs.MimeType = "application/vnd.graphbinary-v1.0"
+	finalMessage, err := gs.buildMessage(request, 0x20, gs.MimeType)
+	if err != nil {
+		return nil, err
+	}
+	return finalMessage, nil
 }
 
-func (gs *graphBinMessageSerializer) buildMessage(message *request, mimeLen byte, mimeType string) ([]byte, error) {
-	byteBuffer := bytes.Buffer{}
+func (gs *GraphBinarySerializer) buildMessage(request *Request, mimeLen byte, mimeType string) ([]byte, error) {
+	buffer := bytes.Buffer{}
 
-	// header
-	byteBuffer.WriteByte(mimeLen)
-	byteBuffer.WriteString(mimeType)
-	byteBuffer.WriteByte(versionByte)
-
+	// mime header
+	buffer.WriteByte(mimeLen)
+	buffer.WriteString(mimeType)
+	// version
+	buffer.WriteByte(versionByte)
 	// RequestID
-	binary.Write(&byteBuffer, binary.BigEndian, message.RequestID)
-
+	_, err := gs.WriterClass.writeValue(request.RequestID, &buffer, false)
+	if err != nil {
+		return nil, err
+	}
 	// Op
-	gs.writerClass.writeValue(message.Op, &byteBuffer, false)
-	//binary.Write(&byteBuffer, binary.BigEndian, len(message.Op))
-	//binary.Write(&byteBuffer, binary.BigEndian, message.Op)
-
+	_, err = gs.WriterClass.writeValue(request.Op, &buffer, false)
+	if err != nil {
+		return nil, err
+	}
 	// Processor
-	gs.writerClass.writeValue(message.Processor, &byteBuffer, false)
-	//binary.Write(&byteBuffer, binary.BigEndian, len(message.Processor))
-	//binary.Write(&byteBuffer, binary.BigEndian, message.Processor)
-
+	_, err = gs.WriterClass.writeValue(request.Processor, &buffer, false)
+	if err != nil {
+		return nil, err
+	}
 	// Args
-	args := message.Args
-	binary.Write(&byteBuffer, binary.BigEndian, int32(len(args)))
-	//binary.Write(&byteBuffer, binary.BigEndian, args)
-	for k, v := range args {
-		gs.writerClass.writeObject(k, &byteBuffer)
-		gs.writerClass.writeObject(v, &byteBuffer)
+	_, err = gs.WriterClass.writeValue(request.Args, &buffer, false)
+	if err != nil {
+		return nil, err
 	}
 
-	return byteBuffer.Bytes(), nil
+	return buffer.Bytes(), nil
 }
 
-func (gs *graphBinMessageSerializer) deserializeMessage(message []byte) response {
-	buff := bytes.Buffer{}
-	buff.Write(message)
-	msgUUID, _ := gs.readerClass.readValue(&buff, byte(uuidType), true)
-	msgCode, _ := gs.readerClass.readValue(&buff, byte(intType), false)
-	msgMsg, _ := gs.readerClass.readValue(&buff, byte(stringType), true)
-	msgAttr, _ := gs.readerClass.readValue(&buff, byte(mapType), false)
-	msgMeta, _ := gs.readerClass.readValue(&buff, byte(mapType), true)
-	msgData := gs.readerClass.read(&buff)
-	var msg response
+// DeserializeMessage deserializes a response message
+func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Response, error) {
+	var msg Response
+	buffer := bytes.Buffer{}
+	buffer.Write(responseMessage)
+	// version
+	_, err := buffer.ReadByte()
+	if err != nil {
+		return msg, err
+	}
+	// UUID
+	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UuidType), true)
+	if err != nil {
+		return msg, err
+	}
+	// Status Code
+	msgCode, err := gs.ReaderClass.readValue(&buffer, byte(IntType), false)
+	if err != nil {
+		return msg, err
+	}
+	// Nullable Status Message
+	msgMsg, err := gs.ReaderClass.readValue(&buffer, byte(StringType), true)
+	if err != nil {
+		return msg, err
+	}
+	// Status Attribute
+	msgAttr, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
+	if err != nil {
+		return msg, err
+	}
+	// Result Meta
+	msgMeta, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
+	if err != nil {
+		return msg, err
+	}
+	// Result Data
+	msgData, err := gs.ReaderClass.read(&buffer)
+	if err != nil {
+		return msg, err
+	}
+
 	msg.RequestID = msgUUID.(uuid.UUID)
-	msg.ResponseStatus.Code = msgCode.(uint32)
+	msg.ResponseStatus.Code = uint16(msgCode.(int32))
 	msg.ResponseStatus.Message = msgMsg.(string)
 	msg.ResponseStatus.Attributes = msgAttr.(map[interface{}]interface{})
 	msg.ResponseResult.Meta = msgMeta.(map[interface{}]interface{})
 	msg.ResponseResult.Data = msgData
 
-	//msg := map[string]interface{}{
-	//	"requestId": request_id,
-	//	"status": map[string]interface{}{"code": status_code,
-	//		"message":    status_msg,
-	//		"attributes": status_attrs},
-	//	"result": map[string]interface{}{"meta": meta_attrs,
-	//		"data": result}}
-	return msg
+	return msg, nil
+}
+
+// DeserializeRequestMessage deserializes a request message
+func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte) (Request, error) {
+	buffer := bytes.Buffer{}
+	var msg Request
+	buffer.Write(requestMessage)
+	// skip headers
+	buffer.Next(33)
+	// version
+	_, err := buffer.ReadByte()
+	if err != nil {
+		return msg, err
+	}
+	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UuidType), false)
+	if err != nil {
+		return msg, err
+	}
+	msgOp, err := gs.ReaderClass.readValue(&buffer, byte(StringType), false)
+	if err != nil {
+		return msg, err
+	}
+	msgProc, err := gs.ReaderClass.readValue(&buffer, byte(StringType), false)
+	if err != nil {
+		return msg, err
+	}
+	msgArgs, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
+	if err != nil {
+		return msg, err
+	}
+
+	msg.RequestID = msgUUID.(uuid.UUID)
+	msg.Op = msgOp.(string)
+	msg.Processor = msgProc.(string)
+	msg.Args = msgArgs.(map[interface{}]interface{})
+
+	return msg, nil
+}
+
+func (gs *GraphBinarySerializer) SerializeResponseMessage(response *Response) ([]byte, error) {
+	buffer := bytes.Buffer{}
+
+	// version
+	buffer.WriteByte(versionByte)
+
+	// RequestID
+	_, err := gs.WriterClass.writeValue(response.RequestID, &buffer, true)
+	if err != nil {
+		return nil, err
+	}
+	// Status Code
+	_, err = gs.WriterClass.writeValue(response.ResponseStatus.Code, &buffer, false)
+	if err != nil {
+		return nil, err
+	}
+	// Status Message
+	_, err = gs.WriterClass.writeValue(response.ResponseStatus.Message, &buffer, true)
+	if err != nil {
+		return nil, err
+	}
+	// Status Attributes
+	_, err = gs.WriterClass.writeValue(response.ResponseStatus.Attributes, &buffer, false)
+	if err != nil {
+		return nil, err
+	}
+	// Result Meta
+	_, err = gs.WriterClass.writeValue(response.ResponseResult.Meta, &buffer, false)
+	if err != nil {
+		return nil, err
+	}
+	// Result
+	_, err = gs.WriterClass.write(response.ResponseResult.Data, &buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
 }

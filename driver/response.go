@@ -21,19 +21,19 @@ package gremlingo
 
 import "github.com/google/uuid"
 
-type responseStatus struct {
-	Code       uint32                      `json:"code"`
+type ResponseStatus struct {
+	Code       uint16                      `json:"code"`
 	Message    string                      `json:"message"`
 	Attributes map[interface{}]interface{} `json:"attributes"`
 }
 
-type responseResult struct {
-	Data interface{}                 `json:"data"`
+type ResponseResult struct {
 	Meta map[interface{}]interface{} `json:"meta"`
+	Data interface{}                 `json:"data"`
 }
 
-type response struct {
+type Response struct {
 	RequestID      uuid.UUID      `json:"requestId"`
-	ResponseStatus responseStatus `json:"responseStatus"`
-	ResponseResult responseResult `json:"responseResult"`
+	ResponseStatus ResponseStatus `json:"responseStatus"`
+	ResponseResult ResponseResult `json:"responseResult"`
 }

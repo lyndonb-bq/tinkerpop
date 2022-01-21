@@ -26,18 +26,18 @@ const op = "eval"
 const processor = ""
 const graphType = "g:Map"
 
-type request struct {
-	RequestID uuid.UUID              `json:"requestId"`
-	Op        string                 `json:"op"`
-	Processor string                 `json:"processor"`
-	Args      map[string]interface{} `json:"args"`
+type Request struct {
+	RequestID uuid.UUID                   `json:"requestId"`
+	Op        string                      `json:"op"`
+	Processor string                      `json:"processor"`
+	Args      map[interface{}]interface{} `json:"args"`
 }
 
-func makeStringRequest(requestString string) (req request) {
+func makeStringRequest(requestString string) (req Request) {
 	req.RequestID = uuid.New()
 	req.Op = op
 	req.Processor = processor
-	req.Args = make(map[string]interface{})
+	req.Args = make(map[interface{}]interface{})
 	req.Args["@type"] = graphType
 	value := make([]string, 2)
 	value[0] = "gremlin"
