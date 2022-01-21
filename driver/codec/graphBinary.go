@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/google/uuid"
@@ -31,53 +30,77 @@ import (
 
 // Version 1.0
 
-type dataType int
+// DataType graphbinary types
+type DataType int
 
+// DataType defined as constants
 const (
-	nullType   dataType = 0xFE
-	intType    dataType = 0x01
-	longType   dataType = 0x02
-	doubleType dataType = 0x07
-	floatType  dataType = 0x08
-
-	stringType dataType = 0x03
-	uuidType   dataType = 0x0c
-	mapType    dataType = 0x0a
+	NullType    DataType = 0xFE
+	IntType     DataType = 0x01
+	LongType    DataType = 0x02
+	StringType  DataType = 0x03
+	DoubleType  DataType = 0x07
+	FloatType   DataType = 0x08
+	ListType    DataType = 0x09
+	MapType     DataType = 0x0a
+	UUIDType    DataType = 0x0c
+	ByteType    DataType = 0x24
+	ShortType   DataType = 0x26
+	BooleanType DataType = 0x27
 )
 
-var nullBytes = []byte{nullType.getCodeByte(), 0x01}
+var nullBytes = []byte{NullType.getCodeByte(), 0x01}
 
-func (dataType dataType) getCode() int {
-	return int(dataType)
-}
+//func (dataType DataType) getCode() int {
+//	return int(dataType)
+//}
 
-func (dataType dataType) getCodeByte() byte {
+func (dataType DataType) getCodeByte() byte {
 	return byte(dataType)
 }
 
-func (dataType dataType) getCodeBytes() []byte {
+func (dataType DataType) getCodeBytes() []byte {
 	return []byte{dataType.getCodeByte()}
 }
 
-type graphBinaryWriter struct {
+// GraphBinaryTypeSerializer interface for the different types of serializers
+type GraphBinaryTypeSerializer interface {
+	// change type of value for each specific serializer?
+	write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error)
+	writeValue(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter, nullable bool) ([]byte, error)
+	read(buffer *bytes.Buffer, reader *GraphBinaryReader) (interface{}, error)
+	readValue(buffer *bytes.Buffer, reader *GraphBinaryReader, nullable bool) (interface{}, error)
+	getDataType() DataType
 }
+
+// Format: 4-byte two’s complement integer.
+type intSerializer struct{}
+
+// Format: 8-byte two’s complement integer.
+type longSerializer struct{}
+
+// Format: {length}{text_value}
+type stringSerializer struct{}
+
+// Format: {length}{item_0}...{item_n}
+type mapSerializer struct{}
+
+// Format: 16 bytes representing the uuid.
+type uuidSerializer struct{}
+
+// GraphBinaryWriter writes an object to byte array
+type GraphBinaryWriter struct{}
+
+// GraphBinaryReader reads a byte array into an object
+type GraphBinaryReader struct{}
 
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
 )
 
-type graphBinarySerializer interface {
-	// change type of value for each specific serializer?
-	write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error)
-	writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error)
-	read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error)
-	readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error)
-	getDataType() dataType
-}
-
 // gets the type of the serializer based on the value
-func (writer *graphBinaryWriter) getSerializer(val interface{}) (graphBinarySerializer, error) {
+func (writer *GraphBinaryWriter) getSerializerToWrite(val interface{}) (GraphBinaryTypeSerializer, error) {
 	switch val.(type) {
 	case string:
 		return &stringSerializer{}, nil
@@ -97,48 +120,43 @@ func (writer *graphBinaryWriter) getSerializer(val interface{}) (graphBinarySeri
 	}
 }
 
-// gets the type of the serializer based on the value
-func (reader *graphBinaryReader) getSerializer(val byte) (graphBinarySerializer, error) {
-	switch val {
-	case stringType.getCodeByte():
+// gets the type of the serializer based on the DataType byte value
+func (reader *GraphBinaryReader) getSerializerToRead(typ byte) (GraphBinaryTypeSerializer, error) {
+	switch typ {
+	case StringType.getCodeByte():
 		return &stringSerializer{}, nil
-	case longType.getCodeByte():
+	case LongType.getCodeByte():
 		return &longSerializer{}, nil
-	case intType.getCodeByte():
+	case IntType.getCodeByte():
 		return &intSerializer{}, nil
-	case uuidType.getCodeByte():
+	case UUIDType.getCodeByte():
 		return &uuidSerializer{}, nil
-	case mapType.getCodeByte():
+	case MapType.getCodeByte():
 		return &mapSerializer{}, nil
 	default:
 		return nil, errors.New("unknown data type")
 	}
 }
 
-// should return type be void?
-func (writer *graphBinaryWriter) write(objectData interface{}) interface{} {
-	buffer := bytes.Buffer{}
-	fmt.Println("At writer")
-	fmt.Println(objectData)
-	return writer.writeObject(objectData, &buffer)
-}
-
 // Writes an object in fully-qualified format, containing {type_code}{type_info}{value_flag}{value}.
-func (writer *graphBinaryWriter) writeObject(valueObject interface{}, buffer *bytes.Buffer) interface{} {
+func (writer *GraphBinaryWriter) write(valueObject interface{}, buffer *bytes.Buffer) (interface{}, error) {
 	if valueObject == nil {
 		// return Object of type "unspecified object null" with the value flag set to null.
 		buffer.Write(nullBytes)
-		return buffer.Bytes()
+		return buffer.Bytes(), nil
 	}
 
-	serializer, _ := writer.getSerializer(valueObject)
+	serializer, _ := writer.getSerializerToWrite(valueObject)
 	buffer.Write(serializer.getDataType().getCodeBytes())
-	message, _ := serializer.write(valueObject, buffer, writer)
-	return message
+	message, err := serializer.write(valueObject, buffer, writer)
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
 }
 
 // Writes a value without including type information.
-func (writer *graphBinaryWriter) writeValue(value interface{}, buffer *bytes.Buffer, nullable bool) (interface{}, error) {
+func (writer *GraphBinaryWriter) writeValue(value interface{}, buffer *bytes.Buffer, nullable bool) (interface{}, error) {
 	if value == nil {
 		if !nullable {
 			return nil, errors.New("unexpected null value when nullable is false")
@@ -147,7 +165,7 @@ func (writer *graphBinaryWriter) writeValue(value interface{}, buffer *bytes.Buf
 		return buffer.Bytes(), nil
 	}
 
-	serializer, err := writer.getSerializer(value)
+	serializer, err := writer.getSerializerToWrite(value)
 	if err != nil {
 		return nil, err
 	}
@@ -159,58 +177,59 @@ func (writer *graphBinaryWriter) writeValue(value interface{}, buffer *bytes.Buf
 	return message, nil
 }
 
-func (writer *graphBinaryWriter) writeValueFlagNull(buffer *bytes.Buffer) {
+func (writer *GraphBinaryWriter) writeValueFlagNull(buffer *bytes.Buffer) {
 	buffer.WriteByte(valueFlagNull)
 }
 
-func (writer *graphBinaryWriter) writeValueFlagNone(buffer *bytes.Buffer) {
+func (writer *GraphBinaryWriter) writeValueFlagNone(buffer *bytes.Buffer) {
 	buffer.WriteByte(valueFlagNone)
 }
 
-type graphBinaryReader struct {
-}
-
 // Reads the type code, information and value of a given buffer with fully-qualified format.
-func (reader *graphBinaryReader) read(buffer *bytes.Buffer) interface{} {
-	fmt.Println("At reader")
+func (reader *GraphBinaryReader) read(buffer *bytes.Buffer) (interface{}, error) {
 	typeCode, _ := buffer.ReadByte()
-	if typeCode == nullType.getCodeByte() {
+	if typeCode == NullType.getCodeByte() {
 		check, _ := buffer.ReadByte()
 		// check this
 		if check != 1 {
-			return errors.New("read value flag")
+			return nil, errors.New("read value flag")
 		}
-		return nil
+		return nil, nil
 	}
 
-	fmt.Println(typeCode)
-	serializer, err := reader.getSerializer(typeCode)
+	serializer, err := reader.getSerializerToRead(typeCode)
 	if err != nil {
-		panic("cannot get serializer for type")
+		return nil, err
 	}
-	val, _ := serializer.read(buffer, reader)
-	return val
+	val, err := serializer.read(buffer, reader)
+	return val, err
 }
 
-func (reader *graphBinaryReader) readValue(buffer *bytes.Buffer, typ byte, nullable bool) (interface{}, error) {
+func (reader *GraphBinaryReader) readValue(buffer *bytes.Buffer, typ byte, nullable bool) (interface{}, error) {
 	if buffer == nil {
 		panic("input cannot be null")
 	}
-	serializer, _ := reader.getSerializer(typ)
+	typeCode, err := buffer.ReadByte()
+	if err != nil {
+		return nil, err
+	}
+	if typeCode != typ {
+		return nil, errors.New("type read from message different from requested type")
+	}
+	serializer, _ := reader.getSerializerToRead(typ)
 	val, _ := serializer.readValue(buffer, reader, nullable)
 	return val, nil
 }
 
-// Format: 4-byte two’s complement integer.
-type intSerializer struct {
-	graphBinarySerializer
+func (intSerializer *intSerializer) getDataType() DataType {
+	return IntType
 }
 
-func (intSerializer *intSerializer) write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error) {
+func (intSerializer *intSerializer) write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error) {
 	return intSerializer.writeValue(value, buffer, writer, true)
 }
 
-func (intSerializer *intSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error) {
+func (intSerializer *intSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter, nullable bool) ([]byte, error) {
 	if value == nil {
 		if !nullable {
 			return nil, errors.New("unexpected null value when nullable is false")
@@ -223,18 +242,31 @@ func (intSerializer *intSerializer) writeValue(value interface{}, buffer *bytes.
 		writer.writeValueFlagNone(buffer)
 	}
 
-	err := binary.Write(buffer, binary.BigEndian, value)
+	//int8, uint16, int32
+	var val int32
+	switch value := value.(type) {
+	case int8:
+		val = int32(value)
+	case uint16:
+		val = int32(value)
+	case int32:
+		val = value
+	default:
+		return nil, errors.New("un-matching type for long serializer")
+	}
+
+	err := binary.Write(buffer, binary.BigEndian, val)
 	if err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil
 }
 
-func (intSerializer *intSerializer) read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error) {
+func (intSerializer *intSerializer) read(buffer *bytes.Buffer, reader *GraphBinaryReader) (interface{}, error) {
 	return intSerializer.readValue(buffer, reader, true)
 }
 
-func (intSerializer *intSerializer) readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error) {
+func (intSerializer *intSerializer) readValue(buffer *bytes.Buffer, reader *GraphBinaryReader, nullable bool) (interface{}, error) {
 	if nullable {
 		nullFlag, _ := buffer.ReadByte()
 		if (nullFlag & 1) == 1 {
@@ -249,18 +281,15 @@ func (intSerializer *intSerializer) readValue(buffer *bytes.Buffer, reader *grap
 	return val, nil
 }
 
-func (intSerializer *intSerializer) getDataType() dataType {
-	return intType
+func (longSerializer *longSerializer) getDataType() DataType {
+	return LongType
 }
 
-// Format: 8-byte two’s complement integer.
-type longSerializer struct{}
-
-func (longSerializer *longSerializer) write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error) {
+func (longSerializer *longSerializer) write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error) {
 	return longSerializer.writeValue(value, buffer, writer, true)
 }
 
-func (longSerializer *longSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error) {
+func (longSerializer *longSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter, nullable bool) ([]byte, error) {
 	if value == nil {
 		if !nullable {
 			return nil, errors.New("unexpected null value when nullable is false")
@@ -273,30 +302,31 @@ func (longSerializer *longSerializer) writeValue(value interface{}, buffer *byte
 		writer.writeValueFlagNone(buffer)
 	}
 
-	switch value.(type) {
+	// int, uint32, int64
+	var val int64
+	switch value := value.(type) {
 	case int:
-		val := int64(value.(int))
-		err := binary.Write(buffer, binary.BigEndian, val)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		return buffer.Bytes(), nil
+		val = int64(value)
+	case uint32:
+		val = int64(value)
+	case int64:
+		val = value
 	default:
-		err := binary.Write(buffer, binary.BigEndian, value)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		return buffer.Bytes(), nil
+		return nil, errors.New("un-matching type for long serializer")
 	}
+	err := binary.Write(buffer, binary.BigEndian, val)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+
 }
 
-func (longSerializer *longSerializer) read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error) {
+func (longSerializer *longSerializer) read(buffer *bytes.Buffer, reader *GraphBinaryReader) (interface{}, error) {
 	return longSerializer.readValue(buffer, reader, true)
 }
 
-func (longSerializer *longSerializer) readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error) {
+func (longSerializer *longSerializer) readValue(buffer *bytes.Buffer, reader *GraphBinaryReader, nullable bool) (interface{}, error) {
 	if nullable {
 		nullFlag, _ := buffer.ReadByte()
 		if (nullFlag & 1) == 1 {
@@ -311,18 +341,15 @@ func (longSerializer *longSerializer) readValue(buffer *bytes.Buffer, reader *gr
 	return val, nil
 }
 
-func (longSerializer *longSerializer) getDataType() dataType {
-	return longType
+func (stringSerializer *stringSerializer) getDataType() DataType {
+	return StringType
 }
 
-// Format: {length}{text_value}
-type stringSerializer struct{}
-
-func (stringSerializer *stringSerializer) write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error) {
+func (stringSerializer *stringSerializer) write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error) {
 	return stringSerializer.writeValue(value, buffer, writer, true)
 }
 
-func (stringSerializer *stringSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error) {
+func (stringSerializer *stringSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter, nullable bool) ([]byte, error) {
 	if value == nil {
 		if !nullable {
 			return nil, errors.New("unexpected null value when nullable is false")
@@ -336,52 +363,130 @@ func (stringSerializer *stringSerializer) writeValue(value interface{}, buffer *
 	}
 
 	val := value.(string)
-	binary.Write(buffer, binary.BigEndian, int32(len(val)))
-	_, err := buffer.WriteString(value.(string))
+	err := binary.Write(buffer, binary.BigEndian, int32(len(val)))
+	if err != nil {
+		return nil, err
+	}
+	_, err = buffer.WriteString(value.(string))
 	if err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil
 }
 
-func (stringSerializer *stringSerializer) read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error) {
+func (stringSerializer *stringSerializer) read(buffer *bytes.Buffer, reader *GraphBinaryReader) (interface{}, error) {
 	return stringSerializer.readValue(buffer, reader, true)
 }
 
-func (stringSerializer *stringSerializer) readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error) {
+func (stringSerializer *stringSerializer) readValue(buffer *bytes.Buffer, reader *GraphBinaryReader, nullable bool) (interface{}, error) {
 	if nullable {
 		nullFlag, _ := buffer.ReadByte()
 		if (nullFlag & 1) == 1 {
 			return "", nil
 		}
 	}
-	// some better way to advance the pointer?
-	buffer.Next(3)
-	fmt.Println(buffer.Bytes())
-	size, _ := binary.ReadUvarint(buffer)
+	var size int32
+	err := binary.Read(buffer, binary.BigEndian, &size)
+	if err != nil {
+		return nil, errors.New("error in reading string length from byte buffer")
+	}
 	valBytes := make([]byte, size)
-	fmt.Println(size)
-	_, err := buffer.Read(valBytes)
-	fmt.Println(buffer.Bytes())
+	_, err = buffer.Read(valBytes)
 	if err != nil {
 		return "", err
 	}
 	return string(valBytes), nil
 }
 
-func (stringSerializer *stringSerializer) getDataType() dataType {
-	return stringType
+func (mapSerializer *mapSerializer) getDataType() DataType {
+	return MapType
 }
 
-// Format: 16 bytes representing the uuid.
-type uuidSerializer struct {
+func (mapSerializer *mapSerializer) write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error) {
+	return mapSerializer.writeValue(value, buffer, writer, true)
 }
 
-func (uuidSerializer *uuidSerializer) write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error) {
+func (mapSerializer *mapSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter, nullable bool) ([]byte, error) {
+	if value == nil {
+		if !nullable {
+			return nil, errors.New("unexpected null value when nullable is false")
+		}
+		writer.writeValueFlagNull(buffer)
+		return buffer.Bytes(), nil
+	}
+
+	if nullable {
+		writer.writeValueFlagNone(buffer)
+	}
+
+	v := reflect.ValueOf(value)
+	if v.Kind() != reflect.Map {
+		return buffer.Bytes(), errors.New("not a map")
+	}
+
+	keys := v.MapKeys()
+	err := binary.Write(buffer, binary.BigEndian, int32(len(keys)))
+	if err != nil {
+		return nil, err
+	}
+	for _, k := range keys {
+		convKey := k.Convert(v.Type().Key())
+		// serialize k
+		_, err := writer.write(k.Interface(), buffer)
+		if err != nil {
+			return nil, err
+		}
+		// serialize v.MapIndex(c_key)
+		val := v.MapIndex(convKey)
+		_, err = writer.write(val.Interface(), buffer)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+	return buffer.Bytes(), nil
+}
+
+func (mapSerializer *mapSerializer) read(buffer *bytes.Buffer, reader *GraphBinaryReader) (interface{}, error) {
+	return mapSerializer.readValue(buffer, reader, true)
+}
+
+func (mapSerializer *mapSerializer) readValue(buffer *bytes.Buffer, reader *GraphBinaryReader, nullable bool) (interface{}, error) {
+	if nullable {
+		nullFlag, _ := buffer.ReadByte()
+		if (nullFlag & 1) == 1 {
+			return nil, nil
+		}
+	}
+	var size int32
+	err := binary.Read(buffer, binary.BigEndian, &size)
+	if err != nil {
+		return nil, errors.New("error in reading map length from byte buffer")
+	}
+	valMap := make(map[interface{}]interface{})
+	for i := 0; i < int(size); i++ {
+		key, err := reader.read(buffer)
+		if err != nil {
+			return nil, err
+		}
+		val, err := reader.read(buffer)
+		if err != nil {
+			return nil, err
+		}
+		valMap[key] = val
+	}
+	return valMap, nil
+}
+
+func (uuidSerializer *uuidSerializer) getDataType() DataType {
+	return UUIDType
+}
+
+func (uuidSerializer *uuidSerializer) write(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter) ([]byte, error) {
 	return uuidSerializer.writeValue(value, buffer, writer, true)
 }
 
-func (uuidSerializer *uuidSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error) {
+func (uuidSerializer *uuidSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *GraphBinaryWriter, nullable bool) ([]byte, error) {
 	if value == nil {
 		if !nullable {
 			return nil, errors.New("unexpected null value when nullable is false")
@@ -401,11 +506,11 @@ func (uuidSerializer *uuidSerializer) writeValue(value interface{}, buffer *byte
 	return buffer.Bytes(), nil
 }
 
-func (uuidSerializer *uuidSerializer) read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error) {
+func (uuidSerializer *uuidSerializer) read(buffer *bytes.Buffer, reader *GraphBinaryReader) (interface{}, error) {
 	return uuidSerializer.readValue(buffer, reader, true)
 }
 
-func (uuidSerializer *uuidSerializer) readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error) {
+func (uuidSerializer *uuidSerializer) readValue(buffer *bytes.Buffer, reader *GraphBinaryReader, nullable bool) (interface{}, error) {
 	if nullable {
 		nullFlag, _ := buffer.ReadByte()
 		if (nullFlag & 1) == 1 {
@@ -420,65 +525,4 @@ func (uuidSerializer *uuidSerializer) readValue(buffer *bytes.Buffer, reader *gr
 	}
 	val, _ := uuid.FromBytes(valBytes)
 	return val, nil
-}
-
-func (uuidSerializer *uuidSerializer) getDataType() dataType {
-	return uuidType
-}
-
-// Format: {length}{item_0}...{item_n}
-type mapSerializer struct{}
-
-func (mapSerializer *mapSerializer) write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error) {
-	return mapSerializer.writeValue(value, buffer, writer, true)
-}
-
-func (mapSerializer *mapSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error) {
-	if value == nil {
-		if !nullable {
-			return nil, errors.New("unexpected null value when nullable is false")
-		}
-		writer.writeValueFlagNull(buffer)
-		return buffer.Bytes(), nil
-	}
-
-	if nullable {
-		writer.writeValueFlagNone(buffer)
-	}
-
-	// problem with maps: currently it can only take type map[interface{}]interface{},
-	// doesn't have a super object type like java.
-	// would type assertion even work?
-	val := value.(map[interface{}]interface{})
-	binary.Write(buffer, binary.BigEndian, int32(len(val)))
-	for k, v := range val {
-		writer.writeObject(k, buffer)
-		writer.writeObject(v, buffer)
-	}
-	return buffer.Bytes(), nil
-}
-
-func (mapSerializer *mapSerializer) read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error) {
-	return mapSerializer.readValue(buffer, reader, true)
-}
-
-func (mapSerializer *mapSerializer) readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error) {
-	if nullable {
-		nullFlag, _ := buffer.ReadByte()
-		if (nullFlag & 1) == 1 {
-			return nil, nil
-		}
-	}
-	buffer.Next(3)
-	size, _ := binary.ReadUvarint(buffer)
-	valMap := make(map[interface{}]interface{})
-	fmt.Println("map size: ", size)
-	for i := 0; i < int(size); i++ {
-		valMap[reader.read(buffer)] = reader.read(buffer)
-	}
-	return valMap, nil
-}
-
-func (mapSerializer *mapSerializer) getDataType() dataType {
-	return mapType
 }

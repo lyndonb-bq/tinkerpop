@@ -43,7 +43,7 @@ type AbstractProtocol struct {
 type GremlinServerWSProtocol struct {
 	*AbstractProtocol
 
-	codec            codec.Codec
+	serializer       *codec.Serializer
 	maxContentLength int
 	username         string
 	password         string
@@ -53,13 +53,15 @@ func (protocol *AbstractProtocol) ConnectionMade(transporter *transport.Transpor
 	protocol.transporter = *transporter
 }
 
-func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSets map[string]results.ResultSet) (uint32, error) {
+func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSets map[string]results.ResultSet) (uint16, error) {
 	if message == nil {
 		return 0, errors.New("malformed ws or wss URL")
 	}
+	response, err := (*protocol.serializer).DeserializeMessage(*message)
+	if err != nil {
+		return 0, err
+	}
 
-	// TOOD: Update so pointer on other side of DeserializeMessage
-	response := (*protocol.codec.Deserializer).DeserializerMessage(*message)
 	requestId, statusCode, metadata, data := response.RequestID, response.ResponseStatus.Code,
 		response.ResponseResult.Meta, response.ResponseResult.Data
 
@@ -79,7 +81,7 @@ func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSet
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 		resultSet.AddResult(results.NewResult(data))
 		if statusCode == http.StatusOK {
-			resultSet.SetStatusAttributes(response.ResponseStatus.Attributes)
+			resultSet.SetStatusAttributes(response.Attributes)
 		}
 		return statusCode, nil
 	} else {
@@ -129,7 +131,7 @@ func (protocol *GremlinServerWSProtocol) ParseResult(message map[string]interfac
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 		// TODO AN-968: Insert data into resultSet.
 		if statusCode == http.StatusOK {
-			resultSet.SetStatusAttributes(msg["status"].(map[string]interface{})["attributes"])
+			// resultSet.SetStatusAttributes(msg["status"].(map[string]interface{})["attributes"])
 			removeResultSetsKey(resultSets, requestId)
 		}
 		return statusCode, nil
