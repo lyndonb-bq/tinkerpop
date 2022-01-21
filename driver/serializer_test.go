@@ -37,7 +37,7 @@ func TestSerializer(t *testing.T) {
 		}
 		serializer := GraphBinarySerializer{}
 		serialized, _ := serializer.SerializeMessage(&testRequest)
-		deserialized, _ := serializer.DeserializeRequestMessage(serialized)
+		deserialized, _ := serializer.deserializeRequestMessage(&serialized)
 		assert.Equal(t, testRequest, deserialized)
 	})
 
@@ -56,8 +56,8 @@ func TestSerializer(t *testing.T) {
 			},
 		}
 		serializer := GraphBinarySerializer{}
-		serialized, _ := serializer.SerializeResponseMessage(&testResponse)
-		deserialized, _ := serializer.DeserializeMessage(serialized)
+		serialized, _ := serializer.serializeResponseMessage(&testResponse)
+		deserialized, _ := serializer.DeserializeMessage(&serialized)
 		assert.Equal(t, testResponse, deserialized)
 	})
 }

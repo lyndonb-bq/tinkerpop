@@ -19,10 +19,6 @@ under the License.
 
 package gremlingo
 
-import (
-	"fmt"
-)
-
 // TODO: make sure these are constants
 const scheme = "ws"
 const path = "gremlin"
@@ -31,6 +27,7 @@ type connection struct {
 	host            string
 	port            int
 	transporterType TransporterType
+	logHandler      *logHandler
 }
 
 // TODO: refactor this when implementing full connection
@@ -40,13 +37,13 @@ func (connection *connection) submit(traversalString string) (response string, e
 
 	err = transporter.Write(traversalString)
 	if err != nil {
-		fmt.Println("Writing request failed!")
+		connection.logHandler.log(Error, writeFailed)
 		return
 	}
 
 	bytes, err := transporter.Read()
 	if err != nil {
-		fmt.Println("Reading message failed!")
+		connection.logHandler.log(Error, readFailed)
 		return
 	}
 

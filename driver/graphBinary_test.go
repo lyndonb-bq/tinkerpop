@@ -48,28 +48,40 @@ func readToValue(buff *bytes.Buffer) interface{} {
 func TestGraphBinaryV1(t *testing.T) {
 	t.Run("test simple types", func(t *testing.T) {
 		buff := bytes.Buffer{}
-		t.Run("test int", func(t *testing.T) {
-			var x int = 33000
-			writeToBuffer(x, &buff)
-			val := readToValue(&buff).(int64)
-			assert.Equal(t, x, int(val))
-		})
 		t.Run("test int32", func(t *testing.T) {
-			var x int32 = 33000
-			writeToBuffer(x, &buff)
-			assert.Equal(t, x, readToValue(&buff))
+			var int32Arr = [3]int32{-33000, 0, 33000}
+			for _, x := range int32Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
+		})
+		t.Run("test int", func(t *testing.T) {
+			var intArr = [3]int{-33000, 0, 33000}
+			for _, x := range intArr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, int(readToValue(&buff).(int64)))
+			}
+		})
+		t.Run("test uint32", func(t *testing.T) {
+			var uint32Arr = [2]uint32{0, 2247483647}
+			for _, x := range uint32Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, uint32(readToValue(&buff).(int64)))
+			}
 		})
 		t.Run("test long", func(t *testing.T) {
-			var x int64 = 2147483648
-			writeToBuffer(x, &buff)
-			assert.Equal(t, x, readToValue(&buff))
+			var int64Arr = [3]int64{-21474836489, 0, 21474836489}
+			for _, x := range int64Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
 		})
 		t.Run("test string", func(t *testing.T) {
 			var x = "serialize this!"
 			writeToBuffer(x, &buff)
 			assert.Equal(t, x, readToValue(&buff))
 		})
-		t.Run("test string", func(t *testing.T) {
+		t.Run("test uuid", func(t *testing.T) {
 			var x, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
 			writeToBuffer(x, &buff)
 			assert.Equal(t, x, readToValue(&buff))

@@ -33,8 +33,8 @@ type Serializer interface {
 
 // GraphBinarySerializer serializes/deserializes message to/from GraphBinary
 type GraphBinarySerializer struct {
-	ReaderClass GraphBinaryReader
-	WriterClass GraphBinaryWriter
+	ReaderClass *GraphBinaryReader
+	WriterClass *GraphBinaryWriter
 	MimeType    string `default:"application/vnd.graphbinary-v1.0"`
 }
 
@@ -83,10 +83,10 @@ func (gs *GraphBinarySerializer) buildMessage(request *Request, mimeLen byte, mi
 }
 
 // DeserializeMessage deserializes a response message
-func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Response, error) {
+func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage *[]byte) (Response, error) {
 	var msg Response
 	buffer := bytes.Buffer{}
-	buffer.Write(responseMessage)
+	buffer.Write(*responseMessage)
 	// version
 	_, err := buffer.ReadByte()
 	if err != nil {
@@ -133,11 +133,11 @@ func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Res
 	return msg, nil
 }
 
-// DeserializeRequestMessage deserializes a request message
-func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte) (Request, error) {
+// private function for deserializing a request message for testing purposes
+func (gs *GraphBinarySerializer) deserializeRequestMessage(requestMessage *[]byte) (Request, error) {
 	buffer := bytes.Buffer{}
 	var msg Request
-	buffer.Write(requestMessage)
+	buffer.Write(*requestMessage)
 	// skip headers
 	buffer.Next(33)
 	// version
@@ -170,8 +170,8 @@ func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte
 	return msg, nil
 }
 
-// SerializeResponseMessage serialize a response message into GraphBinary
-func (gs *GraphBinarySerializer) SerializeResponseMessage(response *Response) ([]byte, error) {
+// private function for serializing a response message for testing purposes
+func (gs *GraphBinarySerializer) serializeResponseMessage(response *Response) ([]byte, error) {
 	buffer := bytes.Buffer{}
 
 	// version
