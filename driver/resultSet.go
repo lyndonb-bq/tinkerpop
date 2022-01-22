@@ -21,13 +21,11 @@ package gremlingo
 
 const DEFAULT_CAPACITY = 1000
 
-// AN-968 Finish ResultSet implementation.
-
 // ResultSet interface to define the functions of a ResultSet.
 type ResultSet interface {
-	SetAggregateTo(val string)
+	setAggregateTo(val string)
 	GetAggregateTo() string
-	SetStatusAttributes(statusAttributes map[interface{}]interface{})
+	setStatusAttributes(statusAttributes map[interface{}]interface{})
 	GetStatusAttributes() map[interface{}]interface{}
 	GetRequestId() int
 	IsEmpty() bool
@@ -55,7 +53,7 @@ func (channelResultSet *channelResultSet) Close() {
 	channelResultSet.closed = true
 }
 
-func (channelResultSet *channelResultSet) SetAggregateTo(val string) {
+func (channelResultSet *channelResultSet) setAggregateTo(val string) {
 	channelResultSet.aggregateTo = val
 }
 
@@ -63,7 +61,7 @@ func (channelResultSet *channelResultSet) GetAggregateTo() string {
 	return channelResultSet.aggregateTo
 }
 
-func (channelResultSet *channelResultSet) SetStatusAttributes(val map[interface{}]interface{}) {
+func (channelResultSet *channelResultSet) setStatusAttributes(val map[interface{}]interface{}) {
 	channelResultSet.statusAttributes = val
 }
 

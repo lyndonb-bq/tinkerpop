@@ -34,9 +34,9 @@ func TestChannelResultSet(t *testing.T) {
 			"2": "foo",
 		}
 		testAggregateTo := "test2"
-		r.SetStatusAttributes(testStatusAttribute)
+		r.setStatusAttributes(testStatusAttribute)
 		assert.Equal(t, r.GetStatusAttributes(), testStatusAttribute)
-		r.SetAggregateTo(testAggregateTo)
+		r.setAggregateTo(testAggregateTo)
 		assert.Equal(t, r.GetAggregateTo(), testAggregateTo)
 	})
 
@@ -90,18 +90,18 @@ func TestChannelResultSet(t *testing.T) {
 func AddResultsPause(resultSet *ResultSet, count int, timeMilliseconds time.Duration) {
 	rs := *resultSet
 	for i := 0; i < count/2; i++ {
-		rs.addResult(NewResult(i))
+		rs.addResult(newResult(i))
 	}
 	time.Sleep(timeMilliseconds * time.Millisecond)
 	for i := count / 2; i < count; i++ {
-		rs.addResult(NewResult(i))
+		rs.addResult(newResult(i))
 	}
 }
 
 func AddResults(resultSet *ResultSet, count int) {
 	rs := *resultSet
 	for i := 0; i < count; i++ {
-		rs.addResult(NewResult(i))
+		rs.addResult(newResult(i))
 	}
 }
 

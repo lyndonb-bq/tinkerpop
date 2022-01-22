@@ -27,7 +27,7 @@ const (
 	Gorilla TransporterType = iota
 )
 
-func GetTransportLayer(transporterType TransporterType, host string, port int) transporter {
+func getTransportLayer(transporterType TransporterType, host string, port int) transporter {
 	switch transporterType {
 	case Gorilla:
 		return &gorillaTransporter{host: host, port: port}

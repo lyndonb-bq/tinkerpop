@@ -32,6 +32,6 @@ func (r *Result) AsString() string {
 	return fmt.Sprintf("%v", r.result)
 }
 
-func NewResult(result interface{}) *Result {
+func newResult(result interface{}) *Result {
 	return &Result{result}
 }

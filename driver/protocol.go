@@ -67,20 +67,20 @@ func (protocol *gremlinServerWSProtocol) dataReceived(message *[]byte, resultSet
 		resultSet = newChannelResultSet()
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
-		resultSet.SetAggregateTo(aggregateTo.(string))
+		resultSet.setAggregateTo(aggregateTo.(string))
 	}
 	if statusCode == http.StatusProxyAuthRequired {
 		// TODO AN-989: Implement authentication (including handshaking).
 		return 0, errors.New("authentication is not currently supported")
 	} else if statusCode == http.StatusNoContent {
 		// Add empty slice to result.
-		resultSet.addResult(NewResult(make([]interface{}, 0)))
+		resultSet.addResult(newResult(make([]interface{}, 0)))
 		return statusCode, nil
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
-		resultSet.addResult(NewResult(data))
+		resultSet.addResult(newResult(data))
 		if statusCode == http.StatusOK {
-			resultSet.SetStatusAttributes(response.responseStatus.attributes)
+			resultSet.setStatusAttributes(response.responseStatus.attributes)
 		}
 		return statusCode, nil
 	} else {

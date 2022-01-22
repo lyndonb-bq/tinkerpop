@@ -84,7 +84,7 @@ func Test(t *testing.T) {
 
 	t.Run("Test protocol connectionMade", func(t *testing.T) {
 		protocol := newGremlinServerWSProtocol()
-		transport := GetTransportLayer(Gorilla, "host", 1234)
+		transport := getTransportLayer(Gorilla, "host", 1234)
 		assert.NotPanics(t, func() { protocol.connectionMade(&transport) })
 	})
 }
