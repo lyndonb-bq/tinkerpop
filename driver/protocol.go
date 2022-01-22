@@ -22,13 +22,14 @@ package gremlingo
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 )
 
 type protocol interface {
 	connectionMade(transport *transporter)
-	dataReceived(requestID int, requestMessage *string)
-	write(message *string, results map[string]interface{})
+	dataReceived(message []byte, resultSets map[string]ResultSet) (protocolStatus, error)
+	write(message string, results map[string]ResultSet) error
 }
 
 type protocolBase struct {
@@ -41,7 +42,7 @@ type gremlinServerWSProtocol struct {
 	*protocolBase
 
 	serializer       serializer
-	loghandler       *logHandler
+	logHandler       *logHandler
 	maxContentLength int
 	username         string
 	password         string
@@ -55,7 +56,7 @@ type protocolStatus = uint16
 
 func (protocol *gremlinServerWSProtocol) dataReceived(message []byte, resultSets map[string]ResultSet) (protocolStatus, error) {
 	if message == nil {
-		protocol.loghandler.log(Error, malformedURL)
+		protocol.logHandler.log(Error, malformedURL)
 		return 0, errors.New("malformed ws or wss URL")
 	}
 	response, err := protocol.serializer.deserializeMessage(message)
@@ -68,7 +69,7 @@ func (protocol *gremlinServerWSProtocol) dataReceived(message []byte, resultSets
 
 	resultSet := resultSets[requestID.String()]
 	if resultSet == nil {
-		resultSet = newChannelResultSet()
+		resultSet = newChannelResultSet(uuid.New().String())
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSet.setAggregateTo(aggregateTo.(string))
@@ -92,10 +93,11 @@ func (protocol *gremlinServerWSProtocol) dataReceived(message []byte, resultSets
 	}
 }
 
-func (protocol *gremlinServerWSProtocol) write(requestMessage *request) error {
-	message, err := protocol.serializer.serializeMessage(requestMessage)
+func (protocol *gremlinServerWSProtocol) write(message string, results map[string]ResultSet) error {
+	request := makeStringRequest(message)
+	bytes, err := protocol.serializer.serializeMessage(&request)
 	if err == nil {
-		err = protocol.transporter.Write(message)
+		err = protocol.transporter.Write(bytes)
 	}
 	return err
 }

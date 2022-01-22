@@ -27,7 +27,7 @@ type ResultSet interface {
 	GetAggregateTo() string
 	setStatusAttributes(statusAttributes map[interface{}]interface{})
 	GetStatusAttributes() map[interface{}]interface{}
-	GetRequestID() int
+	GetRequestID() string
 	IsEmpty() bool
 	Close()
 	Channel() chan *Result
@@ -39,6 +39,7 @@ type ResultSet interface {
 // channelResultSet Channel based implementation of ResultSet.
 type channelResultSet struct {
 	channel          chan *Result
+	requestID        string
 	aggregateTo      string
 	statusAttributes map[interface{}]interface{}
 	closed           bool
@@ -69,8 +70,8 @@ func (channelResultSet *channelResultSet) GetStatusAttributes() map[interface{}]
 	return channelResultSet.statusAttributes
 }
 
-func (channelResultSet *channelResultSet) GetRequestID() int {
-	return -1
+func (channelResultSet *channelResultSet) GetRequestID() string {
+	return channelResultSet.requestID
 }
 
 func (channelResultSet *channelResultSet) Channel() chan *Result {
@@ -93,10 +94,10 @@ func (channelResultSet *channelResultSet) addResult(result *Result) {
 	channelResultSet.channel <- result
 }
 
-func newChannelResultSetCapacity(channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), "", nil, false}
+func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
+	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false}
 }
 
-func newChannelResultSet() ResultSet {
-	return newChannelResultSetCapacity(defaultCapacity)
+func newChannelResultSet(requestID string) ResultSet {
+	return newChannelResultSetCapacity(requestID, defaultCapacity)
 }

@@ -102,4 +102,5 @@ const (
 	unexpectedNull           errorKey = "UNEXPECTED_NULL_VALUE"
 	notMap                   errorKey = "NOT_MAP_TYPE"
 	malformedURL             errorKey = "MALFORMED_URL"
+	transportCloseFailed     errorKey = "TRANSPORT_CLOSE_FAILED"
 )
