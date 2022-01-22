@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package codec
+package gremlingo
 
 import "github.com/google/uuid"
 

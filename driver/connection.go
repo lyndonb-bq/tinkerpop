@@ -19,35 +19,29 @@ under the License.
 
 package gremlingo
 
-import (
-	"fmt"
-	"gremlin-go/driver/transport"
-	transport2 "gremlin-go/driver/transport"
-)
-
 type connection struct {
 	host            string
 	port            int
-	transporterType transport2.TransporterType
+	transporterType TransporterType
+	logHandler      *logHandler
 }
 
 // TODO: refactor this when implementing full connection
 func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := transport.GetTransportLayer(connection.transporterType, connection.host, connection.port)
+	transporter := GetTransportLayer(connection.transporterType, connection.host, connection.port)
 	defer transporter.Close()
 
-	err = transporter.Write(traversalString)
+	err = nil // transporter.Write(traversalString)
 	if err != nil {
-		fmt.Println("Writing request failed!")
+		connection.logHandler.log(Error, writeFailed)
 		return
 	}
 
 	bytes, err := transporter.Read()
 	if err != nil {
-		fmt.Println("Reading message failed!")
+		connection.logHandler.log(Error, readFailed)
 		return
 	}
-	uj
 
 	response = string(bytes)
 	transporter.Close()

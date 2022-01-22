@@ -17,26 +17,35 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package codec
+package gremlingo
 
-import "github.com/google/uuid"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
-// ResponseStatus contains the status info of the response
-type ResponseStatus struct {
-	Code       uint16                      `json:"code"`
-	Message    string                      `json:"message"`
-	Attributes map[interface{}]interface{} `json:"attributes"`
-}
+func TestResult(t *testing.T) {
 
-// ResponseResult contains the result info of the response
-type ResponseResult struct {
-	Meta map[interface{}]interface{} `json:"meta"`
-	Data interface{}                 `json:"data"`
-}
+	t.Run("Test Result.AsString() string", func(t *testing.T) {
+		r := Result{"foo"}
+		assert.Equal(t, r.AsString(), "foo")
+	})
 
-// Response represents a response from the server
-type Response struct {
-	RequestID      uuid.UUID      `json:"requestId"`
-	ResponseStatus ResponseStatus `json:"responseStatus"`
-	ResponseResult ResponseResult `json:"responseResult"`
+	t.Run("Test Result.AsString() slice", func(t *testing.T) {
+		r := Result{[]int{1, 2, 3}}
+		assert.Equal(t, r.AsString(), "[1 2 3]")
+
+	})
+
+	t.Run("Test Result.AsString() int", func(t *testing.T) {
+		r := Result{1}
+		assert.Equal(t, r.AsString(), "1")
+
+	})
+
+	t.Run("Test Result.AsString() float", func(t *testing.T) {
+		r := Result{1.2}
+		assert.Equal(t, r.AsString(), "1.2")
+
+	})
 }

@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package results
+package gremlingo
 
 import (
 	"fmt"
@@ -29,7 +29,10 @@ import (
 func TestChannelResultSet(t *testing.T) {
 	t.Run("Test ResultSet test getter/setters.", func(t *testing.T) {
 		r := NewChannelResultSet()
-		testStatusAttribute := "test1"
+		testStatusAttribute := map[interface{}]interface{}{
+			"1": 1234,
+			"2": "foo",
+		}
 		testAggregateTo := "test2"
 		r.SetStatusAttributes(testStatusAttribute)
 		assert.Equal(t, r.GetStatusAttributes(), testStatusAttribute)

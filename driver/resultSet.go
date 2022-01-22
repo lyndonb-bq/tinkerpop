@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package results
+package gremlingo
 
 const DEFAULT_CAPACITY = 1000
 
@@ -38,52 +38,52 @@ type ResultSet interface {
 	All() []*Result
 }
 
-// ChannelResultSet Channel based implementation of ResultSet.
-type ChannelResultSet struct {
+// channelResultSet Channel based implementation of ResultSet.
+type channelResultSet struct {
 	channel          chan *Result
 	aggregateTo      string
 	statusAttributes map[interface{}]interface{}
 	closed           bool
 }
 
-func (channelResultSet *ChannelResultSet) IsEmpty() bool {
+func (channelResultSet *channelResultSet) IsEmpty() bool {
 	return channelResultSet.closed && len(channelResultSet.channel) == 0
 }
 
-func (channelResultSet *ChannelResultSet) Close() {
+func (channelResultSet *channelResultSet) Close() {
 	close(channelResultSet.channel)
 	channelResultSet.closed = true
 }
 
-func (channelResultSet *ChannelResultSet) SetAggregateTo(val string) {
+func (channelResultSet *channelResultSet) SetAggregateTo(val string) {
 	channelResultSet.aggregateTo = val
 }
 
-func (channelResultSet *ChannelResultSet) GetAggregateTo() string {
+func (channelResultSet *channelResultSet) GetAggregateTo() string {
 	return channelResultSet.aggregateTo
 }
 
-func (channelResultSet *ChannelResultSet) SetStatusAttributes(val map[interface{}]interface{}) {
+func (channelResultSet *channelResultSet) SetStatusAttributes(val map[interface{}]interface{}) {
 	channelResultSet.statusAttributes = val
 }
 
-func (channelResultSet *ChannelResultSet) GetStatusAttributes() map[interface{}]interface{} {
+func (channelResultSet *channelResultSet) GetStatusAttributes() map[interface{}]interface{} {
 	return channelResultSet.statusAttributes
 }
 
-func (channelResultSet *ChannelResultSet) GetRequestId() int {
+func (channelResultSet *channelResultSet) GetRequestId() int {
 	return -1
 }
 
-func (channelResultSet *ChannelResultSet) Channel() chan *Result {
+func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
-func (channelResultSet *ChannelResultSet) One() *Result {
+func (channelResultSet *channelResultSet) One() *Result {
 	return <-channelResultSet.channel
 }
 
-func (channelResultSet *ChannelResultSet) All() []*Result {
+func (channelResultSet *channelResultSet) All() []*Result {
 	var results []*Result
 	for result := range channelResultSet.channel {
 		results = append(results, result)
@@ -91,12 +91,12 @@ func (channelResultSet *ChannelResultSet) All() []*Result {
 	return results
 }
 
-func (channelResultSet *ChannelResultSet) AddResult(result *Result) {
+func (channelResultSet *channelResultSet) AddResult(result *Result) {
 	channelResultSet.channel <- result
 }
 
 func NewChannelResultSetCapacity(channelSize int) ResultSet {
-	return &ChannelResultSet{make(chan *Result, channelSize), "", nil, false}
+	return &channelResultSet{make(chan *Result, channelSize), "", nil, false}
 }
 
 func NewChannelResultSet() ResultSet {

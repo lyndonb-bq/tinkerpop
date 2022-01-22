@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package transport
+package gremlingo
 
 // TransporterType is an alias for valid transport protocols.
 type TransporterType int

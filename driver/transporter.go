@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package transport
+package gremlingo
 
 type Transporter interface {
 	Connect() error
@@ -29,7 +29,6 @@ type Transporter interface {
 
 type websocketConn interface {
 	WriteMessage(int, []byte) error
-	WriteJSON(interface{}) error
 	ReadMessage() (int, []byte, error)
 	Close() error
 }

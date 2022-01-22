@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package codec
+package gremlingo
 
 import (
 	"bytes"
@@ -25,23 +25,23 @@ import (
 	"github.com/google/uuid"
 )
 
-// Serializer interface for serializers
-type Serializer interface {
+// serializer interface for serializers
+type serializer interface {
 	SerializeMessage(request *Request) ([]byte, error)
-	DeserializeMessage(message []byte) (Response, error)
+	DeserializeMessage(message []byte) (response, error)
 }
 
-// GraphBinarySerializer serializes/deserializes message to/from GraphBinary
-type GraphBinarySerializer struct {
-	ReaderClass GraphBinaryReader
-	WriterClass GraphBinaryWriter
+// graphBinarySerializer serializes/deserializes message to/from GraphBinary
+type graphBinarySerializer struct {
+	ReaderClass *GraphBinaryReader
+	WriterClass *GraphBinaryWriter
 	MimeType    string `default:"application/vnd.graphbinary-v1.0"`
 }
 
 const versionByte byte = 0x81
 
-// SerializeMessage serializes a request message into GraphBinary
-func (gs *GraphBinarySerializer) SerializeMessage(request *Request) ([]byte, error) {
+// serializeMessage serializes a request message into GraphBinary
+func (gs *graphBinarySerializer) serializeMessage(request *Request) ([]byte, error) {
 	gs.MimeType = "application/vnd.graphbinary-v1.0"
 	finalMessage, err := gs.buildMessage(request, 0x20, gs.MimeType)
 	if err != nil {
@@ -50,7 +50,7 @@ func (gs *GraphBinarySerializer) SerializeMessage(request *Request) ([]byte, err
 	return finalMessage, nil
 }
 
-func (gs *GraphBinarySerializer) buildMessage(request *Request, mimeLen byte, mimeType string) ([]byte, error) {
+func (gs *graphBinarySerializer) buildMessage(request *Request, mimeLen byte, mimeType string) ([]byte, error) {
 	buffer := bytes.Buffer{}
 
 	// mime header
@@ -58,7 +58,7 @@ func (gs *GraphBinarySerializer) buildMessage(request *Request, mimeLen byte, mi
 	buffer.WriteString(mimeType)
 	// version
 	buffer.WriteByte(versionByte)
-	// RequestID
+	// requestID
 	_, err := gs.WriterClass.writeValue(request.RequestID, &buffer, false)
 	if err != nil {
 		return nil, err
@@ -83,10 +83,10 @@ func (gs *GraphBinarySerializer) buildMessage(request *Request, mimeLen byte, mi
 }
 
 // DeserializeMessage deserializes a response message
-func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Response, error) {
-	var msg Response
+func (gs *graphBinarySerializer) DeserializeMessage(responseMessage *[]byte) (response, error) {
+	var msg response
 	buffer := bytes.Buffer{}
-	buffer.Write(responseMessage)
+	buffer.Write(*responseMessage)
 	// version
 	_, err := buffer.ReadByte()
 	if err != nil {
@@ -102,7 +102,7 @@ func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Res
 	if err != nil {
 		return msg, err
 	}
-	// Nullable Status Message
+	// Nullable Status message
 	msgMsg, err := gs.ReaderClass.readValue(&buffer, byte(StringType), true)
 	if err != nil {
 		return msg, err
@@ -112,32 +112,32 @@ func (gs *GraphBinarySerializer) DeserializeMessage(responseMessage []byte) (Res
 	if err != nil {
 		return msg, err
 	}
-	// Result Meta
+	// Result meta
 	msgMeta, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
 	if err != nil {
 		return msg, err
 	}
-	// Result Data
+	// Result data
 	msgData, err := gs.ReaderClass.read(&buffer)
 	if err != nil {
 		return msg, err
 	}
 
-	msg.RequestID = msgUUID.(uuid.UUID)
-	msg.ResponseStatus.Code = uint16(msgCode.(int32))
-	msg.ResponseStatus.Message = msgMsg.(string)
-	msg.ResponseStatus.Attributes = msgAttr.(map[interface{}]interface{})
-	msg.ResponseResult.Meta = msgMeta.(map[interface{}]interface{})
-	msg.ResponseResult.Data = msgData
+	msg.requestID = msgUUID.(uuid.UUID)
+	msg.responseStatus.code = uint16(msgCode.(int32))
+	msg.responseStatus.message = msgMsg.(string)
+	msg.responseStatus.attributes = msgAttr.(map[interface{}]interface{})
+	msg.responseResult.meta = msgMeta.(map[interface{}]interface{})
+	msg.responseResult.data = msgData
 
 	return msg, nil
 }
 
-// DeserializeRequestMessage deserializes a request message
-func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte) (Request, error) {
+// private function for deserializing a request message for testing purposes
+func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byte) (Request, error) {
 	buffer := bytes.Buffer{}
 	var msg Request
-	buffer.Write(requestMessage)
+	buffer.Write(*requestMessage)
 	// skip headers
 	buffer.Next(33)
 	// version
@@ -170,40 +170,40 @@ func (gs *GraphBinarySerializer) DeserializeRequestMessage(requestMessage []byte
 	return msg, nil
 }
 
-// SerializeResponseMessage serialize a response message into GraphBinary
-func (gs *GraphBinarySerializer) SerializeResponseMessage(response *Response) ([]byte, error) {
+// private function for serializing a response message for testing purposes
+func (gs *graphBinarySerializer) serializeResponseMessage(response *response) ([]byte, error) {
 	buffer := bytes.Buffer{}
 
 	// version
 	buffer.WriteByte(versionByte)
 
-	// RequestID
-	_, err := gs.WriterClass.writeValue(response.RequestID, &buffer, true)
+	// requestID
+	_, err := gs.WriterClass.writeValue(response.requestID, &buffer, true)
 	if err != nil {
 		return nil, err
 	}
 	// Status Code
-	_, err = gs.WriterClass.writeValue(response.ResponseStatus.Code, &buffer, false)
+	_, err = gs.WriterClass.writeValue(response.responseStatus.code, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
-	// Status Message
-	_, err = gs.WriterClass.writeValue(response.ResponseStatus.Message, &buffer, true)
+	// Status message
+	_, err = gs.WriterClass.writeValue(response.responseStatus.message, &buffer, true)
 	if err != nil {
 		return nil, err
 	}
-	// Status Attributes
-	_, err = gs.WriterClass.writeValue(response.ResponseStatus.Attributes, &buffer, false)
+	// Status attributes
+	_, err = gs.WriterClass.writeValue(response.responseStatus.attributes, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
-	// Result Meta
-	_, err = gs.WriterClass.writeValue(response.ResponseResult.Meta, &buffer, false)
+	// Result meta
+	_, err = gs.WriterClass.writeValue(response.responseResult.meta, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Result
-	_, err = gs.WriterClass.write(response.ResponseResult.Data, &buffer)
+	_, err = gs.WriterClass.write(response.responseResult.data, &buffer)
 	if err != nil {
 		return nil, err
 	}

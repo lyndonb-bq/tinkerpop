@@ -17,21 +17,18 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package protocol
+package gremlingo
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gremlin-go/driver/results"
 	"testing"
 )
 
-// TODO: remove this file when sandbox is no longer needed
 func Test(t *testing.T) {
-
 	t.Run("Test DataReceived nil message", func(t *testing.T) {
 		protocol := NewGremlinServerWSProtocol()
-		statusCode, err := protocol.DataReceived(nil, map[string]results.ResultSet{})
-		assert.Equal(t, 0, statusCode)
+		statusCode, err := protocol.DataReceived(nil, map[string]ResultSet{})
+		assert.Equal(t, uint16(0), statusCode)
 		assert.Nil(t, err)
 	})
 
@@ -41,7 +38,5 @@ func Test(t *testing.T) {
 	})
 
 	t.Run("Test Protocol Connection Made", func(t *testing.T) {
-		protocol := NewGremlinServerWSProtocol()
-		protocol.DataReceived(nil, nil)
 	})
 }
