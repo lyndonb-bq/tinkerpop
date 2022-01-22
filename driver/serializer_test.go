@@ -57,7 +57,7 @@ func TestSerializer(t *testing.T) {
 		}
 		serializer := graphBinarySerializer{}
 		serialized, _ := serializer.serializeResponseMessage(&testResponse)
-		deserialized, _ := serializer.DeserializeMessage(&serialized)
+		deserialized, _ := serializer.deserializeMessage(&serialized)
 		assert.Equal(t, testResponse, deserialized)
 	})
 }

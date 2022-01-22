@@ -19,7 +19,7 @@ under the License.
 
 package gremlingo
 
-type Transporter interface {
+type transporter interface {
 	Connect() error
 	Write(data []byte) error
 	Read() ([]byte, error)

@@ -28,7 +28,7 @@ import (
 
 func TestChannelResultSet(t *testing.T) {
 	t.Run("Test ResultSet test getter/setters.", func(t *testing.T) {
-		r := NewChannelResultSet()
+		r := newChannelResultSet()
 		testStatusAttribute := map[interface{}]interface{}{
 			"1": 1234,
 			"2": "foo",
@@ -41,43 +41,43 @@ func TestChannelResultSet(t *testing.T) {
 	})
 
 	t.Run("Test ResultSet Close.", func(t *testing.T) {
-		channelResultSet := NewChannelResultSet()
+		channelResultSet := newChannelResultSet()
 		assert.NotPanics(t, func() { channelResultSet.Close() })
 	})
 
-	t.Run("Test ResultSet One.", func(t *testing.T) {
-		channelResultSet := NewChannelResultSet()
+	t.Run("Test ResultSet one.", func(t *testing.T) {
+		channelResultSet := newChannelResultSet()
 		AddResults(&channelResultSet, 10)
 		idx := 0
 		for i := 0; i < 10; i++ {
-			result := channelResultSet.One()
+			result := channelResultSet.one()
 			assert.Equal(t, result.AsString(), fmt.Sprintf("%v", idx))
 			idx++
 		}
 		go closeAfterTime(500, &channelResultSet)
-		assert.Nil(t, channelResultSet.One())
+		assert.Nil(t, channelResultSet.one())
 	})
 
-	t.Run("Test ResultSet One Paused.", func(t *testing.T) {
-		channelResultSet := NewChannelResultSet()
+	t.Run("Test ResultSet one Paused.", func(t *testing.T) {
+		channelResultSet := newChannelResultSet()
 		go AddResultsPause(&channelResultSet, 10, 500)
 		idx := 0
 		for i := 0; i < 10; i++ {
-			result := channelResultSet.One()
+			result := channelResultSet.one()
 			assert.Equal(t, result.AsString(), fmt.Sprintf("%v", idx))
 			idx++
 		}
 		go closeAfterTime(500, &channelResultSet)
-		assert.Nil(t, channelResultSet.One())
+		assert.Nil(t, channelResultSet.one())
 	})
 
-	t.Run("Test ResultSet One Close.", func(t *testing.T) {
-		channelResultSet := NewChannelResultSet()
+	t.Run("Test ResultSet one Close.", func(t *testing.T) {
+		channelResultSet := newChannelResultSet()
 		channelResultSet.Close()
 	})
 
 	t.Run("Test ResultSet All.", func(t *testing.T) {
-		channelResultSet := NewChannelResultSet()
+		channelResultSet := newChannelResultSet()
 		AddResults(&channelResultSet, 10)
 		go closeAfterTime(500, &channelResultSet)
 		results := channelResultSet.All()
@@ -90,18 +90,18 @@ func TestChannelResultSet(t *testing.T) {
 func AddResultsPause(resultSet *ResultSet, count int, timeMilliseconds time.Duration) {
 	rs := *resultSet
 	for i := 0; i < count/2; i++ {
-		rs.AddResult(NewResult(i))
+		rs.addResult(NewResult(i))
 	}
 	time.Sleep(timeMilliseconds * time.Millisecond)
 	for i := count / 2; i < count; i++ {
-		rs.AddResult(NewResult(i))
+		rs.addResult(NewResult(i))
 	}
 }
 
 func AddResults(resultSet *ResultSet, count int) {
 	rs := *resultSet
 	for i := 0; i < count; i++ {
-		rs.AddResult(NewResult(i))
+		rs.addResult(NewResult(i))
 	}
 }
 

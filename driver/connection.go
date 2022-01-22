@@ -31,7 +31,7 @@ func (connection *connection) submit(traversalString string) (response string, e
 	transporter := GetTransportLayer(connection.transporterType, connection.host, connection.port)
 	defer transporter.Close()
 
-	err = nil // transporter.Write(traversalString)
+	err = nil // transporter.write(traversalString)
 	if err != nil {
 		connection.logHandler.log(Error, writeFailed)
 		return

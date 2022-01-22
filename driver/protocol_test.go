@@ -20,23 +20,71 @@ under the License.
 package gremlingo
 
 import (
+	"errors"
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
 func Test(t *testing.T) {
-	t.Run("Test DataReceived nil message", func(t *testing.T) {
-		protocol := NewGremlinServerWSProtocol()
-		statusCode, err := protocol.DataReceived(nil, map[string]ResultSet{})
+	t.Run("Test dataReceived nil message", func(t *testing.T) {
+		protocol := newGremlinServerWSProtocol()
+		statusCode, err := protocol.dataReceived(nil, map[string]ResultSet{})
 		assert.Equal(t, uint16(0), statusCode)
+		assert.Equal(t, err, errors.New("malformed ws or wss URL"))
+	})
+
+	t.Run("Test dataReceived actual message", func(t *testing.T) {
+		protocol := newGremlinServerWSProtocol()
+		data := map[interface{}]interface{}{"data_key": "data_val"}
+		var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
+		resultSets := map[string]ResultSet{}
+		resultSet := newChannelResultSet()
+		resultSets[u.String()] = resultSet
+		testResponseStatusOK := response{
+			requestID: u,
+			responseStatus: responseStatus{
+				code:       http.StatusOK,
+				message:    "",
+				attributes: map[interface{}]interface{}{"attr_key": "attr_val"},
+			},
+			responseResult: responseResult{
+				data: data,
+				meta: map[interface{}]interface{}{"meta_key": "meta_val"},
+			},
+		}
+		testResponseStatusNoContent := response{
+			requestID: u,
+			responseStatus: responseStatus{
+				code:       http.StatusNoContent,
+				message:    "",
+				attributes: map[interface{}]interface{}{"attr_key": "attr_val"},
+			},
+			responseResult: responseResult{},
+		}
+		serializer := graphBinarySerializer{}
+		message, err := serializer.serializeResponseMessage(&testResponseStatusOK)
 		assert.Nil(t, err)
+		code, err := protocol.dataReceived(&message, resultSets)
+		assert.Nil(t, err)
+		assert.Equal(t, uint16(http.StatusOK), code)
+
+		message, err = serializer.serializeResponseMessage(&testResponseStatusNoContent)
+		code, err = protocol.dataReceived(&message, resultSets)
+		assert.Nil(t, err)
+		assert.Equal(t, uint16(http.StatusNoContent), code)
+
+		result1 := resultSet.one()
+		assert.Equal(t, fmt.Sprintf("%v", data), result1.AsString())
+		result2 := resultSet.one()
+		assert.Equal(t, fmt.Sprintf("%v", make([]interface{}, 0)), result2.AsString())
 	})
 
-	t.Run("Test DataReceived nil message", func(t *testing.T) {
-		protocol := NewGremlinServerWSProtocol()
-		protocol.DataReceived(nil, nil)
-	})
-
-	t.Run("Test Protocol Connection Made", func(t *testing.T) {
+	t.Run("Test protocol connectionMade", func(t *testing.T) {
+		protocol := newGremlinServerWSProtocol()
+		transport := GetTransportLayer(Gorilla, "host", 1234)
+		assert.NotPanics(t, func() { protocol.connectionMade(&transport) })
 	})
 }

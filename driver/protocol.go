@@ -25,36 +25,36 @@ import (
 	"net/http"
 )
 
-type Protocol interface {
-	connectionMade(transport *string)
+type protocol interface {
+	connectionMade(transport *transporter)
 	dataReceived(requestId int, requestMessage *string)
 	write(message *string, results map[string]interface{})
 }
 
-type AbstractProtocol struct {
-	Protocol
+type abstractProtocol struct {
+	protocol
 
-	transporter Transporter
+	transporter transporter
 }
 
-type GremlinServerWSProtocol struct {
-	*AbstractProtocol
+type gremlinServerWSProtocol struct {
+	*abstractProtocol
 
-	serializer       *serializer
+	serializer       serializer
 	maxContentLength int
 	username         string
 	password         string
 }
 
-func (protocol *AbstractProtocol) ConnectionMade(transporter *Transporter) {
+func (protocol *abstractProtocol) connectionMade(transporter *transporter) {
 	protocol.transporter = *transporter
 }
 
-func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSets map[string]ResultSet) (uint16, error) {
+func (protocol *gremlinServerWSProtocol) dataReceived(message *[]byte, resultSets map[string]ResultSet) (uint16, error) {
 	if message == nil {
 		return 0, errors.New("malformed ws or wss URL")
 	}
-	response, err := (*protocol.serializer).DeserializeMessage(*message)
+	response, err := protocol.serializer.deserializeMessage(message)
 	if err != nil {
 		return 0, err
 	}
@@ -64,7 +64,7 @@ func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSet
 
 	resultSet := resultSets[requestId.String()]
 	if resultSet == nil {
-		resultSet = NewChannelResultSet()
+		resultSet = newChannelResultSet()
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSet.SetAggregateTo(aggregateTo.(string))
@@ -74,11 +74,11 @@ func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSet
 		return 0, errors.New("authentication is not currently supported")
 	} else if statusCode == http.StatusNoContent {
 		// Add empty slice to result.
-		resultSet.AddResult(NewResult(make([]interface{}, 0)))
+		resultSet.addResult(NewResult(make([]interface{}, 0)))
 		return statusCode, nil
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
-		resultSet.AddResult(NewResult(data))
+		resultSet.addResult(NewResult(data))
 		if statusCode == http.StatusOK {
 			resultSet.SetStatusAttributes(response.responseStatus.attributes)
 		}
@@ -88,16 +88,17 @@ func (protocol *GremlinServerWSProtocol) DataReceived(message *[]byte, resultSet
 	}
 }
 
-func (protocol *GremlinServerWSProtocol) Write(requestMessage *Request) error {
-	message, err := (*protocol.serializer).SerializeMessage(requestMessage)
+func (protocol *gremlinServerWSProtocol) write(requestMessage *Request) error {
+	message, err := protocol.serializer.serializeMessage(requestMessage)
 	if err == nil {
 		err = protocol.transporter.Write(message)
 	}
 	return err
 }
 
-func NewGremlinServerWSProtocol() *GremlinServerWSProtocol {
-	ap := &AbstractProtocol{}
-	protocol := &GremlinServerWSProtocol{ap, nil, 1, "", ""}
+func newGremlinServerWSProtocol() *gremlinServerWSProtocol {
+	ap := &abstractProtocol{}
+
+	protocol := &gremlinServerWSProtocol{ap, NewGraphBinarySerializer(), 1, "", ""}
 	return protocol
 }

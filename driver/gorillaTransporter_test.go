@@ -61,7 +61,7 @@ func TestGorillaTransporter(t *testing.T) {
 			isClosed:   false,
 		}
 
-		t.Run("Write", func(t *testing.T) {
+		t.Run("write", func(t *testing.T) {
 			mockConn.On("WriteMessage", 2, make([]byte, 10)).Return(nil)
 			err := transporter.Write(make([]byte, 10))
 			assert.Nil(t, err)
@@ -94,7 +94,7 @@ func TestGorillaTransporter(t *testing.T) {
 			isClosed:   false,
 		}
 
-		t.Run("Write", func(t *testing.T) {
+		t.Run("write", func(t *testing.T) {
 			mockConn.On("WriteMessage", 2, make([]byte, 10)).Return(errors.New(mockWriteErrMessage))
 			err := transporter.Write(make([]byte, 10))
 			assert.NotNil(t, err)

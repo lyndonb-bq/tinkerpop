@@ -27,23 +27,27 @@ import (
 
 // serializer interface for serializers
 type serializer interface {
-	SerializeMessage(request *Request) ([]byte, error)
-	DeserializeMessage(message []byte) (response, error)
+	serializeMessage(request *Request) ([]byte, error)
+	deserializeMessage(message *[]byte) (response, error)
 }
 
 // graphBinarySerializer serializes/deserializes message to/from GraphBinary
 type graphBinarySerializer struct {
-	ReaderClass *GraphBinaryReader
-	WriterClass *GraphBinaryWriter
-	MimeType    string `default:"application/vnd.graphbinary-v1.0"`
+	readerClass *GraphBinaryReader
+	writerClass *GraphBinaryWriter
+	mimeType    string `default:"application/vnd.graphbinary-v1.0"`
+}
+
+func NewGraphBinarySerializer() serializer {
+	return graphBinarySerializer{}
 }
 
 const versionByte byte = 0x81
 
 // serializeMessage serializes a request message into GraphBinary
-func (gs *graphBinarySerializer) serializeMessage(request *Request) ([]byte, error) {
-	gs.MimeType = "application/vnd.graphbinary-v1.0"
-	finalMessage, err := gs.buildMessage(request, 0x20, gs.MimeType)
+func (gs graphBinarySerializer) serializeMessage(request *Request) ([]byte, error) {
+	gs.mimeType = "application/vnd.graphbinary-v1.0"
+	finalMessage, err := gs.buildMessage(request, 0x20, gs.mimeType)
 	if err != nil {
 		return nil, err
 	}
@@ -59,22 +63,22 @@ func (gs *graphBinarySerializer) buildMessage(request *Request, mimeLen byte, mi
 	// version
 	buffer.WriteByte(versionByte)
 	// requestID
-	_, err := gs.WriterClass.writeValue(request.RequestID, &buffer, false)
+	_, err := gs.writerClass.writeValue(request.RequestID, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Op
-	_, err = gs.WriterClass.writeValue(request.Op, &buffer, false)
+	_, err = gs.writerClass.writeValue(request.Op, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Processor
-	_, err = gs.WriterClass.writeValue(request.Processor, &buffer, false)
+	_, err = gs.writerClass.writeValue(request.Processor, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Args
-	_, err = gs.WriterClass.writeValue(request.Args, &buffer, false)
+	_, err = gs.writerClass.writeValue(request.Args, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +86,8 @@ func (gs *graphBinarySerializer) buildMessage(request *Request, mimeLen byte, mi
 	return buffer.Bytes(), nil
 }
 
-// DeserializeMessage deserializes a response message
-func (gs *graphBinarySerializer) DeserializeMessage(responseMessage *[]byte) (response, error) {
+// deserializeMessage deserializes a response message
+func (gs graphBinarySerializer) deserializeMessage(responseMessage *[]byte) (response, error) {
 	var msg response
 	buffer := bytes.Buffer{}
 	buffer.Write(*responseMessage)
@@ -93,32 +97,32 @@ func (gs *graphBinarySerializer) DeserializeMessage(responseMessage *[]byte) (re
 		return msg, err
 	}
 	// UUID
-	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UUIDType), true)
+	msgUUID, err := gs.readerClass.readValue(&buffer, byte(UUIDType), true)
 	if err != nil {
 		return msg, err
 	}
 	// Status Code
-	msgCode, err := gs.ReaderClass.readValue(&buffer, byte(IntType), false)
+	msgCode, err := gs.readerClass.readValue(&buffer, byte(IntType), false)
 	if err != nil {
 		return msg, err
 	}
 	// Nullable Status message
-	msgMsg, err := gs.ReaderClass.readValue(&buffer, byte(StringType), true)
+	msgMsg, err := gs.readerClass.readValue(&buffer, byte(StringType), true)
 	if err != nil {
 		return msg, err
 	}
 	// Status Attribute
-	msgAttr, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
+	msgAttr, err := gs.readerClass.readValue(&buffer, byte(MapType), false)
 	if err != nil {
 		return msg, err
 	}
 	// Result meta
-	msgMeta, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
+	msgMeta, err := gs.readerClass.readValue(&buffer, byte(MapType), false)
 	if err != nil {
 		return msg, err
 	}
 	// Result data
-	msgData, err := gs.ReaderClass.read(&buffer)
+	msgData, err := gs.readerClass.read(&buffer)
 	if err != nil {
 		return msg, err
 	}
@@ -145,19 +149,19 @@ func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byt
 	if err != nil {
 		return msg, err
 	}
-	msgUUID, err := gs.ReaderClass.readValue(&buffer, byte(UUIDType), false)
+	msgUUID, err := gs.readerClass.readValue(&buffer, byte(UUIDType), false)
 	if err != nil {
 		return msg, err
 	}
-	msgOp, err := gs.ReaderClass.readValue(&buffer, byte(StringType), false)
+	msgOp, err := gs.readerClass.readValue(&buffer, byte(StringType), false)
 	if err != nil {
 		return msg, err
 	}
-	msgProc, err := gs.ReaderClass.readValue(&buffer, byte(StringType), false)
+	msgProc, err := gs.readerClass.readValue(&buffer, byte(StringType), false)
 	if err != nil {
 		return msg, err
 	}
-	msgArgs, err := gs.ReaderClass.readValue(&buffer, byte(MapType), false)
+	msgArgs, err := gs.readerClass.readValue(&buffer, byte(MapType), false)
 	if err != nil {
 		return msg, err
 	}
@@ -178,32 +182,32 @@ func (gs *graphBinarySerializer) serializeResponseMessage(response *response) ([
 	buffer.WriteByte(versionByte)
 
 	// requestID
-	_, err := gs.WriterClass.writeValue(response.requestID, &buffer, true)
+	_, err := gs.writerClass.writeValue(response.requestID, &buffer, true)
 	if err != nil {
 		return nil, err
 	}
 	// Status Code
-	_, err = gs.WriterClass.writeValue(response.responseStatus.code, &buffer, false)
+	_, err = gs.writerClass.writeValue(response.responseStatus.code, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Status message
-	_, err = gs.WriterClass.writeValue(response.responseStatus.message, &buffer, true)
+	_, err = gs.writerClass.writeValue(response.responseStatus.message, &buffer, true)
 	if err != nil {
 		return nil, err
 	}
 	// Status attributes
-	_, err = gs.WriterClass.writeValue(response.responseStatus.attributes, &buffer, false)
+	_, err = gs.writerClass.writeValue(response.responseStatus.attributes, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Result meta
-	_, err = gs.WriterClass.writeValue(response.responseResult.meta, &buffer, false)
+	_, err = gs.writerClass.writeValue(response.responseResult.meta, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Result
-	_, err = gs.WriterClass.write(response.responseResult.data, &buffer)
+	_, err = gs.writerClass.write(response.responseResult.data, &buffer)
 	if err != nil {
 		return nil, err
 	}

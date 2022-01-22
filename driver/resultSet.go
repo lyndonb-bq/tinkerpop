@@ -33,8 +33,8 @@ type ResultSet interface {
 	IsEmpty() bool
 	Close()
 	Channel() chan *Result
-	AddResult(result *Result)
-	One() *Result
+	addResult(result *Result)
+	one() *Result
 	All() []*Result
 }
 
@@ -79,7 +79,7 @@ func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
-func (channelResultSet *channelResultSet) One() *Result {
+func (channelResultSet *channelResultSet) one() *Result {
 	return <-channelResultSet.channel
 }
 
@@ -91,14 +91,14 @@ func (channelResultSet *channelResultSet) All() []*Result {
 	return results
 }
 
-func (channelResultSet *channelResultSet) AddResult(result *Result) {
+func (channelResultSet *channelResultSet) addResult(result *Result) {
 	channelResultSet.channel <- result
 }
 
-func NewChannelResultSetCapacity(channelSize int) ResultSet {
+func newChannelResultSetCapacity(channelSize int) ResultSet {
 	return &channelResultSet{make(chan *Result, channelSize), "", nil, false}
 }
 
-func NewChannelResultSet() ResultSet {
-	return NewChannelResultSetCapacity(DEFAULT_CAPACITY)
+func newChannelResultSet() ResultSet {
+	return newChannelResultSetCapacity(DEFAULT_CAPACITY)
 }
