@@ -19,7 +19,7 @@ under the License.
 
 package gremlingo
 
-const DEFAULT_CAPACITY = 1000
+const defaultCapacity = 1000
 
 // ResultSet interface to define the functions of a ResultSet.
 type ResultSet interface {
@@ -98,5 +98,5 @@ func newChannelResultSetCapacity(channelSize int) ResultSet {
 }
 
 func newChannelResultSet() ResultSet {
-	return newChannelResultSetCapacity(DEFAULT_CAPACITY)
+	return newChannelResultSetCapacity(defaultCapacity)
 }

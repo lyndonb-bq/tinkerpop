@@ -27,7 +27,7 @@ import (
 
 type protocol interface {
 	connectionMade(transport *transporter)
-	dataReceived(requestId int, requestMessage *string)
+	dataReceived(requestID int, requestMessage *string)
 	write(message *string, results map[string]interface{})
 }
 
@@ -59,10 +59,10 @@ func (protocol *gremlinServerWSProtocol) dataReceived(message *[]byte, resultSet
 		return 0, err
 	}
 
-	requestId, statusCode, metadata, data := response.requestID, response.responseStatus.code,
+	requestID, statusCode, metadata, data := response.requestID, response.responseStatus.code,
 		response.responseResult.meta, response.responseResult.data
 
-	resultSet := resultSets[requestId.String()]
+	resultSet := resultSets[requestID.String()]
 	if resultSet == nil {
 		resultSet = newChannelResultSet()
 	}
@@ -99,6 +99,6 @@ func (protocol *gremlinServerWSProtocol) write(requestMessage *Request) error {
 func newGremlinServerWSProtocol() *gremlinServerWSProtocol {
 	ap := &abstractProtocol{}
 
-	protocol := &gremlinServerWSProtocol{ap, NewGraphBinarySerializer(), 1, "", ""}
+	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(), 1, "", ""}
 	return protocol
 }

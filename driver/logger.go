@@ -101,5 +101,4 @@ const (
 	unmatchedDataType        errorKey = "UNMATCHED_DATATYPE"
 	unexpectedNull           errorKey = "UNEXPECTED_NULL_VALUE"
 	notMap                   errorKey = "NOT_MAP_TYPE"
-	incorrectWebsocketUrl    errorKey = "INCORRECT_WEBSOCKET_URL"
 )

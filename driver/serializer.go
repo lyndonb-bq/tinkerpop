@@ -38,7 +38,7 @@ type graphBinarySerializer struct {
 	mimeType    string `default:"application/vnd.graphbinary-v1.0"`
 }
 
-func NewGraphBinarySerializer() serializer {
+func newGraphBinarySerializer() serializer {
 	return graphBinarySerializer{}
 }
 

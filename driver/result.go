@@ -28,6 +28,7 @@ type Result struct {
 	result interface{}
 }
 
+// AsString returns the current Result formatted as a string.
 func (r *Result) AsString() string {
 	return fmt.Sprintf("%v", r.result)
 }
