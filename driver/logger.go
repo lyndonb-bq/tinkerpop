@@ -66,10 +66,6 @@ type logHandler struct {
 	localizer *i18n.Localizer
 }
 
-func newDefaultLogHandler() *logHandler {
-	return newLogHandler(&defaultLogger{}, Info, language.English)
-}
-
 func newLogHandler(logger Logger, verbosity LogVerbosity, locale language.Tag) *logHandler {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
@@ -105,4 +101,5 @@ const (
 	unmatchedDataType        errorKey = "UNMATCHED_DATATYPE"
 	unexpectedNull           errorKey = "UNEXPECTED_NULL_VALUE"
 	notMap                   errorKey = "NOT_MAP_TYPE"
+	malformedURL             errorKey = "MALFORMED_URL"
 )

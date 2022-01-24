@@ -7,4 +7,5 @@
   "UNMATCHED_DATATYPE": "Datatype read from input buffer different from requested datatype.",
   "UNEXPECTED_NULL_VALUE": "Unexpected null value to write when value is not nullable.",
   "NOT_MAP_TYPE": "Did not get the expected map type as input.",
+  "MALFORMED_URL": "Malformed ws or wss URL."
 }

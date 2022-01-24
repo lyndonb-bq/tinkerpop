@@ -41,7 +41,7 @@ func TestChannelResultSet(t *testing.T) {
 		assert.Equal(t, r.GetAggregateTo(), testAggregateTo)
 	})
 
-	t.Run("Test ResultSet Close.", func(t *testing.T) {
+	t.Run("Test ResultSet close.", func(t *testing.T) {
 		channelResultSet := newChannelResultSet()
 		assert.NotPanics(t, func() { channelResultSet.Close() })
 	})
@@ -72,7 +72,7 @@ func TestChannelResultSet(t *testing.T) {
 		assert.Nil(t, channelResultSet.one())
 	})
 
-	t.Run("Test ResultSet one Close.", func(t *testing.T) {
+	t.Run("Test ResultSet one close.", func(t *testing.T) {
 		channelResultSet := newChannelResultSet()
 		channelResultSet.Close()
 	})
