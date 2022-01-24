@@ -1,3 +1,6 @@
+NOTE that versions suffixed with "-rc" are considered release candidates (i.e. pre-alpha, alpha, beta, etc.) and thus
+for early testing purposes only.
+
 <!--
 
  Licensed to the Apache Software Foundation (ASF) under one
@@ -86,8 +89,7 @@ TODO: Add Go code for Find Vertices.
 TODO: Add Go code for Update Vertex.
 -->
 
-NOTE that versions suffixed with "-rc" are considered release candidates (i.e. pre-alpha, alpha, beta, etc.) and thus 
-for early testing purposes only.
+
 
 ## Test Coverage
 
