@@ -19,6 +19,9 @@
 
 -->
 
+# Getting Started
+<!-- TODO: Fill this section in with instructions on how to try it out. -->
+
 # Go Gremlin Language Variant
 
 [Apache TinkerPop™][tk] is a graph computing framework for both graph databases (OLTP) and graph analytic systems
@@ -26,10 +29,11 @@
 data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's
 property graph.
 
-<!--
-TODO: Add gremlin specific details for following paragraph.
--->
-Gremlin-Go implements Gremlin within the Go language.
+Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. Go's syntax 
+has the same constructs as Java including "dot notation" for function chaining (a.b.c), round bracket function arguments
+(a(b,c)), and support for global namespaces (a(b()) vs a(__.b())). One important distinction with Go and Java is that 
+the functions are capitalized, as is required to export functions is Go. As such, anyone familiar with Gremlin-Java 
+will immediately be able to work with Gremlin-Go.
 
 Gremlin-Go is designed to connect to a "server" that is hosting a TinkerPop-enabled graph system. That "server"
 could be [Gremlin Server][gs] or a [remote Gremlin provider][rgp] that exposes protocols by which Gremlin-Go
@@ -37,14 +41,12 @@ can connect.
 
 A typical connection to a server running on "localhost" that supports the Gremlin Server protocol using websockets
 looks like this:
-
 <!--
 TODO: Add Go code example of connection to server.
 -->
 
 Once "g" has been created using a connection, it is then possible to start writing Gremlin traversals to query the
 remote graph:
-
 <!--
 TODO: Add Go code example of a Gremlin traversal query.
 -->
@@ -52,7 +54,6 @@ TODO: Add Go code example of a Gremlin traversal query.
 # The following material is currently Work-in-progress: 
 
 ## Sample Traversals
-
 <!--
 TODO: Add Go specific changes to following paragraph:
 examples:
@@ -76,13 +77,11 @@ TODO: Add Go code to create a vertex.
 -->
 
 ### Find Vertices
-
 <!--
 TODO: Add Go code for Find Vertices.
 -->
 
 ### Update Vertex
-
 <!--
 TODO: Add Go code for Update Vertex.
 -->
