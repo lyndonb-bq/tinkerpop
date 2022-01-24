@@ -54,9 +54,16 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 	return client
 }
 
-// Submit a Gremlin traversal string to execute.
-func (client *Client) Submit(traversalString string) (string, error) {
+func (client *Client) Close() {
+}
+
+func (client *Client) SubmitAsync(traversalString string) (string, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	connection := &connection{client.host, client.port, client.transporterType, client.logHandler}
 	return connection.submit(traversalString)
+}
+
+// Submit a Gremlin traversal string to execute.
+func (client *Client) Submit(traversalString string) (string, error) {
+	return client.SubmitAsync(traversalString)
 }
