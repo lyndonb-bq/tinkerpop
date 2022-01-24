@@ -173,3 +173,12 @@ for early testing purposes only.
 ## Test Coverage
 
 [![codecov](https://codecov.io/gh/Bit-Quill/gremlin-go/branch/main/graph/badge.svg?token=lzavk3wBTi)](https://codecov.io/gh/Bit-Quill/gremlin-go)
+
+[tk]: https://tinkerpop.apache.org
+[gremlin]: https://tinkerpop.apache.org/gremlin.html
+[docs]: https://tinkerpop.apache.org/docs/current/reference/#gremlin-go
+[gs]: https://tinkerpop.apache.org/docs/current/reference/#gremlin-server
+[rgp]: https://tinkerpop.apache.org/docs/current/reference/#connecting-rgp
+[console]: https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/
+[steps]: https://tinkerpop.apache.org/docs/current/reference/#graph-traversal-steps
+[differences]: https://tinkerpop.apache.org/docs/current/reference/#gremlin-go-differences
