@@ -41,6 +41,7 @@ type gremlinServerWSProtocol struct {
 	*protocolBase
 
 	serializer       serializer
+	loghandler       *logHandler
 	maxContentLength int
 	username         string
 	password         string
@@ -54,6 +55,7 @@ type protocolStatus = uint16
 
 func (protocol *gremlinServerWSProtocol) dataReceived(message []byte, resultSets map[string]ResultSet) (protocolStatus, error) {
 	if message == nil {
+		protocol.loghandler.log(Error, malformedURL)
 		return 0, errors.New("malformed ws or wss URL")
 	}
 	response, err := protocol.serializer.deserializeMessage(message)
@@ -101,6 +103,6 @@ func (protocol *gremlinServerWSProtocol) write(requestMessage *request) error {
 func newGremlinServerWSProtocol(handler *logHandler) *gremlinServerWSProtocol {
 	ap := &protocolBase{}
 
-	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(handler), 1, "", ""}
+	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(handler), handler, 1, "", ""}
 	return protocol
 }
