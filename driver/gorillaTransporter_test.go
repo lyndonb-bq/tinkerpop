@@ -36,8 +36,8 @@ type mockWebsocketConn struct {
 	mock.Mock
 }
 
-func (conn *mockWebsocketConn) WriteJSON(v interface{}) error {
-	args := conn.Called(v)
+func (conn *mockWebsocketConn) WriteMessage(messageType int, data []byte) error {
+	args := conn.Called(messageType, data)
 	return args.Error(0)
 }
 
@@ -61,9 +61,9 @@ func TestGorillaTransporter(t *testing.T) {
 			isClosed:   false,
 		}
 
-		t.Run("Write", func(t *testing.T) {
-			mockConn.On("WriteJSON", mock.Anything).Return(nil)
-			err := transporter.Write("mockTraversal")
+		t.Run("WriteMessage", func(t *testing.T) {
+			mockConn.On("WriteMessage", 2, make([]byte, 10)).Return(nil)
+			err := transporter.Write(make([]byte, 10))
 			assert.Nil(t, err)
 		})
 
@@ -94,9 +94,9 @@ func TestGorillaTransporter(t *testing.T) {
 			isClosed:   false,
 		}
 
-		t.Run("Write", func(t *testing.T) {
-			mockConn.On("WriteJSON", mock.Anything).Return(errors.New(mockWriteErrMessage))
-			err := transporter.Write("mockTraversal")
+		t.Run("WriteMessage", func(t *testing.T) {
+			mockConn.On("WriteMessage", 2, make([]byte, 10)).Return(errors.New(mockWriteErrMessage))
+			err := transporter.Write(make([]byte, 10))
 			assert.NotNil(t, err)
 			assert.Equal(t, mockWriteErrMessage, err.Error())
 		})

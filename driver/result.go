@@ -19,31 +19,20 @@ under the License.
 
 package gremlingo
 
-type connection struct {
-	host            string
-	port            int
-	transporterType TransporterType
-	logHandler      *logHandler
+// AN-968 Finish Result implementation.
+
+import "fmt"
+
+// Result Struct to abstract the Result and provide functions to use it.
+type Result struct {
+	result interface{}
 }
 
-// TODO: refactor this when implementing full connection
-func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := getTransportLayer(connection.transporterType, connection.host, connection.port)
-	defer transporter.Close()
+// AsString returns the current Result formatted as a string.
+func (r *Result) AsString() string {
+	return fmt.Sprintf("%v", r.result)
+}
 
-	err = nil // transporter.write(traversalString)
-	if err != nil {
-		connection.logHandler.log(Error, writeFailed)
-		return
-	}
-
-	bytes, err := transporter.Read()
-	if err != nil {
-		connection.logHandler.log(Error, readFailed)
-		return
-	}
-
-	response = string(bytes)
-	transporter.Close()
-	return
+func newResult(result interface{}) *Result {
+	return &Result{result}
 }

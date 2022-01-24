@@ -54,7 +54,7 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 	return
 }
 
-func (transporter *gorillaTransporter) Write(traversal string) (err error) {
+func (transporter *gorillaTransporter) Write(data []byte) (err error) {
 	if transporter.connection == nil {
 		err = transporter.Connect()
 		if err != nil {
@@ -62,7 +62,7 @@ func (transporter *gorillaTransporter) Write(traversal string) (err error) {
 		}
 	}
 
-	err = transporter.connection.WriteJSON(makeStringRequest(traversal))
+	err = transporter.connection.WriteMessage(websocket.BinaryMessage, data)
 	return err
 }
 

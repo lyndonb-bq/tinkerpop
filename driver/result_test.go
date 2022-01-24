@@ -19,31 +19,34 @@ under the License.
 
 package gremlingo
 
-type connection struct {
-	host            string
-	port            int
-	transporterType TransporterType
-	logHandler      *logHandler
-}
+import (
+	"testing"
 
-// TODO: refactor this when implementing full connection
-func (connection *connection) submit(traversalString string) (response string, err error) {
-	transporter := getTransportLayer(connection.transporterType, connection.host, connection.port)
-	defer transporter.Close()
+	"github.com/stretchr/testify/assert"
+)
 
-	err = nil // transporter.write(traversalString)
-	if err != nil {
-		connection.logHandler.log(Error, writeFailed)
-		return
-	}
+func TestResult(t *testing.T) {
 
-	bytes, err := transporter.Read()
-	if err != nil {
-		connection.logHandler.log(Error, readFailed)
-		return
-	}
+	t.Run("Test Result.AsString() string", func(t *testing.T) {
+		r := Result{"foo"}
+		assert.Equal(t, r.AsString(), "foo")
+	})
 
-	response = string(bytes)
-	transporter.Close()
-	return
+	t.Run("Test Result.AsString() slice", func(t *testing.T) {
+		r := Result{[]int{1, 2, 3}}
+		assert.Equal(t, r.AsString(), "[1 2 3]")
+
+	})
+
+	t.Run("Test Result.AsString() int", func(t *testing.T) {
+		r := Result{1}
+		assert.Equal(t, r.AsString(), "1")
+
+	})
+
+	t.Run("Test Result.AsString() float", func(t *testing.T) {
+		r := Result{1.2}
+		assert.Equal(t, r.AsString(), "1.2")
+
+	})
 }

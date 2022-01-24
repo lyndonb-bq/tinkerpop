@@ -19,16 +19,19 @@ under the License.
 
 package gremlingo
 
+const scheme = "ws"
+const path = "gremlin"
+
 type transporter interface {
 	Connect() error
-	Write(string) error
+	Write(data []byte) error
 	Read() ([]byte, error)
 	Close() error
 	IsClosed() bool
 }
 
 type websocketConn interface {
-	WriteJSON(interface{}) error
+	WriteMessage(int, []byte) error
 	ReadMessage() (int, []byte, error)
 	Close() error
 }
