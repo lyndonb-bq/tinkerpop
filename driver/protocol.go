@@ -31,14 +31,14 @@ type protocol interface {
 	write(message *string, results map[string]interface{})
 }
 
-type abstractProtocol struct {
+type protocolBase struct {
 	protocol
 
 	transporter transporter
 }
 
 type gremlinServerWSProtocol struct {
-	*abstractProtocol
+	*protocolBase
 
 	serializer       serializer
 	maxContentLength int
@@ -46,11 +46,13 @@ type gremlinServerWSProtocol struct {
 	password         string
 }
 
-func (protocol *abstractProtocol) connectionMade(transporter *transporter) {
+func (protocol *protocolBase) connectionMade(transporter *transporter) {
 	protocol.transporter = *transporter
 }
 
-func (protocol *gremlinServerWSProtocol) dataReceived(message *[]byte, resultSets map[string]ResultSet) (uint16, error) {
+type protocolStatus = uint16
+
+func (protocol *gremlinServerWSProtocol) dataReceived(message []byte, resultSets map[string]ResultSet) (protocolStatus, error) {
 	if message == nil {
 		return 0, errors.New("malformed ws or wss URL")
 	}
@@ -97,7 +99,7 @@ func (protocol *gremlinServerWSProtocol) write(requestMessage *request) error {
 }
 
 func newGremlinServerWSProtocol(handler *logHandler) *gremlinServerWSProtocol {
-	ap := &abstractProtocol{}
+	ap := &protocolBase{}
 
 	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(handler), 1, "", ""}
 	return protocol

@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/text/language"
 	"net/http"
 	"testing"
 
@@ -31,14 +32,14 @@ import (
 
 func Test(t *testing.T) {
 	t.Run("Test dataReceived nil message", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
+		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
 		statusCode, err := protocol.dataReceived(nil, map[string]ResultSet{})
 		assert.Equal(t, uint16(0), statusCode)
 		assert.Equal(t, err, errors.New("malformed ws or wss URL"))
 	})
 
 	t.Run("Test dataReceived actual message", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
+		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
 		data := map[interface{}]interface{}{"data_key": "data_val"}
 		var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
 		resultSets := map[string]ResultSet{}
@@ -68,13 +69,13 @@ func Test(t *testing.T) {
 		serializer := graphBinarySerializer{}
 		message, err := serializer.serializeResponseMessage(&testResponseStatusOK)
 		assert.Nil(t, err)
-		code, err := protocol.dataReceived(&message, resultSets)
+		code, err := protocol.dataReceived(message, resultSets)
 		assert.Nil(t, err)
 		assert.Equal(t, uint16(http.StatusOK), code)
 
 		message, err = serializer.serializeResponseMessage(&testResponseStatusNoContent)
 		assert.Nil(t, err)
-		code, err = protocol.dataReceived(&message, resultSets)
+		code, err = protocol.dataReceived(message, resultSets)
 		assert.Nil(t, err)
 		assert.Equal(t, uint16(http.StatusNoContent), code)
 
@@ -85,13 +86,13 @@ func Test(t *testing.T) {
 	})
 
 	t.Run("Test protocol connectionMade", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
+		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
 		transport := getTransportLayer(Gorilla, "host", 1234)
 		assert.NotPanics(t, func() { protocol.connectionMade(&transport) })
 	})
 
 	t.Run("Test dataReceived actual message", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
+		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
 		request := makeStringRequest("1+1")
 		err := protocol.write(&request)
 		assert.NotNil(t, err)

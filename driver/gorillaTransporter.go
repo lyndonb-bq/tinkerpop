@@ -26,9 +26,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const scheme = "ws"
-const path = "gremlin"
-
 type gorillaTransporter struct {
 	host       string
 	port       int

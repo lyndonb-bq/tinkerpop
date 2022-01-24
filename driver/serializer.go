@@ -25,10 +25,12 @@ import (
 	"github.com/google/uuid"
 )
 
+const graphBinaryMimeType = "application/vnd.graphbinary-v1.0"
+
 // serializer interface for serializers
 type serializer interface {
 	serializeMessage(request *request) ([]byte, error)
-	deserializeMessage(message *[]byte) (response, error)
+	deserializeMessage(message []byte) (response, error)
 }
 
 // graphBinarySerializer serializes/deserializes message to/from GraphBinary
@@ -41,14 +43,14 @@ type graphBinarySerializer struct {
 func newGraphBinarySerializer(handler *logHandler) serializer {
 	reader := graphBinaryReader{handler}
 	writer := graphBinaryWriter{handler}
-	return graphBinarySerializer{&reader, &writer, "application/vnd.graphbinary-v1.0"}
+	return graphBinarySerializer{&reader, &writer, graphBinaryMimeType}
 }
 
 const versionByte byte = 0x81
 
 // serializeMessage serializes a request message into GraphBinary
 func (gs graphBinarySerializer) serializeMessage(request *request) ([]byte, error) {
-	gs.mimeType = "application/vnd.graphbinary-v1.0"
+	gs.mimeType = graphBinaryMimeType
 	finalMessage, err := gs.buildMessage(request, 0x20, gs.mimeType)
 	if err != nil {
 		return nil, err
@@ -89,10 +91,10 @@ func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte, mi
 }
 
 // deserializeMessage deserializes a response message
-func (gs graphBinarySerializer) deserializeMessage(responseMessage *[]byte) (response, error) {
+func (gs graphBinarySerializer) deserializeMessage(responseMessage []byte) (response, error) {
 	var msg response
 	buffer := bytes.Buffer{}
-	buffer.Write(*responseMessage)
+	buffer.Write(responseMessage)
 	// version
 	_, err := buffer.ReadByte()
 	if err != nil {

@@ -19,6 +19,9 @@ under the License.
 
 package gremlingo
 
+const scheme = "ws"
+const path = "gremlin"
+
 type transporter interface {
 	Connect() error
 	Write(data []byte) error
