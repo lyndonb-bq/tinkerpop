@@ -22,10 +22,11 @@ package gremlingo
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test(t *testing.T) {
@@ -72,6 +73,7 @@ func Test(t *testing.T) {
 		assert.Equal(t, uint16(http.StatusOK), code)
 
 		message, err = serializer.serializeResponseMessage(&testResponseStatusNoContent)
+		assert.Nil(t, err)
 		code, err = protocol.dataReceived(&message, resultSets)
 		assert.Nil(t, err)
 		assert.Equal(t, uint16(http.StatusNoContent), code)

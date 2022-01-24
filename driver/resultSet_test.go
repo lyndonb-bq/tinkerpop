@@ -21,9 +21,10 @@ package gremlingo
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+	
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChannelResultSet(t *testing.T) {
