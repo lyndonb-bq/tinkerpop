@@ -28,7 +28,7 @@ import (
 )
 
 func writeToBuffer(value interface{}, buffer *bytes.Buffer) []byte {
-	writer := GraphBinaryWriter{}
+	writer := graphBinaryWriter{}
 	val, err := writer.write(value, buffer)
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func writeToBuffer(value interface{}, buffer *bytes.Buffer) []byte {
 }
 
 func readToValue(buff *bytes.Buffer) interface{} {
-	reader := GraphBinaryReader{}
+	reader := graphBinaryReader{}
 	val, err := reader.read(buff)
 	if err != nil {
 		panic(err)

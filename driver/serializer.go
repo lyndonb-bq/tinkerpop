@@ -27,25 +27,27 @@ import (
 
 // serializer interface for serializers
 type serializer interface {
-	serializeMessage(request *Request) ([]byte, error)
+	serializeMessage(request *request) ([]byte, error)
 	deserializeMessage(message *[]byte) (response, error)
 }
 
 // graphBinarySerializer serializes/deserializes message to/from GraphBinary
 type graphBinarySerializer struct {
-	readerClass *GraphBinaryReader
-	writerClass *GraphBinaryWriter
+	readerClass *graphBinaryReader
+	writerClass *graphBinaryWriter
 	mimeType    string `default:"application/vnd.graphbinary-v1.0"`
 }
 
-func newGraphBinarySerializer() serializer {
-	return graphBinarySerializer{}
+func newGraphBinarySerializer(handler *logHandler) serializer {
+	reader := graphBinaryReader{handler}
+	writer := graphBinaryWriter{handler}
+	return graphBinarySerializer{&reader, &writer, "application/vnd.graphbinary-v1.0"}
 }
 
 const versionByte byte = 0x81
 
 // serializeMessage serializes a request message into GraphBinary
-func (gs graphBinarySerializer) serializeMessage(request *Request) ([]byte, error) {
+func (gs graphBinarySerializer) serializeMessage(request *request) ([]byte, error) {
 	gs.mimeType = "application/vnd.graphbinary-v1.0"
 	finalMessage, err := gs.buildMessage(request, 0x20, gs.mimeType)
 	if err != nil {
@@ -54,7 +56,7 @@ func (gs graphBinarySerializer) serializeMessage(request *Request) ([]byte, erro
 	return finalMessage, nil
 }
 
-func (gs *graphBinarySerializer) buildMessage(request *Request, mimeLen byte, mimeType string) ([]byte, error) {
+func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte, mimeType string) ([]byte, error) {
 	buffer := bytes.Buffer{}
 
 	// mime header
@@ -63,22 +65,22 @@ func (gs *graphBinarySerializer) buildMessage(request *Request, mimeLen byte, mi
 	// version
 	buffer.WriteByte(versionByte)
 	// requestID
-	_, err := gs.writerClass.writeValue(request.RequestID, &buffer, false)
+	_, err := gs.writerClass.writeValue(request.requestID, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
-	// Op
-	_, err = gs.writerClass.writeValue(request.Op, &buffer, false)
+	// op
+	_, err = gs.writerClass.writeValue(request.op, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
-	// Processor
-	_, err = gs.writerClass.writeValue(request.Processor, &buffer, false)
+	// processor
+	_, err = gs.writerClass.writeValue(request.processor, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
-	// Args
-	_, err = gs.writerClass.writeValue(request.Args, &buffer, false)
+	// args
+	_, err = gs.writerClass.writeValue(request.args, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +140,9 @@ func (gs graphBinarySerializer) deserializeMessage(responseMessage *[]byte) (res
 }
 
 // private function for deserializing a request message for testing purposes
-func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byte) (Request, error) {
+func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byte) (request, error) {
 	buffer := bytes.Buffer{}
-	var msg Request
+	var msg request
 	buffer.Write(*requestMessage)
 	// skip headers
 	buffer.Next(33)
@@ -166,10 +168,10 @@ func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byt
 		return msg, err
 	}
 
-	msg.RequestID = msgUUID.(uuid.UUID)
-	msg.Op = msgOp.(string)
-	msg.Processor = msgProc.(string)
-	msg.Args = msgArgs.(map[interface{}]interface{})
+	msg.requestID = msgUUID.(uuid.UUID)
+	msg.op = msgOp.(string)
+	msg.processor = msgProc.(string)
+	msg.args = msgArgs.(map[interface{}]interface{})
 
 	return msg, nil
 }

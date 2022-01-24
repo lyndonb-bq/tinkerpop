@@ -27,7 +27,7 @@ type ResultSet interface {
 	GetAggregateTo() string
 	setStatusAttributes(statusAttributes map[interface{}]interface{})
 	GetStatusAttributes() map[interface{}]interface{}
-	GetRequestId() int
+	GetRequestID() int
 	IsEmpty() bool
 	Close()
 	Channel() chan *Result
@@ -69,7 +69,7 @@ func (channelResultSet *channelResultSet) GetStatusAttributes() map[interface{}]
 	return channelResultSet.statusAttributes
 }
 
-func (channelResultSet *channelResultSet) GetRequestId() int {
+func (channelResultSet *channelResultSet) GetRequestID() int {
 	return -1
 }
 

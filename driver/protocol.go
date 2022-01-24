@@ -88,7 +88,7 @@ func (protocol *gremlinServerWSProtocol) dataReceived(message *[]byte, resultSet
 	}
 }
 
-func (protocol *gremlinServerWSProtocol) write(requestMessage *Request) error {
+func (protocol *gremlinServerWSProtocol) write(requestMessage *request) error {
 	message, err := protocol.serializer.serializeMessage(requestMessage)
 	if err == nil {
 		err = protocol.transporter.Write(message)
@@ -96,9 +96,9 @@ func (protocol *gremlinServerWSProtocol) write(requestMessage *Request) error {
 	return err
 }
 
-func newGremlinServerWSProtocol() *gremlinServerWSProtocol {
+func newGremlinServerWSProtocol(handler *logHandler) *gremlinServerWSProtocol {
 	ap := &abstractProtocol{}
 
-	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(), 1, "", ""}
+	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(handler), 1, "", ""}
 	return protocol
 }

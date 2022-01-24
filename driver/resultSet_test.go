@@ -87,12 +87,12 @@ func TestChannelResultSet(t *testing.T) {
 	})
 }
 
-func AddResultsPause(resultSet *ResultSet, count int, timeMilliseconds time.Duration) {
+func AddResultsPause(resultSet *ResultSet, count int, ticks time.Duration) {
 	rs := *resultSet
 	for i := 0; i < count/2; i++ {
 		rs.addResult(newResult(i))
 	}
-	time.Sleep(timeMilliseconds * time.Millisecond)
+	time.Sleep(ticks * time.Millisecond)
 	for i := count / 2; i < count; i++ {
 		rs.addResult(newResult(i))
 	}
@@ -105,7 +105,7 @@ func AddResults(resultSet *ResultSet, count int) {
 	}
 }
 
-func closeAfterTime(timeMilliseconds time.Duration, resultSet *ResultSet) {
-	time.Sleep(timeMilliseconds * time.Millisecond)
+func closeAfterTime(ticks time.Duration, resultSet *ResultSet) {
+	time.Sleep(ticks * time.Millisecond)
 	(*resultSet).Close()
 }

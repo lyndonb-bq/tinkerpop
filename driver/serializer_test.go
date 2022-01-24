@@ -29,11 +29,11 @@ import (
 func TestSerializer(t *testing.T) {
 	t.Run("test serialize and deserialize request message", func(t *testing.T) {
 		var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
-		testRequest := Request{
-			RequestID: u,
-			Op:        "eval",
-			Processor: "traversal",
-			Args:      map[interface{}]interface{}{"test_key": "test_val"},
+		testRequest := request{
+			requestID: u,
+			op:        "eval",
+			processor: "traversal",
+			args:      map[interface{}]interface{}{"test_key": "test_val"},
 		}
 		serializer := graphBinarySerializer{}
 		serialized, _ := serializer.serializeMessage(&testRequest)

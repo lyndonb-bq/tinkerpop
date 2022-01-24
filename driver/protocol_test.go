@@ -30,14 +30,14 @@ import (
 
 func Test(t *testing.T) {
 	t.Run("Test dataReceived nil message", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol()
+		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
 		statusCode, err := protocol.dataReceived(nil, map[string]ResultSet{})
 		assert.Equal(t, uint16(0), statusCode)
 		assert.Equal(t, err, errors.New("malformed ws or wss URL"))
 	})
 
 	t.Run("Test dataReceived actual message", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol()
+		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
 		data := map[interface{}]interface{}{"data_key": "data_val"}
 		var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
 		resultSets := map[string]ResultSet{}
@@ -83,8 +83,15 @@ func Test(t *testing.T) {
 	})
 
 	t.Run("Test protocol connectionMade", func(t *testing.T) {
-		protocol := newGremlinServerWSProtocol()
+		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
 		transport := getTransportLayer(Gorilla, "host", 1234)
 		assert.NotPanics(t, func() { protocol.connectionMade(&transport) })
+	})
+
+	t.Run("Test dataReceived actual message", func(t *testing.T) {
+		protocol := newGremlinServerWSProtocol(newDefaultLogHandler())
+		request := makeStringRequest("1+1")
+		err := protocol.write(&request)
+		assert.NotNil(t, err)
 	})
 }

@@ -66,6 +66,10 @@ type logHandler struct {
 	localizer *i18n.Localizer
 }
 
+func newDefaultLogHandler() *logHandler {
+	return newLogHandler(&defaultLogger{}, Info, language.English)
+}
+
 func newLogHandler(logger Logger, verbosity LogVerbosity, locale language.Tag) *logHandler {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
