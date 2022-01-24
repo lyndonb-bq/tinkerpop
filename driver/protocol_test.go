@@ -22,12 +22,12 @@ package gremlingo
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/text/language"
 	"net/http"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/text/language"
 )
 
 func Test(t *testing.T) {
