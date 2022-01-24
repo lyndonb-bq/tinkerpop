@@ -38,7 +38,7 @@ Moreover, there are a few added constructs to Gremlin-Python that make traversal
 Gremlin-Go implements Gremlin within the Go language.
 
 Gremlin-Go is designed to connect to a "server" that is hosting a TinkerPop-enabled graph system. That "server"
-could be [Gremlin Server][gs] or a [remote Gremlin provider][rgp] that exposes protocols by which Gremlin-Javascript
+could be [Gremlin Server][gs] or a [remote Gremlin provider][rgp] that exposes protocols by which Gremlin-Go
 can connect.
 
 A typical connection to a server running on "localhost" that supports the Gremlin Server protocol using websockets
