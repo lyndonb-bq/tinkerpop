@@ -56,7 +56,6 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 
 // Submit a Gremlin traversal string to execute.
 func (client *Client) Submit(traversalString string) (string, error) {
-	// TODO AN-982: Obtain connection from pool of connections held by the client.
-	connection := &connection{client.host, client.port, client.transporterType, client.logHandler}
-	return connection.submit(traversalString)
+	// TODO
+	return "", nil
 }

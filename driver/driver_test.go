@@ -20,21 +20,20 @@ under the License.
 package gremlingo
 
 import (
-	"fmt"
 	"testing"
 )
 
 // TODO: remove this file when sandbox is no longer needed
 func TestDriver(t *testing.T) {
 
-	t.Run("Sandbox", func(t *testing.T) {
-		client := NewClient("localhost", 8182)
-
-		response, err := client.Submit("1 + 1")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(response)
-	})
+	//t.Run("Sandbox", func(t *testing.T) {
+	//	client := NewClient("localhost", 8182)
+	//
+	//	response, err := client.Submit("1 + 1")
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		return
+	//	}
+	//	fmt.Println(response)
+	//})
 }

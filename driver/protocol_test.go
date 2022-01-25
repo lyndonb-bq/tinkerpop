@@ -43,7 +43,7 @@ func Test(t *testing.T) {
 		data := map[interface{}]interface{}{"data_key": "data_val"}
 		var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
 		resultSets := map[string]ResultSet{}
-		resultSet := newChannelResultSet()
+		resultSet := newChannelResultSet(u.String())
 		resultSets[u.String()] = resultSet
 		testResponseStatusOK := response{
 			requestID: u,
@@ -88,13 +88,12 @@ func Test(t *testing.T) {
 	t.Run("Test protocol connectionMade", func(t *testing.T) {
 		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
 		transport := getTransportLayer(Gorilla, "host", 1234)
-		assert.NotPanics(t, func() { protocol.connectionMade(&transport) })
+		assert.NotPanics(t, func() { protocol.connectionMade(transport) })
 	})
 
 	t.Run("Test dataReceived actual message", func(t *testing.T) {
 		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
-		request := makeStringRequest("1+1")
-		err := protocol.write(&request)
+		err := protocol.write("1+1", nil)
 		assert.NotNil(t, err)
 	})
 }
