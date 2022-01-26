@@ -103,4 +103,5 @@ const (
 	notMap                   errorKey = "NOT_MAP_TYPE"
 	malformedURL             errorKey = "MALFORMED_URL"
 	transportCloseFailed     errorKey = "TRANSPORT_CLOSE_FAILED"
+	notSlice                 errorKey = "NOT_SLICE_TYPE"
 )

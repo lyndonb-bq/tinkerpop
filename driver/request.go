@@ -28,17 +28,17 @@ const graphType = "g:Map"
 
 // request represents a request to the server
 type request struct {
-	requestID uuid.UUID                   `json:"requestId"`
-	op        string                      `json:"op"`
-	processor string                      `json:"processor"`
-	args      map[interface{}]interface{} `json:"args"`
+	requestID uuid.UUID              `json:"requestId"`
+	op        string                 `json:"op"`
+	processor string                 `json:"processor"`
+	args      map[string]interface{} `json:"args"`
 }
 
 func makeStringRequest(requestString string) (req request) {
 	req.requestID = uuid.New()
 	req.op = op
 	req.processor = processor
-	req.args = make(map[interface{}]interface{})
+	req.args = make(map[string]interface{})
 	req.args["@type"] = graphType
 	value := make([]string, 2)
 	value[0] = "gremlin"

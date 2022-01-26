@@ -21,6 +21,7 @@ package gremlingo
 
 import (
 	"bytes"
+	"golang.org/x/text/language"
 
 	"github.com/google/uuid"
 )
@@ -67,26 +68,32 @@ func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte, mi
 	// version
 	buffer.WriteByte(versionByte)
 	// requestID
+	logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
+	logHandler.logger.Logf(Error, "requestID")
 	_, err := gs.writerClass.writeValue(request.requestID, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// op
+	logHandler.logger.Logf(Error, "op")
 	_, err = gs.writerClass.writeValue(request.op, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// processor
+	logHandler.logger.Logf(Error, "processor")
 	_, err = gs.writerClass.writeValue(request.processor, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// args
+	logHandler.logger.Logf(Error, "args")
 	_, err = gs.writerClass.writeValue(request.args, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 
+	logHandler.logger.Logf(Error, "Done")
 	return buffer.Bytes(), nil
 }
 
@@ -173,7 +180,7 @@ func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byt
 	msg.requestID = msgUUID.(uuid.UUID)
 	msg.op = msgOp.(string)
 	msg.processor = msgProc.(string)
-	msg.args = msgArgs.(map[interface{}]interface{})
+	msg.args = msgArgs.(map[string]interface{})
 
 	return msg, nil
 }

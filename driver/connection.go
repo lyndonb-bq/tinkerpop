@@ -43,39 +43,40 @@ func (connection *connection) connect() error {
 		closeErr := connection.transporter.Close()
 		connection.logHandler.logf(Warning, transportCloseFailed, closeErr)
 	}
-
+	connection.protocol = newGremlinServerWSProtocol(connection.logHandler)
 	connection.transporter = getTransportLayer(connection.transporterType, connection.host, connection.port)
-	err := connection.connect()
-	if err == nil {
-		// connection.protocol.connection_made(connection.transporter)
+	err := connection.transporter.Connect()
+	if err != nil {
+		return err
 	}
-	return err
+	connection.protocol.connectionMade(connection.transporter)
+	return nil
 }
 
-func (connection *connection) write(traversalString string) ([]byte, error) {
-	if connection.transporter == nil {
-		connection.connect()
+func (connection *connection) write(traversalString string) (ResultSet, error) {
+	if connection.transporter == nil || connection.transporter.IsClosed() {
+		err := connection.connect()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	requestId := uuid.New().String()
-	resultSet := newChannelResultSet(requestId)
+	// Generate request and insert in map with request id as key attached.
+	requestID := uuid.New().String()
 	if connection.results == nil {
 		connection.results = map[string]ResultSet{}
 	}
-	connection.results[requestId] = resultSet
+	connection.results[requestID] = newChannelResultSet(requestID)
+
+	// Write through protocol layer.
 	err := connection.protocol.write(traversalString, connection.results)
 	if err != nil {
 		return nil, err
 	}
-	data, err := connection.transporter.Read()
-	if err != nil {
-		return nil, err
-	}
+	return connection.results[requestID], nil
+}
 
-	// TODO: Is checking the status required? GorillaTransporter.Read() abstracts it away
-	_, err = connection.protocol.dataReceived(data, connection.results)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+func newConnection(host string, port int, transporterType TransporterType, handler *logHandler, transporter transporter,
+	protocol protocol, results map[string]ResultSet) *connection {
+	return &connection{host, port, transporterType, handler, transporter, protocol, results}
 }

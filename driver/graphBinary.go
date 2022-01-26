@@ -78,6 +78,9 @@ type longSerializer struct{}
 type stringSerializer struct{}
 
 // Format: {length}{item_0}...{item_n}
+type listSerializer struct{}
+
+// Format: {length}{item_0}...{item_n}
 type mapSerializer struct{}
 
 // Format: 16 bytes representing the uuid.
@@ -109,6 +112,8 @@ func (writer *graphBinaryWriter) getSerializerToWrite(val interface{}) (GraphBin
 		return &intSerializer{}, nil
 	case uuid.UUID:
 		return &uuidSerializer{}, nil
+	case []string, []int, []int8, []int16, []int32, []uint, []uint8, []uint16, []uint32:
+		return &listSerializer{}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -540,4 +545,85 @@ func (uuidSerializer *uuidSerializer) readValue(buffer *bytes.Buffer, reader *gr
 	}
 	val, _ := uuid.FromBytes(valBytes)
 	return val, nil
+}
+
+func (listSerializer *listSerializer) getDataType() DataType {
+	return ListType
+}
+
+func (listSerializer *listSerializer) write(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter) ([]byte, error) {
+	return listSerializer.writeValue(value, buffer, writer, true)
+}
+
+func (listSerializer *listSerializer) writeValue(value interface{}, buffer *bytes.Buffer, writer *graphBinaryWriter, nullable bool) ([]byte, error) {
+	if value == nil {
+		if !nullable {
+			writer.logHandler.log(Error, unexpectedNull)
+			return nil, errors.New("unexpected null value to write when nullable is false")
+		}
+		writer.writeValueFlagNull(buffer)
+		return buffer.Bytes(), nil
+	}
+
+	if nullable {
+		writer.writeValueFlagNone(buffer)
+	}
+
+	v := reflect.ValueOf(value)
+	if v.Kind() != reflect.Slice {
+		writer.logHandler.log(Error, notSlice)
+		return buffer.Bytes(), errors.New("did not get the expected slice type as input")
+	}
+
+	// Need to convert to underlying type. Right now hardcode string.
+	values := v.Interface().([]string)
+	err := binary.Write(buffer, binary.BigEndian, int32(len(values)))
+	if err != nil {
+		return nil, err
+	}
+	if len(values) < 1 {
+		return buffer.Bytes(), nil
+	}
+	subWriter, err := writer.getSerializerToWrite(values[0])
+	if err != nil {
+		return nil, err
+	}
+	for val := range values {
+		_, err := subWriter.write(val, buffer, writer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buffer.Bytes(), nil
+}
+
+func (listSerializer *listSerializer) read(buffer *bytes.Buffer, reader *graphBinaryReader) (interface{}, error) {
+	return listSerializer.readValue(buffer, reader, true)
+}
+
+func (listSerializer *listSerializer) readValue(buffer *bytes.Buffer, reader *graphBinaryReader, nullable bool) (interface{}, error) {
+	if nullable {
+		nullFlag, _ := buffer.ReadByte()
+		if nullFlag == valueFlagNull {
+			return nil, nil
+		}
+	}
+	var size int32
+	err := binary.Read(buffer, binary.BigEndian, &size)
+	if err != nil {
+		return nil, err
+	}
+	valMap := make(map[interface{}]interface{})
+	for i := 0; i < int(size); i++ {
+		key, err := reader.read(buffer)
+		if err != nil {
+			return nil, err
+		}
+		val, err := reader.read(buffer)
+		if err != nil {
+			return nil, err
+		}
+		valMap[key] = val
+	}
+	return valMap, nil
 }

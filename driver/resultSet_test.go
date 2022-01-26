@@ -28,8 +28,10 @@ import (
 )
 
 func TestChannelResultSet(t *testing.T) {
+	const mockID = "mockID"
+
 	t.Run("Test ResultSet test getter/setters.", func(t *testing.T) {
-		r := newChannelResultSet()
+		r := newChannelResultSet(mockID)
 		testStatusAttribute := map[interface{}]interface{}{
 			"1": 1234,
 			"2": "foo",
@@ -42,12 +44,12 @@ func TestChannelResultSet(t *testing.T) {
 	})
 
 	t.Run("Test ResultSet close.", func(t *testing.T) {
-		channelResultSet := newChannelResultSet()
+		channelResultSet := newChannelResultSet(mockID)
 		assert.NotPanics(t, func() { channelResultSet.Close() })
 	})
 
 	t.Run("Test ResultSet one.", func(t *testing.T) {
-		channelResultSet := newChannelResultSet()
+		channelResultSet := newChannelResultSet(mockID)
 		AddResults(&channelResultSet, 10)
 		idx := 0
 		for i := 0; i < 10; i++ {
@@ -60,7 +62,7 @@ func TestChannelResultSet(t *testing.T) {
 	})
 
 	t.Run("Test ResultSet one Paused.", func(t *testing.T) {
-		channelResultSet := newChannelResultSet()
+		channelResultSet := newChannelResultSet(mockID)
 		go AddResultsPause(&channelResultSet, 10, 500)
 		idx := 0
 		for i := 0; i < 10; i++ {
@@ -73,12 +75,12 @@ func TestChannelResultSet(t *testing.T) {
 	})
 
 	t.Run("Test ResultSet one close.", func(t *testing.T) {
-		channelResultSet := newChannelResultSet()
+		channelResultSet := newChannelResultSet(mockID)
 		channelResultSet.Close()
 	})
 
 	t.Run("Test ResultSet All.", func(t *testing.T) {
-		channelResultSet := newChannelResultSet()
+		channelResultSet := newChannelResultSet(mockID)
 		AddResults(&channelResultSet, 10)
 		go closeAfterTime(500, &channelResultSet)
 		results := channelResultSet.All()

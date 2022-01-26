@@ -33,7 +33,7 @@ func TestSerializer(t *testing.T) {
 			requestID: u,
 			op:        "eval",
 			processor: "traversal",
-			args:      map[interface{}]interface{}{"test_key": "test_val"},
+			args:      map[string]interface{}{"test_key": "test_val"},
 		}
 		serializer := graphBinarySerializer{}
 		serialized, _ := serializer.serializeMessage(&testRequest)
