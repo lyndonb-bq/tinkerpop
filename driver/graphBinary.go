@@ -108,16 +108,17 @@ func (writer *graphBinaryWriter) getSerializerToWrite(val interface{}) (GraphBin
 		return &stringSerializer{}, nil
 	case int64, int, uint32:
 		return &longSerializer{}, nil
-	case int32, int8, uint16:
+	case int32, uint16:
 		return &intSerializer{}, nil
 	case uuid.UUID:
 		return &uuidSerializer{}, nil
-	case []string, []int, []int8, []int16, []int32, []uint, []uint8, []uint16, []uint32:
-		return &listSerializer{}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
 			return &mapSerializer{}, nil
+		case reflect.Array, reflect.Slice:
+			// we can write array or slices into the list datatype
+			return &listSerializer{}, nil
 		default:
 			writer.logHandler.log(Error, serializeDataTypeError)
 			return nil, errors.New("unknown data type to serialize")
@@ -138,6 +139,8 @@ func (reader *graphBinaryReader) getSerializerToRead(typ byte) (GraphBinaryTypeS
 		return &uuidSerializer{}, nil
 	case MapType.getCodeByte():
 		return &mapSerializer{}, nil
+	case ListType.getCodeByte():
+		return &listSerializer{}, nil
 	default:
 		reader.logHandler.log(Error, deserializeDataTypeError)
 		return nil, errors.New("unknown data type to deserialize")
@@ -255,11 +258,9 @@ func (intSerializer *intSerializer) writeValue(value interface{}, buffer *bytes.
 		writer.writeValueFlagNone(buffer)
 	}
 
-	//int8, uint16, int32
+	//uint16, int32
 	var val int32
 	switch value := value.(type) {
-	case int8:
-		val = int32(value)
 	case uint16:
 		val = int32(value)
 	case int32:
@@ -378,7 +379,6 @@ func (stringSerializer *stringSerializer) writeValue(value interface{}, buffer *
 	if nullable {
 		writer.writeValueFlagNone(buffer)
 	}
-
 	val := value.(string)
 	err := binary.Write(buffer, binary.BigEndian, int32(len(val)))
 	if err != nil {
@@ -482,6 +482,7 @@ func (mapSerializer *mapSerializer) readValue(buffer *bytes.Buffer, reader *grap
 	if err != nil {
 		return nil, err
 	}
+	// currently, all map data types will be converted to a map of [interface{}]interface{}
 	valMap := make(map[interface{}]interface{})
 	for i := 0; i < int(size); i++ {
 		key, err := reader.read(buffer)
@@ -570,26 +571,22 @@ func (listSerializer *listSerializer) writeValue(value interface{}, buffer *byte
 	}
 
 	v := reflect.ValueOf(value)
-	if v.Kind() != reflect.Slice {
+	if (v.Kind() != reflect.Array) && (v.Kind() != reflect.Slice) {
 		writer.logHandler.log(Error, notSlice)
-		return buffer.Bytes(), errors.New("did not get the expected slice type as input")
+		return buffer.Bytes(), errors.New("did not get the expected array or slice type as input")
 	}
 
-	// Need to convert to underlying type. Right now hardcode string.
-	values := v.Interface().([]string)
-	err := binary.Write(buffer, binary.BigEndian, int32(len(values)))
+	valLen := v.Len()
+	err := binary.Write(buffer, binary.BigEndian, int32(valLen))
 	if err != nil {
 		return nil, err
 	}
-	if len(values) < 1 {
+	if valLen < 1 {
 		return buffer.Bytes(), nil
 	}
-	subWriter, err := writer.getSerializerToWrite(values[0])
-	if err != nil {
-		return nil, err
-	}
-	for val := range values {
-		_, err := subWriter.write(val, buffer, writer)
+	for i := 0; i < valLen; i++ {
+		// serialize val
+		_, err := writer.write(v.Index(i).Interface(), buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -613,17 +610,14 @@ func (listSerializer *listSerializer) readValue(buffer *bytes.Buffer, reader *gr
 	if err != nil {
 		return nil, err
 	}
-	valMap := make(map[interface{}]interface{})
+	// currently, all list data types will be converted to a slice of interface{}
+	var valList []interface{}
 	for i := 0; i < int(size); i++ {
-		key, err := reader.read(buffer)
-		if err != nil {
-			return nil, err
-		}
 		val, err := reader.read(buffer)
 		if err != nil {
 			return nil, err
 		}
-		valMap[key] = val
+		valList = append(valList, val)
 	}
-	return valMap, nil
+	return valList, nil
 }
