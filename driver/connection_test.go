@@ -1,9 +1,10 @@
 package gremlingo
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
-	"testing"
 )
 
 const runIntegration = false

@@ -22,10 +22,10 @@ package gremlingo
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/assert"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
 )
 

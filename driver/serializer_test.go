@@ -21,10 +21,11 @@ package gremlingo
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
-	"testing"
 )
 
 func TestSerializer(t *testing.T) {

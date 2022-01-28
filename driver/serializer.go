@@ -170,15 +170,15 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		err = binary.Read(buffer, binary.BigEndian, &nullable)
 		if nullable != 0 {
 			return nil, errors.New("expected non-null key for map")
-		} else {
-			k, err := readString(buffer)
-			if err != nil {
-				return nil, err
-			}
-			mapData[k], err = gs.readerClass.read(buffer)
-			if err != nil {
-				return nil, err
-			}
+		}
+
+		k, err := readString(buffer)
+		if err != nil {
+			return nil, err
+		}
+		mapData[k], err = gs.readerClass.read(buffer)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return mapData, nil
