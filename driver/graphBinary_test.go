@@ -21,14 +21,17 @@ package gremlingo
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/text/language"
 )
 
 func writeToBuffer(value interface{}, buffer *bytes.Buffer) []byte {
-	writer := graphBinaryWriter{}
+	logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
+	writer := graphBinaryWriter{logHandler}
 	val, err := writer.write(value, buffer)
 	if err != nil {
 		panic(err)
@@ -37,7 +40,8 @@ func writeToBuffer(value interface{}, buffer *bytes.Buffer) []byte {
 }
 
 func readToValue(buff *bytes.Buffer) interface{} {
-	reader := graphBinaryReader{}
+	logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
+	reader := graphBinaryReader{logHandler}
 	val, err := reader.read(buff)
 	if err != nil {
 		panic(err)
@@ -99,5 +103,30 @@ func TestGraphBinaryV1(t *testing.T) {
 			writeToBuffer(m, &buff)
 			assert.Equal(t, m, readToValue(&buff))
 		})
+		t.Run("test slice", func(t *testing.T) {
+			var x = []interface{}{"a", "b", "c"}
+			writeToBuffer(x, &buff)
+			assert.Equal(t, x, readToValue(&buff))
+		})
+	})
+
+	t.Run("temp test to printout serialized and deserialized data", func(t *testing.T) {
+		var x = []interface{}{"a", "b", "c"}
+		//var y int32 = 100
+		//var z int64 = 100
+		//var s = "serialize this!"
+		//var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
+		//var a int64 = 666
+		//var m = map[interface{}]interface{}{
+		//	"marko": a,
+		//	"noone": "blah",
+		//}
+		buff := bytes.Buffer{}
+		writeToBuffer(x, &buff)
+		fmt.Println(buff.Bytes())
+		res := readToValue(&buff)
+		assert.Equal(t, x, res)
+		fmt.Println("expected: ", res)
+		fmt.Println("result: ", res)
 	})
 }

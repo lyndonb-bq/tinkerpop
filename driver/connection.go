@@ -19,8 +19,6 @@ under the License.
 
 package gremlingo
 
-import "github.com/google/uuid"
-
 type connection struct {
 	host            string
 	port            int
@@ -43,43 +41,28 @@ func (connection *connection) connect() error {
 		closeErr := connection.transporter.Close()
 		connection.logHandler.logf(Warning, transportCloseFailed, closeErr)
 	}
-
+	connection.protocol = newGremlinServerWSProtocol(connection.logHandler)
 	connection.transporter = getTransportLayer(connection.transporterType, connection.host, connection.port)
 	err := connection.transporter.Connect()
-	if err == nil {
-		connection.protocol.connectionMade(connection.transporter)
+	if err != nil {
+		return err
 	}
-	return err
+	connection.protocol.connectionMade(connection.transporter)
+	return nil
 }
 
-func (connection *connection) write(traversalString string) ([]byte, error) {
+func (connection *connection) write(traversalString string) (ResultSet, error) {
 	if connection.transporter == nil || connection.transporter.IsClosed() {
 		err := connection.connect()
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	requestID := uuid.New().String()
 	if connection.results == nil {
 		connection.results = map[string]ResultSet{}
 	}
-	connection.results[requestID] = newChannelResultSet(requestID)
 
-	err := connection.protocol.write(traversalString, connection.results)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := connection.transporter.Read()
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Is checking the status required? GorillaTransporter.Read() abstracts it away
-	_, err = connection.protocol.dataReceived(data, connection.results)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	// Write through protocol layer.
+	responseID, err := connection.protocol.write(traversalString, connection.results)
+	return connection.results[responseID], err
 }

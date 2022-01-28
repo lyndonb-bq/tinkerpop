@@ -21,28 +21,22 @@ package gremlingo
 
 import "github.com/google/uuid"
 
-// TODO: remove these constants
 const op = "eval"
 const processor = ""
-const graphType = "g:Map"
 
 // request represents a request to the server
 type request struct {
-	requestID uuid.UUID                   `json:"requestId"`
-	op        string                      `json:"op"`
-	processor string                      `json:"processor"`
-	args      map[interface{}]interface{} `json:"args"`
+	requestID uuid.UUID              `json:"requestId"`
+	op        string                 `json:"op"`
+	processor string                 `json:"processor"`
+	args      map[string]interface{} `json:"args"`
 }
 
 func makeStringRequest(requestString string) (req request) {
-	req.requestID = uuid.New()
-	req.op = op
-	req.processor = processor
-	req.args = make(map[interface{}]interface{})
-	req.args["@type"] = graphType
-	value := make([]string, 2)
-	value[0] = "gremlin"
-	value[1] = requestString
-	req.args["@value"] = value
-	return
+	return request{uuid.New(), op, processor, map[string]interface{}{
+		"gremlin": requestString,
+		"aliases": map[string]interface{}{
+			"g": "g",
+		},
+	}}
 }

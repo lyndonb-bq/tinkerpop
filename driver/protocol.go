@@ -23,14 +23,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 type protocol interface {
 	connectionMade(transport transporter)
-	dataReceived(message []byte, resultSets map[string]ResultSet) (protocolStatus, error)
-	write(message string, results map[string]ResultSet) error
+	read(resultSets map[string]ResultSet) (string, error)
+	write(message string, results map[string]ResultSet) (string, error)
 }
 
 type protocolBase struct {
@@ -53,59 +51,78 @@ func (protocol *protocolBase) connectionMade(transporter transporter) {
 	protocol.transporter = transporter
 }
 
-type protocolStatus = uint16
-
-func (protocol *gremlinServerWSProtocol) dataReceived(message []byte, resultSets map[string]ResultSet) (protocolStatus, error) {
-	if message == nil {
+func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (string, error) {
+	// Read data from transport layer.
+	msg, err := protocol.transporter.Read()
+	if err != nil || msg == nil {
+		if err != nil {
+			return "", err
+		}
 		protocol.logHandler.log(Error, malformedURL)
-		return 0, errors.New("malformed ws or wss URL")
+		return "", errors.New("malformed ws or wss URL")
 	}
-	response, err := protocol.serializer.deserializeMessage(message)
+	// Deserialize message and unpack.
+	response, err := protocol.serializer.deserializeMessage(msg)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
-	requestID, statusCode, metadata, data := response.requestID, response.responseStatus.code,
+	responseID, statusCode, metadata, data := response.responseID, response.responseStatus.code,
 		response.responseResult.meta, response.responseResult.data
 
-	resultSet := resultSets[requestID.String()]
+	resultSet := resultSets[responseID.String()]
 	if resultSet == nil {
-		resultSet = newChannelResultSet(uuid.New().String())
+		resultSet = newChannelResultSet(responseID.String())
 	}
+	resultSets[responseID.String()] = resultSet
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSet.setAggregateTo(aggregateTo.(string))
 	}
+
+	// Handle status codes appropriately. If status code is http.StatusPartialContent, we need to re-read data.
 	if statusCode == http.StatusProxyAuthRequired {
 		// TODO AN-989: Implement authentication (including handshaking).
-		return 0, errors.New("authentication is not currently supported")
+		resultSet.Close()
+		return responseID.String(), errors.New("authentication is not currently supported")
 	} else if statusCode == http.StatusNoContent {
 		// Add empty slice to result.
 		resultSet.addResult(newResult(make([]interface{}, 0)))
-		return statusCode, nil
+		resultSet.Close()
+		return responseID.String(), nil
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
 		resultSet.addResult(newResult(data))
 		if statusCode == http.StatusOK {
 			resultSet.setStatusAttributes(response.responseStatus.attributes)
 		}
-		return statusCode, nil
+
+		// More data coming, need to read again.
+		if statusCode == http.StatusPartialContent {
+			return protocol.read(resultSets)
+		}
+		resultSet.Close()
+		return responseID.String(), nil
 	} else {
-		return 0, errors.New(fmt.Sprint("statusCode: ", statusCode))
+		resultSet.Close()
+		return "", errors.New(fmt.Sprint("statusCode: ", statusCode))
 	}
 }
 
-func (protocol *gremlinServerWSProtocol) write(message string, results map[string]ResultSet) error {
+func (protocol *gremlinServerWSProtocol) write(message string, results map[string]ResultSet) (string, error) {
 	request := makeStringRequest(message)
 	bytes, err := protocol.serializer.serializeMessage(&request)
-	if err == nil {
-		err = protocol.transporter.Write(bytes)
+	if err != nil {
+		return "", err
 	}
-	return err
+	err = protocol.transporter.Write(bytes)
+	if err != nil {
+		return "", err
+	}
+	results[request.requestID.String()] = newChannelResultSet(request.requestID.String())
+	go protocol.read(results)
+	return request.requestID.String(), nil
 }
 
-func newGremlinServerWSProtocol(handler *logHandler) *gremlinServerWSProtocol {
-	ap := &protocolBase{}
-
-	protocol := &gremlinServerWSProtocol{ap, newGraphBinarySerializer(handler), handler, 1, "", ""}
-	return protocol
+func newGremlinServerWSProtocol(handler *logHandler) protocol {
+	return &gremlinServerWSProtocol{&protocolBase{}, newGraphBinarySerializer(handler), handler, 1, "", ""}
 }
