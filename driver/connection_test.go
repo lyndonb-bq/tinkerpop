@@ -7,7 +7,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-const runIntegration = true
+const runIntegration = false
 
 func TestConnection(t *testing.T) {
 	t.Run("Test connect", func(t *testing.T) {
