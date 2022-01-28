@@ -117,7 +117,7 @@ func (writer *graphBinaryWriter) getSerializerToWrite(val interface{}) (GraphBin
 		case reflect.Map:
 			return &mapSerializer{}, nil
 		case reflect.Array, reflect.Slice:
-			// we can write array or slices into the list datatype
+			// We can write an array or slice into the list datatype.
 			return &listSerializer{}, nil
 		default:
 			writer.logHandler.log(Error, serializeDataTypeError)
@@ -480,7 +480,7 @@ func (mapSerializer *mapSerializer) readValue(buffer *bytes.Buffer, reader *grap
 	if err != nil {
 		return nil, err
 	}
-	// currently, all map data types will be converted to a map of [interface{}]interface{}
+	// Currently, all map data types will be converted to a map of [interface{}]interface{}.
 	valMap := make(map[interface{}]interface{})
 	for i := 0; i < int(size); i++ {
 		key, err := reader.read(buffer)
@@ -583,7 +583,6 @@ func (listSerializer *listSerializer) writeValue(value interface{}, buffer *byte
 		return buffer.Bytes(), nil
 	}
 	for i := 0; i < valLen; i++ {
-		// serialize val
 		_, err := writer.write(v.Index(i).Interface(), buffer)
 		if err != nil {
 			return nil, err
@@ -608,7 +607,7 @@ func (listSerializer *listSerializer) readValue(buffer *bytes.Buffer, reader *gr
 	if err != nil {
 		return nil, err
 	}
-	// currently, all list data types will be converted to a slice of interface{}
+	// Currently, all list data types will be converted to a slice of interface{}.
 	var valList []interface{}
 	for i := 0; i < int(size); i++ {
 		val, err := reader.read(buffer)

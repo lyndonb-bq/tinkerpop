@@ -52,7 +52,7 @@ func (protocol *protocolBase) connectionMade(transporter transporter) {
 }
 
 func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (string, error) {
-	// Read data from transport layer
+	// Read data from transport layer.
 	msg, err := protocol.transporter.Read()
 	if err != nil || msg == nil {
 		if err != nil {

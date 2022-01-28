@@ -58,8 +58,6 @@ func (connection *connection) write(traversalString string) (ResultSet, error) {
 			return nil, err
 		}
 	}
-
-	// Generate request and insert in map with request id as key attached.
 	if connection.results == nil {
 		connection.results = map[string]ResultSet{}
 	}
@@ -67,9 +65,4 @@ func (connection *connection) write(traversalString string) (ResultSet, error) {
 	// Write through protocol layer.
 	responseID, err := connection.protocol.write(traversalString, connection.results)
 	return connection.results[responseID], err
-}
-
-func newConnection(host string, port int, transporterType TransporterType, handler *logHandler, transporter transporter,
-	protocol protocol, results map[string]ResultSet) *connection {
-	return &connection{host, port, transporterType, handler, transporter, protocol, results}
 }

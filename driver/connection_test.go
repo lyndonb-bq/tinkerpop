@@ -12,7 +12,7 @@ const runIntegration = false
 func TestConnection(t *testing.T) {
 	t.Run("Test connect", func(t *testing.T) {
 		if runIntegration {
-			connection := newConnection("localhost", 8181, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil)
+			connection := connection{"localhost", 8181, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil}
 			err := connection.connect()
 			assert.Nil(t, err)
 		}
@@ -20,7 +20,7 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test write", func(t *testing.T) {
 		if runIntegration {
-			connection := newConnection("localhost", 8181, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil)
+			connection := connection{"localhost", 8181, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil}
 			err := connection.connect()
 			assert.Nil(t, err)
 			resultSet, err := connection.write("g.V().count()")
@@ -28,7 +28,7 @@ func TestConnection(t *testing.T) {
 			assert.NotNil(t, resultSet)
 			result := resultSet.one()
 			assert.NotNil(t, result)
-			assert.Equal(t, result.AsString(), "[0]")
+			assert.Equal(t, "[0]", result.AsString())
 		}
 	})
 }

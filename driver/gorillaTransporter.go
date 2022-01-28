@@ -51,7 +51,7 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 	if err == nil {
 		transporter.connection = conn
 	}
-	return err
+	return
 }
 
 func (transporter *gorillaTransporter) Write(data []byte) (err error) {
