@@ -51,7 +51,7 @@ func (connection *connection) connect() error {
 	return nil
 }
 
-func (connection *connection) write(traversalString string) (ResultSet, error) {
+func (connection *connection) write(request *request) (ResultSet, error) {
 	if connection.transporter == nil || connection.transporter.IsClosed() {
 		err := connection.connect()
 		if err != nil {
@@ -63,6 +63,6 @@ func (connection *connection) write(traversalString string) (ResultSet, error) {
 	}
 
 	// Write through protocol layer.
-	responseID, err := connection.protocol.write(traversalString, connection.results)
+	responseID, err := connection.protocol.write(request, connection.results)
 	return connection.results[responseID], err
 }

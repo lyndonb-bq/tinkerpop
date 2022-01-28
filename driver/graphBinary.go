@@ -207,7 +207,7 @@ func (reader *graphBinaryReader) read(buffer *bytes.Buffer) (interface{}, error)
 	}
 	if typeCode == NullType {
 		var isNull byte
-		err = binary.Read(buffer, binary.BigEndian, &isNull)
+		_ = binary.Read(buffer, binary.BigEndian, &isNull)
 		if isNull != 1 {
 			return nil, errors.New("expected isNull check to be true for NullType")
 		}

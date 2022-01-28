@@ -63,7 +63,7 @@ func (gs graphBinarySerializer) serializeMessage(request *request) ([]byte, erro
 }
 
 func writeStr(buffer bytes.Buffer, str string) error {
-	err := binary.Write(&buffer, binary.BigEndian, len(str))
+	err := binary.Write(&buffer, binary.BigEndian, int64(len(str)))
 	if err != nil {
 		return err
 	}

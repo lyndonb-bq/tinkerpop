@@ -19,7 +19,9 @@ under the License.
 
 package gremlingo
 
-import "golang.org/x/text/language"
+import (
+	"golang.org/x/text/language"
+)
 
 // ClientSettings is used to modify a Client's settings on initialization.
 type ClientSettings struct {
@@ -33,8 +35,9 @@ type ClientSettings struct {
 type Client struct {
 	host            string
 	port            int
-	transporterType TransporterType
 	logHandler      *logHandler
+	transporterType TransporterType
+	connection      *connection
 }
 
 // NewClient creates a Client and configures it with the given parameters.
@@ -50,12 +53,38 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	client := &Client{host, port, settings.TransporterType, logHandler}
+	client := &Client{
+		host:            host,
+		port:            port,
+		logHandler:      logHandler,
+		transporterType: settings.TransporterType,
+		connection:      nil,
+	}
 	return client
 }
 
-// Submit a Gremlin traversal string to execute.
-func (client *Client) Submit(traversalString string) (string, error) {
-	// TODO
-	return "", nil
+// Close closes the client via connection
+func (client *Client) Close() {
+	err := client.connection.close()
+	if err != nil {
+		return
+	}
+}
+
+// Submit submits a Gremlin script to the server and returns a ResultSet
+func (client *Client) Submit(traversalString string) (ResultSet, error) {
+	// TODO AN-982: Obtain connection from pool of connections held by the client.
+	request := makeStringRequest(traversalString)
+	if client.connection == nil {
+		client.connection = &connection{
+			host:            client.host,
+			port:            client.port,
+			transporterType: client.transporterType,
+			logHandler:      client.logHandler,
+			transporter:     nil,
+			protocol:        nil,
+		}
+	}
+
+	return client.connection.write(&request)
 }
