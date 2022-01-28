@@ -25,23 +25,30 @@ const defaultCapacity = 1000
 type ResultSet interface {
 	setAggregateTo(val string)
 	GetAggregateTo() string
-	setStatusAttributes(statusAttributes map[interface{}]interface{})
-	GetStatusAttributes() map[interface{}]interface{}
-	GetRequestID() int
+	setStatusAttributes(statusAttributes map[string]interface{})
+	GetStatusAttributes() map[string]interface{}
+	GetRequestID() string
 	IsEmpty() bool
 	Close()
 	Channel() chan *Result
 	addResult(result *Result)
 	one() *Result
 	All() []*Result
+	GetError() error
 }
 
 // channelResultSet Channel based implementation of ResultSet.
 type channelResultSet struct {
 	channel          chan *Result
+	requestID        string
 	aggregateTo      string
-	statusAttributes map[interface{}]interface{}
+	statusAttributes map[string]interface{}
 	closed           bool
+	err              error
+}
+
+func (channelResultSet *channelResultSet) GetError() error {
+	return channelResultSet.err
 }
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
@@ -61,16 +68,16 @@ func (channelResultSet *channelResultSet) GetAggregateTo() string {
 	return channelResultSet.aggregateTo
 }
 
-func (channelResultSet *channelResultSet) setStatusAttributes(val map[interface{}]interface{}) {
+func (channelResultSet *channelResultSet) setStatusAttributes(val map[string]interface{}) {
 	channelResultSet.statusAttributes = val
 }
 
-func (channelResultSet *channelResultSet) GetStatusAttributes() map[interface{}]interface{} {
+func (channelResultSet *channelResultSet) GetStatusAttributes() map[string]interface{} {
 	return channelResultSet.statusAttributes
 }
 
-func (channelResultSet *channelResultSet) GetRequestID() int {
-	return -1
+func (channelResultSet *channelResultSet) GetRequestID() string {
+	return channelResultSet.requestID
 }
 
 func (channelResultSet *channelResultSet) Channel() chan *Result {
@@ -93,10 +100,10 @@ func (channelResultSet *channelResultSet) addResult(result *Result) {
 	channelResultSet.channel <- result
 }
 
-func newChannelResultSetCapacity(channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), "", nil, false}
+func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
+	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil}
 }
 
-func newChannelResultSet() ResultSet {
-	return newChannelResultSetCapacity(defaultCapacity)
+func newChannelResultSet(requestID string) ResultSet {
+	return newChannelResultSetCapacity(requestID, defaultCapacity)
 }

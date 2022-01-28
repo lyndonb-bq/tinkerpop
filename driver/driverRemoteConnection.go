@@ -19,8 +19,103 @@ under the License.
 
 package gremlingo
 
-type DriverRemoteConnection interface {
-	Close()
-	Submit(traversalString string)
-	SubmitAsync(traversalString string)
+import "golang.org/x/text/language"
+
+// DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection
+type DriverRemoteConnectionSettings struct {
+	TraversalSource string
+	Username        string
+	Password        string
+	TransporterType TransporterType
+	LogVerbosity    LogVerbosity
+	Logger          Logger
+	Language        language.Tag
+
+	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
+	Protocol   protocol
+	Serializer serializer
 }
+
+// DriverRemoteConnection is a remote connection
+type DriverRemoteConnection struct {
+	client *Client
+}
+
+// NewDriverRemoteConnection creates a new DriverRemoteConnection
+func NewDriverRemoteConnection(
+	host string,
+	port int,
+	configurations ...func(settings *DriverRemoteConnectionSettings)) *DriverRemoteConnection {
+	settings := &DriverRemoteConnectionSettings{
+		TraversalSource: "g",
+		Username:        "",
+		Password:        "",
+		TransporterType: Gorilla,
+		LogVerbosity:    Info,
+		Logger:          &defaultLogger{},
+		Language:        language.English,
+
+		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
+		Protocol:   nil,
+		Serializer: nil,
+	}
+	for _, configuration := range configurations {
+		configuration(settings)
+	}
+
+	// TODO: Full constructor blocked on client
+	client := &Client{
+		host:            host,
+		port:            port,
+		transporterType: settings.TransporterType,
+		logHandler:      newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language),
+	}
+
+	return &DriverRemoteConnection{client: client}
+}
+
+// Close closes the DriverRemoteConnection
+func (driver *DriverRemoteConnection) Close() error {
+	return driver.client.Close()
+}
+
+// Submit sends a traversal to the server
+// TODO: Take in Bytecode when implemented
+func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet, error) {
+	return driver.client.Submit(traversalString)
+}
+
+// TODO: Bytecode, OptionsStrategy, RequestOptions
+//func extractRequestOptions(bytecode Bytecode) RequestOptions {
+//	var optionsStrategy OptionsStrategy = nil
+//	for _, instruction := range bytecode.sourceInstructions {
+//		if instruction[0] == "withStrategies" {
+//			_, isOptionsStrategy := instruction[1].(OptionsStrategy)
+//			if isOptionsStrategy {
+//				optionsStrategy = instruction
+//				break
+//			}
+//		}
+//	}
+//
+//	var requestOptions RequestOptions = nil
+//	if optionsStrategy != nil {
+//		allowedKeys := []string{'evaluationTimeout', 'scriptEvaluationTimeout', 'batchSize', 'requestId', 'userAgent'}
+//		requestOptions := make(map[string]string)
+//		for _, allowedKey := range allowedKeys {
+//			if isAllowedKeyInConfigs(allowedKey, optionsStrategy[1].configuration) {
+//				requestOptions[allowedKey] = optionsStrategy[1].configuration[allowedKey]
+//			}
+//		}
+//	}
+//	return requestOptions
+//}
+
+//func isAllowedKeyInConfigs(allowedKey string, configs []string) bool {
+//	for _, config := range configs {
+//		if allowedKey == config {
+//			return true
+//		}
+//	}
+//	return false
+//}
