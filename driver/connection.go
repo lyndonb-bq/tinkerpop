@@ -65,8 +65,8 @@ func (connection *connection) write(traversalString string) (ResultSet, error) {
 	}
 
 	// Write through protocol layer.
-	responseId, err := connection.protocol.write(traversalString, connection.results)
-	return connection.results[responseId], err
+	responseID, err := connection.protocol.write(traversalString, connection.results)
+	return connection.results[responseID], err
 }
 
 func newConnection(host string, port int, transporterType TransporterType, handler *logHandler, transporter transporter,

@@ -45,7 +45,7 @@ func TestSerializer(t *testing.T) {
 		responseByteArray := []byte{129, 0, 251, 37, 42, 74, 117, 221, 71, 191, 183, 78, 86, 53, 0, 12, 132, 100, 0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 0, 0, 0, 0, 4, 104, 111, 115, 116, 3, 0, 0, 0, 0, 16, 47, 49, 50, 55, 46, 48, 46, 48, 46, 49, 58, 54, 50, 48, 51, 53, 0, 0, 0, 0, 9, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 		serializer := newGraphBinarySerializer(newLogHandler(&defaultLogger{}, Error, language.English))
 		response, _ := serializer.deserializeMessage(responseByteArray)
-		assert.Equal(t, response.responseId.String(), "fb252a4a-75dd-47bf-b74e-5635000c8464")
+		assert.Equal(t, response.responseID.String(), "fb252a4a-75dd-47bf-b74e-5635000c8464")
 		assert.Equal(t, response.responseStatus.code, uint16(200))
 		assert.Equal(t, response.responseStatus.message, "")
 		assert.Equal(t, response.responseStatus.attributes, map[string]interface{}{"host": "/127.0.0.1:62035"})

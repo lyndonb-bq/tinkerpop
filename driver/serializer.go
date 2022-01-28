@@ -82,9 +82,9 @@ func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte, mi
 	buffer.WriteByte(versionByte)
 
 	// Request uuid
-	bigIntUuid := uuidToBigInt(request.requestID)
-	lower := bigIntUuid.Uint64()
-	upperBigInt := bigIntUuid.Rsh(&bigIntUuid, 64)
+	bigIntUUID := uuidToBigInt(request.requestID)
+	lower := bigIntUUID.Uint64()
+	upperBigInt := bigIntUUID.Rsh(&bigIntUUID, 64)
 	upper := upperBigInt.Uint64()
 	err := binary.Write(&buffer, binary.BigEndian, upper)
 	if err != nil {
@@ -140,7 +140,7 @@ func uuidToBigInt(requestId uuid.UUID) big.Int {
 	return bigInt
 }
 
-func readUuid(buffer *bytes.Buffer) (uuid.UUID, error) {
+func readUUID(buffer *bytes.Buffer) (uuid.UUID, error) {
 	var nullable byte
 	err := binary.Read(buffer, binary.LittleEndian, &nullable)
 	if err != nil {
@@ -164,12 +164,12 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		if err != nil {
 			return nil, err
 		} else if keyType != StringType {
-			return nil, errors.New("Expected string key for map.")
+			return nil, errors.New("expected string key for map")
 		}
 		var nullable byte
 		err = binary.Read(buffer, binary.BigEndian, &nullable)
 		if nullable != 0 {
-			return nil, errors.New("Expected non-null key for map.")
+			return nil, errors.New("expected non-null key for map")
 		} else {
 			k, err := readString(buffer)
 			if err != nil {
@@ -212,7 +212,7 @@ func (gs graphBinarySerializer) deserializeMessage(responseMessage []byte) (resp
 	}
 
 	// Response uuid
-	msgUUID, err := readUuid(&buffer)
+	msgUUID, err := readUUID(&buffer)
 	if err != nil {
 		return msg, err
 	}
@@ -254,7 +254,7 @@ func (gs graphBinarySerializer) deserializeMessage(responseMessage []byte) (resp
 		return msg, err
 	}
 
-	msg.responseId = msgUUID
+	msg.responseID = msgUUID
 	msg.responseStatus.code = uint16(statusCode)
 	msg.responseStatus.message = statusMessage
 	msg.responseStatus.attributes = statusAttributes
@@ -309,7 +309,7 @@ func (gs *graphBinarySerializer) serializeResponseMessage(response *response) ([
 	buffer.WriteByte(versionByte)
 
 	// requestID
-	_, err := gs.writerClass.writeValue(response.responseId, &buffer, true)
+	_, err := gs.writerClass.writeValue(response.responseID, &buffer, true)
 	if err != nil {
 		return nil, err
 	}

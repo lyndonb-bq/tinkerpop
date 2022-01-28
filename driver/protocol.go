@@ -67,14 +67,14 @@ func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (
 		return "", err
 	}
 
-	responseId, statusCode, metadata, data := response.responseId, response.responseStatus.code,
+	responseID, statusCode, metadata, data := response.responseID, response.responseStatus.code,
 		response.responseResult.meta, response.responseResult.data
 
-	resultSet := resultSets[responseId.String()]
+	resultSet := resultSets[responseID.String()]
 	if resultSet == nil {
-		resultSet = newChannelResultSet(responseId.String())
+		resultSet = newChannelResultSet(responseID.String())
 	}
-	resultSets[responseId.String()] = resultSet
+	resultSets[responseID.String()] = resultSet
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSet.setAggregateTo(aggregateTo.(string))
 	}
@@ -83,12 +83,12 @@ func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (
 	if statusCode == http.StatusProxyAuthRequired {
 		// TODO AN-989: Implement authentication (including handshaking).
 		resultSet.Close()
-		return responseId.String(), errors.New("authentication is not currently supported")
+		return responseID.String(), errors.New("authentication is not currently supported")
 	} else if statusCode == http.StatusNoContent {
 		// Add empty slice to result.
 		resultSet.addResult(newResult(make([]interface{}, 0)))
 		resultSet.Close()
-		return responseId.String(), nil
+		return responseID.String(), nil
 	} else if statusCode == http.StatusOK || statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
 		resultSet.addResult(newResult(data))
@@ -101,7 +101,7 @@ func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (
 			return protocol.read(resultSets)
 		}
 		resultSet.Close()
-		return responseId.String(), nil
+		return responseID.String(), nil
 	} else {
 		resultSet.Close()
 		return "", errors.New(fmt.Sprint("statusCode: ", statusCode))

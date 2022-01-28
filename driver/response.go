@@ -36,7 +36,7 @@ type responseResult struct {
 
 // response represents a response from the server
 type response struct {
-	responseId     uuid.UUID
+	responseID     uuid.UUID
 	responseStatus responseStatus
 	responseResult responseResult
 }
