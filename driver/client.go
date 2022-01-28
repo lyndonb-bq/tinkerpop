@@ -75,17 +75,16 @@ func (client *Client) Close() {
 func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	request := makeStringRequest(traversalString)
-	client.connection = &connection{
-		host:            client.host,
-		port:            client.port,
-		transporterType: client.transporterType,
-		logHandler:      client.logHandler,
-		transporter:     nil,
-		protocol:        nil,
+	if client.connection == nil {
+		client.connection = &connection{
+			host:            client.host,
+			port:            client.port,
+			transporterType: client.transporterType,
+			logHandler:      client.logHandler,
+			transporter:     nil,
+			protocol:        nil,
+		}
 	}
-	res, err := client.connection.write(&request)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+
+	return client.connection.write(&request)
 }
