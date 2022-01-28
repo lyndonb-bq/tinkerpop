@@ -21,20 +21,8 @@ func TestConnection(t *testing.T) {
 		resultSet, err := connection.write("g.V().count()")
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		results := resultSet.All()
-		for result := range results {
-			assert.Equal(t, "0", result)
-		}
+		result := resultSet.one()
+		assert.NotNil(t, result)
+		assert.Equal(t, result.AsString(), "[0]")
 	})
-
-	//t.Run("Sandbox", func(t *testing.T) {
-	//	client := NewClient("localhost", 8182)
-	//
-	//	response, err := client.Submit("1 + 1")
-	//	if err != nil {
-	//		fmt.Println(err)
-	//		return
-	//	}
-	//	fmt.Println(response)
-	//})
 }

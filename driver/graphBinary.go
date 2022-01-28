@@ -31,7 +31,7 @@ import (
 // Version 1.0
 
 // DataType graphbinary types
-type DataType int
+type DataType uint8
 
 // DataType defined as constants
 const (
@@ -106,7 +106,7 @@ func (writer *graphBinaryWriter) getSerializerToWrite(val interface{}) (GraphBin
 	switch val.(type) {
 	case string:
 		return &stringSerializer{}, nil
-	case int64, int, uint32:
+	case uint64, int64, int, uint32: // ?
 		return &longSerializer{}, nil
 	case int32, uint16:
 		return &intSerializer{}, nil
@@ -200,17 +200,21 @@ func (writer *graphBinaryWriter) writeValueFlagNone(buffer *bytes.Buffer) {
 
 // Reads the type code, information and value of a given buffer with fully-qualified format.
 func (reader *graphBinaryReader) read(buffer *bytes.Buffer) (interface{}, error) {
-	typeCode, _ := buffer.ReadByte()
-	if typeCode == NullType.getCodeByte() {
-		check, _ := buffer.ReadByte()
-		// check this
-		if check != 1 {
-			return nil, errors.New("read value flag")
+	var typeCode DataType
+	err := binary.Read(buffer, binary.BigEndian, &typeCode)
+	if err != nil {
+		return nil, err
+	}
+	if typeCode == NullType {
+		var isNull byte
+		err = binary.Read(buffer, binary.BigEndian, &isNull)
+		if isNull != 1 {
+			return nil, errors.New("expected isNull check to be true for NullType.")
 		}
 		return nil, nil
 	}
 
-	serializer, err := reader.getSerializerToRead(typeCode)
+	serializer, err := reader.getSerializerToRead(byte(typeCode))
 	if err != nil {
 		return nil, err
 	}
@@ -318,20 +322,7 @@ func (longSerializer *longSerializer) writeValue(value interface{}, buffer *byte
 		writer.writeValueFlagNone(buffer)
 	}
 
-	// int, uint32, int64
-	var val int64
-	switch value := value.(type) {
-	case int:
-		val = int64(value)
-	case uint32:
-		val = int64(value)
-	case int64:
-		val = value
-	default:
-		writer.logHandler.log(Error, unmatchedDataType)
-		return nil, errors.New("datatype read from input buffer different from requested datatype")
-	}
-	err := binary.Write(buffer, binary.BigEndian, val)
+	err := binary.Write(buffer, binary.BigEndian, value)
 	if err != nil {
 		return nil, err
 	}

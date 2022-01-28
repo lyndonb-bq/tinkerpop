@@ -25,8 +25,8 @@ const defaultCapacity = 1000
 type ResultSet interface {
 	setAggregateTo(val string)
 	GetAggregateTo() string
-	setStatusAttributes(statusAttributes map[interface{}]interface{})
-	GetStatusAttributes() map[interface{}]interface{}
+	setStatusAttributes(statusAttributes map[string]interface{})
+	GetStatusAttributes() map[string]interface{}
 	GetRequestID() string
 	IsEmpty() bool
 	Close()
@@ -41,7 +41,7 @@ type channelResultSet struct {
 	channel          chan *Result
 	requestID        string
 	aggregateTo      string
-	statusAttributes map[interface{}]interface{}
+	statusAttributes map[string]interface{}
 	closed           bool
 }
 
@@ -62,11 +62,11 @@ func (channelResultSet *channelResultSet) GetAggregateTo() string {
 	return channelResultSet.aggregateTo
 }
 
-func (channelResultSet *channelResultSet) setStatusAttributes(val map[interface{}]interface{}) {
+func (channelResultSet *channelResultSet) setStatusAttributes(val map[string]interface{}) {
 	channelResultSet.statusAttributes = val
 }
 
-func (channelResultSet *channelResultSet) GetStatusAttributes() map[interface{}]interface{} {
+func (channelResultSet *channelResultSet) GetStatusAttributes() map[string]interface{} {
 	return channelResultSet.statusAttributes
 }
 

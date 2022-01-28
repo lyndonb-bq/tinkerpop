@@ -35,7 +35,9 @@ func Test(t *testing.T) {
 
 	t.Run("Test dataReceived actual message", func(t *testing.T) {
 		protocol := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English))
-		err := protocol.write("1+1", nil)
+		protocol.connectionMade(getTransportLayer(Gorilla, "host", 1234))
+		requestId, err := protocol.write("1+1", nil)
 		assert.NotNil(t, err)
+		assert.Equal(t, requestId, "")
 	})
 }

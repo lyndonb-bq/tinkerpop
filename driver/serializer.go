@@ -21,7 +21,10 @@ package gremlingo
 
 import (
 	"bytes"
-	"golang.org/x/text/language"
+	"encoding/binary"
+	"errors"
+	"math/big"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -59,42 +62,141 @@ func (gs graphBinarySerializer) serializeMessage(request *request) ([]byte, erro
 	return finalMessage, nil
 }
 
+func writeStr(buffer bytes.Buffer, str string) error {
+	err := binary.Write(&buffer, binary.BigEndian, len(str))
+	if err != nil {
+		return err
+	}
+	_, err = buffer.WriteString(str)
+	return err
+}
+
 func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte, mimeType string) ([]byte, error) {
 	buffer := bytes.Buffer{}
 
 	// mime header
 	buffer.WriteByte(mimeLen)
 	buffer.WriteString(mimeType)
-	// version
+
+	// Version
 	buffer.WriteByte(versionByte)
-	// requestID
-	logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
-	logHandler.logger.Logf(Error, "requestID")
-	_, err := gs.writerClass.writeValue(request.requestID, &buffer, false)
+
+	// Request uuid
+	bigIntUuid := uuidToBigInt(request.requestID)
+	lower := bigIntUuid.Uint64()
+	upperBigInt := bigIntUuid.Rsh(&bigIntUuid, 64)
+	upper := upperBigInt.Uint64()
+	err := binary.Write(&buffer, binary.BigEndian, upper)
 	if err != nil {
 		return nil, err
 	}
-	// op
-	logHandler.logger.Logf(Error, "op")
-	_, err = gs.writerClass.writeValue(request.op, &buffer, false)
-	if err != nil {
-		return nil, err
-	}
-	// processor
-	logHandler.logger.Logf(Error, "processor")
-	_, err = gs.writerClass.writeValue(request.processor, &buffer, false)
-	if err != nil {
-		return nil, err
-	}
-	// args
-	logHandler.logger.Logf(Error, "args")
-	_, err = gs.writerClass.writeValue(request.args, &buffer, false)
+	err = binary.Write(&buffer, binary.BigEndian, lower)
 	if err != nil {
 		return nil, err
 	}
 
-	logHandler.logger.Logf(Error, "Done")
+	// op
+	err = binary.Write(&buffer, binary.BigEndian, uint32(len(request.op)))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.WriteString(request.op)
+	if err != nil {
+		return nil, err
+	}
+
+	// processor
+	err = binary.Write(&buffer, binary.BigEndian, uint32(len(request.processor)))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.WriteString(request.processor)
+	if err != nil {
+		return nil, err
+	}
+
+	// args
+	err = binary.Write(&buffer, binary.BigEndian, uint32(len(request.args)))
+	for k, v := range request.args {
+		_, err = gs.writerClass.writeValue(k, &buffer, true)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = gs.writerClass.writeValue(v, &buffer, true)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return buffer.Bytes(), nil
+}
+
+func uuidToBigInt(requestId uuid.UUID) big.Int {
+	var bigInt big.Int
+	bigInt.SetString(strings.Replace(requestId.String(), "-", "", 4), 16)
+	return bigInt
+}
+
+func readUuid(buffer *bytes.Buffer) (uuid.UUID, error) {
+	var nullable byte
+	err := binary.Read(buffer, binary.LittleEndian, &nullable)
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+	uuidBytes := make([]byte, 16)
+	err = binary.Read(buffer, binary.LittleEndian, uuidBytes)
+	return uuid.FromBytes(uuidBytes)
+}
+
+func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interface{}, error) {
+	var mapSize uint32
+	err := binary.Read(buffer, binary.BigEndian, &mapSize)
+	if err != nil {
+		return nil, err
+	}
+	var mapData = map[string]interface{}{}
+	for i := uint32(0); i < mapSize; i++ {
+		var keyType DataType
+		err = binary.Read(buffer, binary.BigEndian, &keyType)
+		if err != nil {
+			return nil, err
+		} else if keyType != StringType {
+			return nil, errors.New("Expected string key for map.")
+		}
+		var nullable byte
+		err = binary.Read(buffer, binary.BigEndian, &nullable)
+		if nullable != 0 {
+			return nil, errors.New("Expected non-null key for map.")
+		} else {
+			k, err := readString(buffer)
+			if err != nil {
+				return nil, err
+			}
+			mapData[k], err = gs.readerClass.read(buffer)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return mapData, nil
+}
+
+func readString(buffer *bytes.Buffer) (string, error) {
+	var strLength uint32
+	err := binary.Read(buffer, binary.BigEndian, &strLength)
+	if err != nil {
+		return "", err
+	}
+
+	strBytes := make([]byte, strLength)
+	err = binary.Read(buffer, binary.BigEndian, strBytes)
+	if err != nil {
+		return "", err
+	}
+	return string(strBytes[:]), nil
 }
 
 // deserializeMessage deserializes a response message
@@ -102,48 +204,62 @@ func (gs graphBinarySerializer) deserializeMessage(responseMessage []byte) (resp
 	var msg response
 	buffer := bytes.Buffer{}
 	buffer.Write(responseMessage)
-	// version
+
+	// Version
 	_, err := buffer.ReadByte()
 	if err != nil {
 		return msg, err
 	}
-	// UUID
-	msgUUID, err := gs.readerClass.readValue(&buffer, byte(UUIDType), true)
-	if err != nil {
-		return msg, err
-	}
-	// Status Code
-	msgCode, err := gs.readerClass.readValue(&buffer, byte(IntType), false)
-	if err != nil {
-		return msg, err
-	}
-	// Nullable Status message
-	msgMsg, err := gs.readerClass.readValue(&buffer, byte(StringType), true)
-	if err != nil {
-		return msg, err
-	}
-	// Status Attribute
-	msgAttr, err := gs.readerClass.readValue(&buffer, byte(MapType), false)
-	if err != nil {
-		return msg, err
-	}
-	// Result meta
-	msgMeta, err := gs.readerClass.readValue(&buffer, byte(MapType), false)
-	if err != nil {
-		return msg, err
-	}
-	// Result data
-	msgData, err := gs.readerClass.read(&buffer)
+
+	// Response uuid
+	msgUUID, err := readUuid(&buffer)
 	if err != nil {
 		return msg, err
 	}
 
-	msg.requestID = msgUUID.(uuid.UUID)
-	msg.responseStatus.code = uint16(msgCode.(int32))
-	msg.responseStatus.message = msgMsg.(string)
-	msg.responseStatus.attributes = msgAttr.(map[interface{}]interface{})
-	msg.responseResult.meta = msgMeta.(map[interface{}]interface{})
-	msg.responseResult.data = msgData
+	// Status Code
+	var statusCode uint32
+	err = binary.Read(&buffer, binary.BigEndian, &statusCode)
+	if err != nil {
+		return msg, err
+	}
+	statusCode = statusCode & 0xFF
+
+	// Nullable Status message
+	var statusMessageNull byte
+	var statusMessage string
+	err = binary.Read(&buffer, binary.LittleEndian, &statusMessageNull)
+	if statusMessageNull == 0 {
+		statusMessage, err = readString(&buffer)
+		if err != nil {
+			return msg, err
+		}
+	}
+
+	// Status Attributes
+	statusAttributes, err := readMap(&buffer, &gs)
+	if err != nil {
+		return msg, err
+	}
+
+	// Meta Attributes
+	metaAttributes, err := readMap(&buffer, &gs)
+	if err != nil {
+		return msg, err
+	}
+
+	// Result data
+	data, err := gs.readerClass.read(&buffer)
+	if err != nil {
+		return msg, err
+	}
+
+	msg.responseId = msgUUID
+	msg.responseStatus.code = uint16(statusCode)
+	msg.responseStatus.message = statusMessage
+	msg.responseStatus.attributes = statusAttributes
+	msg.responseResult.meta = metaAttributes
+	msg.responseResult.data = data
 
 	return msg, nil
 }
@@ -193,7 +309,7 @@ func (gs *graphBinarySerializer) serializeResponseMessage(response *response) ([
 	buffer.WriteByte(versionByte)
 
 	// requestID
-	_, err := gs.writerClass.writeValue(response.requestID, &buffer, true)
+	_, err := gs.writerClass.writeValue(response.responseId, &buffer, true)
 	if err != nil {
 		return nil, err
 	}

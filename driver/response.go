@@ -23,20 +23,20 @@ import "github.com/google/uuid"
 
 // responseStatus contains the status info of the response
 type responseStatus struct {
-	code       uint16                      `json:"code"`
-	message    string                      `json:"message"`
-	attributes map[interface{}]interface{} `json:"attributes"`
+	code       uint16
+	message    string
+	attributes map[string]interface{}
 }
 
 // responseResult contains the result info of the response
 type responseResult struct {
-	meta map[interface{}]interface{} `json:"meta"`
-	data interface{}                 `json:"data"`
+	meta map[string]interface{}
+	data interface{}
 }
 
 // response represents a response from the server
 type response struct {
-	requestID      uuid.UUID      `json:"requestId"`
-	responseStatus responseStatus `json:"responseStatus"`
-	responseResult responseResult `json:"responseResult"`
+	responseId     uuid.UUID
+	responseStatus responseStatus
+	responseResult responseResult
 }

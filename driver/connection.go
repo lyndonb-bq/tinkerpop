@@ -19,8 +19,6 @@ under the License.
 
 package gremlingo
 
-import "github.com/google/uuid"
-
 type connection struct {
 	host            string
 	port            int
@@ -62,18 +60,13 @@ func (connection *connection) write(traversalString string) (ResultSet, error) {
 	}
 
 	// Generate request and insert in map with request id as key attached.
-	requestID := uuid.New().String()
 	if connection.results == nil {
 		connection.results = map[string]ResultSet{}
 	}
-	connection.results[requestID] = newChannelResultSet(requestID)
 
 	// Write through protocol layer.
-	err := connection.protocol.write(traversalString, connection.results)
-	if err != nil {
-		return nil, err
-	}
-	return connection.results[requestID], nil
+	responseId, err := connection.protocol.write(traversalString, connection.results)
+	return connection.results[responseId], err
 }
 
 func newConnection(host string, port int, transporterType TransporterType, handler *logHandler, transporter transporter,
