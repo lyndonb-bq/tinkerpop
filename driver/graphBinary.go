@@ -106,7 +106,7 @@ func (writer *graphBinaryWriter) getSerializerToWrite(val interface{}) (GraphBin
 	switch val.(type) {
 	case string:
 		return &stringSerializer{}, nil
-	case uint64, int64, int, uint32: // ?
+	case int64, int, uint32:
 		return &longSerializer{}, nil
 	case int32, uint16:
 		return &intSerializer{}, nil
@@ -320,6 +320,13 @@ func (longSerializer *longSerializer) writeValue(value interface{}, buffer *byte
 
 	if nullable {
 		writer.writeValueFlagNone(buffer)
+	}
+
+	switch v := value.(type) {
+	case int:
+		value = int64(v)
+	case uint32:
+		value = int64(v)
 	}
 
 	err := binary.Write(buffer, binary.BigEndian, value)
