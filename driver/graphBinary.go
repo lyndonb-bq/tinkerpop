@@ -262,7 +262,7 @@ func (intSerializer *intSerializer) writeValue(value interface{}, buffer *bytes.
 		writer.writeValueFlagNone(buffer)
 	}
 
-	//uint16, int32
+	// uint16, int32
 	var val int32
 	switch value := value.(type) {
 	case uint16:
