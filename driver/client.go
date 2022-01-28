@@ -63,6 +63,7 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 	return client
 }
 
+// Close closes the client via connection
 func (client *Client) Close() {
 	err := client.connection.close()
 	if err != nil {
@@ -70,6 +71,7 @@ func (client *Client) Close() {
 	}
 }
 
+// Submit submits a Gremlin script to the server and returns a ResultSet
 func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	request := makeStringRequest(traversalString)
