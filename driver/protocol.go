@@ -28,7 +28,7 @@ import (
 type protocol interface {
 	connectionMade(transport transporter)
 	read(resultSets map[string]ResultSet) (string, error)
-	write(message string, results map[string]ResultSet) (string, error)
+	write(request *request, results map[string]ResultSet) (string, error)
 }
 
 type protocolBase struct {
@@ -108,9 +108,8 @@ func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (
 	}
 }
 
-func (protocol *gremlinServerWSProtocol) write(message string, results map[string]ResultSet) (string, error) {
-	request := makeStringRequest(message)
-	bytes, err := protocol.serializer.serializeMessage(&request)
+func (protocol *gremlinServerWSProtocol) write(request *request, results map[string]ResultSet) (string, error) {
+	bytes, err := protocol.serializer.serializeMessage(request)
 	if err != nil {
 		return "", err
 	}
