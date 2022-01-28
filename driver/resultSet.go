@@ -34,6 +34,7 @@ type ResultSet interface {
 	addResult(result *Result)
 	one() *Result
 	All() []*Result
+	GetError() error
 }
 
 // channelResultSet Channel based implementation of ResultSet.
@@ -43,6 +44,11 @@ type channelResultSet struct {
 	aggregateTo      string
 	statusAttributes map[string]interface{}
 	closed           bool
+	err              error
+}
+
+func (channelResultSet *channelResultSet) GetError() error {
+	return channelResultSet.err
 }
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
@@ -95,7 +101,7 @@ func (channelResultSet *channelResultSet) addResult(result *Result) {
 }
 
 func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false}
+	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil}
 }
 
 func newChannelResultSet(requestID string) ResultSet {

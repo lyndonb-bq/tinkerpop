@@ -23,8 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 type protocol interface {
@@ -74,7 +72,7 @@ func (protocol *gremlinServerWSProtocol) read(resultSets map[string]ResultSet) (
 
 	resultSet := resultSets[responseId.String()]
 	if resultSet == nil {
-		resultSet = newChannelResultSet(uuid.New().String())
+		resultSet = newChannelResultSet(responseId.String())
 	}
 	resultSets[responseId.String()] = resultSet
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
@@ -120,11 +118,9 @@ func (protocol *gremlinServerWSProtocol) write(message string, results map[strin
 	if err != nil {
 		return "", err
 	}
-	requestId, err := protocol.read(results)
-	if err != nil {
-		return "", err
-	}
-	return requestId, nil
+	results[request.requestID.String()] = newChannelResultSet(request.requestID.String())
+	go protocol.read(results)
+	return request.requestID.String(), nil
 }
 
 func newGremlinServerWSProtocol(handler *logHandler) protocol {

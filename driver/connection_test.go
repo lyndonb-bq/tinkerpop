@@ -7,7 +7,6 @@ import (
 )
 
 func TestConnection(t *testing.T) {
-
 	t.Run("Test connect", func(t *testing.T) {
 		connection := newConnection("localhost", 8181, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil)
 		err := connection.connect()
