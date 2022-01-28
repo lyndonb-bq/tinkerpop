@@ -134,9 +134,9 @@ func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte, mi
 	return buffer.Bytes(), nil
 }
 
-func uuidToBigInt(requestId uuid.UUID) big.Int {
+func uuidToBigInt(requestID uuid.UUID) big.Int {
 	var bigInt big.Int
-	bigInt.SetString(strings.Replace(requestId.String(), "-", "", 4), 16)
+	bigInt.SetString(strings.Replace(requestID.String(), "-", "", 4), 16)
 	return bigInt
 }
 
