@@ -64,11 +64,8 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 }
 
 // Close closes the client via connection
-func (client *Client) Close() {
-	err := client.connection.close()
-	if err != nil {
-		return
-	}
+func (client *Client) Close() error {
+	return client.connection.close()
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet
