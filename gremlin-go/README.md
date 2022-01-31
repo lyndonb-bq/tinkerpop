@@ -93,8 +93,6 @@ TODO: Add Go code for Update Vertex.
 
 ## Test Coverage
 
-[![codecov](https://codecov.io/gh/Bit-Quill/gremlin-go/branch/main/graph/badge.svg?token=lzavk3wBTi)](https://codecov.io/gh/Bit-Quill/gremlin-go)
-
 [tk]: https://tinkerpop.apache.org
 [gremlin]: https://tinkerpop.apache.org/gremlin.html
 [docs]: https://tinkerpop.apache.org/docs/current/reference/#gremlin-go
