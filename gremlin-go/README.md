@@ -64,20 +64,20 @@ import (
 )
 
 func main() {
-    // Creating the connection to the server.
+	// Creating the connection to the server.
 	driverRemoteConnection := gremlingo.NewDriverRemoteConnection("localhost", 8182)
-    // Cleanup
+	// Cleanup
 	defer driverRemoteConnection.Close()
-    // Submit a traversal (string format in milestone 1).
+	// Submit a traversal (string format in milestone 1).
 	resultSet, err := driverRemoteConnection.Submit("1 + 1")
-    // Check for traversal execution errors, print them if there are any and exit.
+	// Check for traversal execution errors, print them if there are any and exit.
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-    // Grab the first result from all the results in the ResultSet.
+	// Grab the first result from all the results in the ResultSet.
 	result := resultSet.All()[0]
-    // Print the first result.
+	// Print the first result.
 	fmt.Println(result.AsString())
 }
 ```
