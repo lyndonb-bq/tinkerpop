@@ -39,14 +39,15 @@ type serializer interface {
 
 // graphBinarySerializer serializes/deserializes message to/from GraphBinary
 type graphBinarySerializer struct {
-	readerClass *graphBinaryReader
-	writerClass *graphBinaryWriter
+	readerClass *graphBinaryTypeSerializer
+	writerClass *graphBinaryTypeSerializer
 	mimeType    string `default:"application/vnd.graphbinary-v1.0"`
 }
 
 func newGraphBinarySerializer(handler *logHandler) serializer {
-	reader := graphBinaryReader{handler}
-	writer := graphBinaryWriter{handler}
+	tempObj := graphBinaryTypeSerializer{NullType, nil, nil, nil, handler}
+	reader := tempObj
+	writer := tempObj
 	return graphBinarySerializer{&reader, &writer, graphBinaryMimeType}
 }
 
