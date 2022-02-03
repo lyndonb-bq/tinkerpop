@@ -26,7 +26,13 @@ import (
 	"strings"
 )
 
-type Graph struct{}
+type Graph struct {
+}
+
+// TODO: Implement with TraversalStrategies (requires TraversalStrategies global cache).
+func (g *Graph) traversal() GraphTraversalSource {
+	return nil
+}
 
 // Element is the base structure for both Vertex and Edge.
 // The inherited identifier must be unique to the inheriting classes.
