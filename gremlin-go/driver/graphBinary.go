@@ -105,7 +105,7 @@ func (serializer graphBinaryTypeSerializer) readTypeValue(buffer *bytes.Buffer, 
 }
 
 // Format: {length}{item_0}...{item_n}
-func myListWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+func listWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := reflect.ValueOf(value)
 	if (v.Kind() != reflect.Array) && (v.Kind() != reflect.Slice) {
 		typeSerializer.logHandler.log(Error, notSlice)
@@ -128,7 +128,7 @@ func myListWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 	return buffer.Bytes(), nil
 }
 
-func myListReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+func listReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	var size int32
 	err := binary.Read(buffer, binary.BigEndian, &size)
 	if err != nil {
@@ -147,7 +147,7 @@ func myListReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerialize
 }
 
 // Format: {length}{item_0}...{item_n}
-func myMapWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+func mapWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := reflect.ValueOf(value)
 	if v.Kind() != reflect.Map {
 		typeSerializer.logHandler.log(Error, notMap)
@@ -177,7 +177,7 @@ func myMapWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphB
 	return buffer.Bytes(), nil
 }
 
-func myMapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	var size int32
 	err := binary.Read(buffer, binary.BigEndian, &size)
 	if err != nil {
@@ -240,10 +240,10 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
-			return &graphBinaryTypeSerializer{dataType: MapType, writer: myMapWriter, reader: myMapReader, nullFlagReturn: nil}, nil
+			return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 		case reflect.Array, reflect.Slice:
 			// We can write an array or slice into the list datatype.
-			return &graphBinaryTypeSerializer{dataType: ListType, writer: myListWriter, reader: myListReader, nullFlagReturn: nil}, nil
+			return &graphBinaryTypeSerializer{dataType: ListType, writer: listWriter, reader: listReader, nullFlagReturn: nil}, nil
 		default:
 			serializer.logHandler.log(Error, serializeDataTypeError)
 			return nil, errors.New("unknown data type to serialize")
@@ -286,9 +286,9 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			return val, nil
 		}, nullFlagReturn: uuid.Nil}, nil
 	case MapType.getCodeByte():
-		return &graphBinaryTypeSerializer{dataType: MapType, writer: myMapWriter, reader: myMapReader, nullFlagReturn: nil}, nil
+		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 	case ListType.getCodeByte():
-		return &graphBinaryTypeSerializer{dataType: IntType, writer: myListWriter, reader: myListReader, nullFlagReturn: nil}, nil
+		return &graphBinaryTypeSerializer{dataType: IntType, writer: listWriter, reader: listReader, nullFlagReturn: nil}, nil
 	default:
 		serializer.logHandler.log(Error, deserializeDataTypeError)
 		return nil, errors.New("unknown data type to deserialize")
