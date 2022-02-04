@@ -68,10 +68,6 @@ type graphBinaryTypeSerializer struct {
 	logHandler     *logHandler
 }
 
-func (serializer *graphBinaryTypeSerializer) getDataType() DataType {
-	return serializer.dataType
-}
-
 func (serializer *graphBinaryTypeSerializer) writeType(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	return serializer.writeTypeValue(value, buffer, typeSerializer, true)
 }
@@ -308,7 +304,7 @@ func (serializer *graphBinaryTypeSerializer) write(valueObject interface{}, buff
 	if err != nil {
 		return nil, err
 	}
-	buffer.Write(typeSerializer.getDataType().getCodeBytes())
+	buffer.Write(typeSerializer.dataType.getCodeBytes())
 	message, err := typeSerializer.writeType(valueObject, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
@@ -331,7 +327,7 @@ func (serializer *graphBinaryTypeSerializer) writeValue(value interface{}, buffe
 	if err != nil {
 		return nil, err
 	}
-	buffer.Write(typeSerializer.getDataType().getCodeBytes())
+	buffer.Write(typeSerializer.dataType.getCodeBytes())
 	message, err := typeSerializer.writeTypeValue(value, buffer, typeSerializer, nullable)
 	if err != nil {
 		return nil, err
