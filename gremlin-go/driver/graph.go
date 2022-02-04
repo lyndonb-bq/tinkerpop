@@ -98,7 +98,7 @@ func (p *Path) String() string {
 	return fmt.Sprintf("path[%s]", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(p.objects)), ", "), "[]"))
 }
 
-// GetPathObject returns the value that corresponds to the key for the Path.
+// GetPathObject returns the value that corresponds to the key for the Path and error if the value is not present or cannot be retrieved.
 func (p *Path) GetPathObject(key string) (interface{}, error) {
 	if len(p.objects) != len(p.labels) {
 		return nil, errors.New("Path is invalid because it does not contain an equal number of labels and objects.")
