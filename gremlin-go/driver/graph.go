@@ -22,8 +22,9 @@ package gremlingo
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type Graph struct {
@@ -97,14 +98,15 @@ func (p *Path) String() string {
 	return fmt.Sprintf("path[%s]", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(p.objects)), ", "), "[]"))
 }
 
-func (p *Path) GetPathObject(key string) (error, interface{}) {
+// GetPathObject returns the value that corresponds to the key for the Path.
+func (p *Path) GetPathObject(key string) (interface{}, error) {
 	if len(p.objects) != len(p.labels) {
-		return errors.New("Path is invalid because it does not contain an equal number of labels and objects."), nil
+		return nil, errors.New("Path is invalid because it does not contain an equal number of labels and objects.")
 	}
 	for i := 0; i < len(p.labels); i++ {
 		if p.labels[i] == key {
-			return nil, p.objects[i]
+			return p.objects[i], nil
 		}
 	}
-	return errors.New(fmt.Sprintf("Path does not contain a label of '%s'.", key)), nil
+	return nil, errors.New(fmt.Sprintf("Path does not contain a label of '%s'.", key))
 }

@@ -66,13 +66,13 @@ func TestGraphStructureFunctions(t *testing.T) {
 		keys := []string{"foo", "bar", "baz"}
 		data := []interface{}{1, 2, "hello"}
 		p := Path{keys, data}
-		err, v := p.GetPathObject("foo")
+		v, err := p.GetPathObject("foo")
 		assert.Nil(t, err)
 		assert.Equal(t, 1, v)
-		err, v = p.GetPathObject("bar")
+		v, err = p.GetPathObject("bar")
 		assert.Nil(t, err)
 		assert.Equal(t, 2, v)
-		err, v = p.GetPathObject("baz")
+		v, err = p.GetPathObject("baz")
 		assert.Nil(t, err)
 		assert.Equal(t, "hello", v)
 	})
@@ -81,7 +81,7 @@ func TestGraphStructureFunctions(t *testing.T) {
 		keys := []string{"foo", "bar", "baz"}
 		data := []interface{}{1, 2}
 		p := Path{keys, data}
-		err, val := p.GetPathObject("foo")
+		val, err := p.GetPathObject("foo")
 		assert.Nil(t, val)
 		assert.NotNil(t, err)
 	})
@@ -90,7 +90,7 @@ func TestGraphStructureFunctions(t *testing.T) {
 		keys := []string{"foo", "bar", "baz"}
 		data := []interface{}{1, 2}
 		p := Path{keys, data}
-		err, val := p.GetPathObject("foobar")
+		val, err := p.GetPathObject("foobar")
 		assert.Nil(t, val)
 		assert.NotNil(t, err)
 	})
