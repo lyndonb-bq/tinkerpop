@@ -22,4 +22,5 @@ package gremlingo
 type bytecode interface {
 	addSource(sourceName string, args ...interface{})
 	addStep(stepName string, args ...interface{})
+	toString() string
 }
