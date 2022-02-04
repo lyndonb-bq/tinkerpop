@@ -93,7 +93,10 @@ func (serializer graphBinaryTypeSerializer) readType(buffer *bytes.Buffer, typeS
 
 func (serializer graphBinaryTypeSerializer) readTypeValue(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer, nullable bool) (interface{}, error) {
 	if nullable {
-		nullFlag, _ := buffer.ReadByte()
+		nullFlag, err := buffer.ReadByte()
+		if err != nil {
+			return nil, err
+		}
 		if nullFlag == valueFlagNull {
 			return serializer.nullFlagReturn, nil
 		}
