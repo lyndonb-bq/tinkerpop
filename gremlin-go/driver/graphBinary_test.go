@@ -52,13 +52,6 @@ func readToValue(buff *bytes.Buffer) interface{} {
 func TestGraphBinaryV1(t *testing.T) {
 	t.Run("test simple types", func(t *testing.T) {
 		buff := bytes.Buffer{}
-		t.Run("test int32", func(t *testing.T) {
-			var int32Arr = [3]int32{-33000, 0, 33000}
-			for _, x := range int32Arr {
-				writeToBuffer(x, &buff)
-				assert.Equal(t, x, readToValue(&buff))
-			}
-		})
 		t.Run("test int", func(t *testing.T) {
 			var intArr = [3]int{-33000, 0, 33000}
 			for _, x := range intArr {
@@ -66,14 +59,42 @@ func TestGraphBinaryV1(t *testing.T) {
 				assert.Equal(t, x, int(readToValue(&buff).(int64)))
 			}
 		})
-		t.Run("test uint32", func(t *testing.T) {
-			var uint32Arr = [2]uint32{0, 2247483647}
+		t.Run("test short(uint8)", func(t *testing.T) {
+			var uint8Arr = [2]uint8{0, 255}
+			for _, x := range uint8Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, uint8(readToValue(&buff).(int16)))
+			}
+		})
+		t.Run("test short(int16)", func(t *testing.T) {
+			var int16Arr = [3]int16{-32768, 0, 32767}
+			for _, x := range int16Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
+		})
+		t.Run("test int(uint16)", func(t *testing.T) {
+			var uint16Arr = [2]uint16{0, 65535}
+			for _, x := range uint16Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, uint16(readToValue(&buff).(int32)))
+			}
+		})
+		t.Run("test int(int32)", func(t *testing.T) {
+			var int32Arr = [3]int32{-2147483648, 0, 2147483647}
+			for _, x := range int32Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
+		})
+		t.Run("test long(uint32)", func(t *testing.T) {
+			var uint32Arr = [2]uint32{0, 4294967295}
 			for _, x := range uint32Arr {
 				writeToBuffer(x, &buff)
 				assert.Equal(t, x, uint32(readToValue(&buff).(int64)))
 			}
 		})
-		t.Run("test long", func(t *testing.T) {
+		t.Run("test long(int64)", func(t *testing.T) {
 			var int64Arr = [3]int64{-21474836489, 0, 21474836489}
 			for _, x := range int64Arr {
 				writeToBuffer(x, &buff)
