@@ -115,6 +115,13 @@ func TestGraphBinaryV1(t *testing.T) {
 				assert.Equal(t, x, readToValue(&buff))
 			}
 		})
+		t.Run("test float(float32)", func(t *testing.T) {
+			var float32Arr = [3]float32{1, 0.375}
+			for _, x := range float32Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
+		})
 		t.Run("test string", func(t *testing.T) {
 			var x = "serialize this!"
 			writeToBuffer(x, &buff)
