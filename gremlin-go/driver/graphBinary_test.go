@@ -116,8 +116,15 @@ func TestGraphBinaryV1(t *testing.T) {
 			}
 		})
 		t.Run("test float(float32)", func(t *testing.T) {
-			var float32Arr = [3]float32{1, 0.375}
+			var float32Arr = [2]float32{1, 0.375}
 			for _, x := range float32Arr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
+		})
+		t.Run("test double(float64)", func(t *testing.T) {
+			var float64Arr = [3]float64{1, 0.00390625, 0.1}
+			for _, x := range float64Arr {
 				writeToBuffer(x, &buff)
 				assert.Equal(t, x, readToValue(&buff))
 			}
