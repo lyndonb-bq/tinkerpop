@@ -265,6 +265,11 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			err := binary.Write(buffer, binary.BigEndian, value)
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
+	case float64:
+		return &graphBinaryTypeSerializer{dataType: DoubleType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+			err := binary.Write(buffer, binary.BigEndian, value)
+			return buffer.Bytes(), err
+		}, reader: nil, nullFlagReturn: 0}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -333,6 +338,12 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 	case FloatType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: FloatType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 			var val float32
+			err := binary.Read(buffer, binary.BigEndian, &val)
+			return val, err
+		}, nullFlagReturn: 0}, nil
+	case DoubleType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: DoubleType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+			var val float64
 			err := binary.Read(buffer, binary.BigEndian, &val)
 			return val, err
 		}, nullFlagReturn: 0}, nil
