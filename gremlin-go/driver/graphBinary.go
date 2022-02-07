@@ -288,6 +288,11 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			var val int32
 			return val, binary.Read(buffer, binary.BigEndian, &val)
 		}, nullFlagReturn: 0}, nil
+	case ShortType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: ShortType, writer: nil, reader: func(buffer *bytes.Buffer, typSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+			var val int16
+			return val, binary.Read(buffer, binary.BigEndian, &val)
+		}, nullFlagReturn: 0}, nil
 	case UUIDType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: UUIDType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 			valBytes := make([]byte, 16)
