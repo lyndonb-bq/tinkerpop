@@ -245,6 +245,11 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			err := binary.Write(buffer, binary.BigEndian, value.(int16))
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
+	case int8:
+		return &graphBinaryTypeSerializer{dataType: ByteType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+			err := binary.Write(buffer, binary.BigEndian, value.(int8))
+			return buffer.Bytes(), err
+		}, reader: nil, nullFlagReturn: 0}, nil
 	case uuid.UUID:
 		return &graphBinaryTypeSerializer{dataType: UUIDType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 			err := binary.Write(buffer, binary.BigEndian, value)
@@ -292,6 +297,12 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: ShortType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 			var val int16
 			return val, binary.Read(buffer, binary.BigEndian, &val)
+		}, nullFlagReturn: 0}, nil
+	case ByteType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: ByteType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+			var val int8
+			err := binary.Read(buffer, binary.BigEndian, &val)
+			return val, err
 		}, nullFlagReturn: 0}, nil
 	case UUIDType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: UUIDType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
@@ -384,8 +395,7 @@ func (serializer *graphBinaryTypeSerializer) read(buffer *bytes.Buffer) (interfa
 	if err != nil {
 		return nil, err
 	}
-	val, err := typeSerializer.readType(buffer, typeSerializer)
-	return val, err
+	return typeSerializer.readType(buffer, typeSerializer)
 }
 
 func (serializer *graphBinaryTypeSerializer) readValue(buffer *bytes.Buffer, typ byte, nullable bool) (interface{}, error) {
