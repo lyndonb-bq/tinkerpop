@@ -236,18 +236,14 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			err := binary.Write(buffer, binary.BigEndian, value.(int32))
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
-	case int16, uint8:
+	case int16:
 		return &graphBinaryTypeSerializer{dataType: ShortType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-			switch v := value.(type) {
-			case uint8:
-				value = int16(v)
-			}
 			err := binary.Write(buffer, binary.BigEndian, value.(int16))
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
-	case int8:
+	case uint8:
 		return &graphBinaryTypeSerializer{dataType: ByteType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-			err := binary.Write(buffer, binary.BigEndian, value.(int8))
+			err := binary.Write(buffer, binary.BigEndian, value.(uint8))
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
 	case bool:
@@ -315,7 +311,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		}, nullFlagReturn: 0}, nil
 	case ByteType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: ByteType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
-			var val int8
+			var val uint8
 			err := binary.Read(buffer, binary.BigEndian, &val)
 			return val, err
 		}, nullFlagReturn: 0}, nil
