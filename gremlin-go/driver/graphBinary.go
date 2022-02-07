@@ -229,6 +229,10 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		}, reader: nil, nullFlagReturn: 0}, nil
 	case int32, uint16:
 		return &graphBinaryTypeSerializer{dataType: IntType, writer: func(value interface{}, buffer *bytes.Buffer, typSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+			switch v := value.(type) {
+			case uint16:
+				value = int32(v)
+			}
 			err := binary.Write(buffer, binary.BigEndian, value.(int32))
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
