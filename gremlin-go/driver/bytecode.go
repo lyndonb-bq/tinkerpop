@@ -43,40 +43,41 @@ func newBytecode(bc *bytecode) *bytecode {
 	}
 }
 
-func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) error {
+func (bytecode *bytecode) createInstruction(operator string, args ...interface{}) (*instruction, error) {
 	instruction := &instruction{
-		operator:  sourceName,
+		operator:  operator,
 		arguments: make([]interface{}, 0),
 	}
 
 	for _, arg := range args {
 		converted, err := bytecode.convertArgument(arg)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		instruction.arguments = append(instruction.arguments, converted)
+	}
+
+	return instruction, nil
+}
+
+func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) (err error) {
+	instruction, err := bytecode.createInstruction(sourceName, args...)
+	if err != nil {
+		return
 	}
 
 	bytecode.sourceInstructions = append(bytecode.sourceInstructions, *instruction)
-	return nil
+	return
 }
 
-func (bytecode *bytecode) addStep(stepName string, args ...interface{}) error {
-	instruction := &instruction{
-		operator:  stepName,
-		arguments: make([]interface{}, 0),
-	}
-
-	for _, arg := range args {
-		converted, err := bytecode.convertArgument(arg)
-		if err != nil {
-			return err
-		}
-		instruction.arguments = append(instruction.arguments, converted)
+func (bytecode *bytecode) addStep(stepName string, args ...interface{}) (err error) {
+	instruction, err := bytecode.createInstruction(stepName, args...)
+	if err != nil {
+		return
 	}
 
 	bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
-	return nil
+	return
 }
 
 func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) {
@@ -122,7 +123,7 @@ func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) 
 				key:   v.key,
 				value: convertedValue,
 			}, nil
-		// TODO: Traversal
+		// TODO: AN-970 Traversal
 		//case Traversal:
 		//if arg.graph != nil {
 		//	return errors.New()
@@ -142,7 +143,7 @@ type instruction struct {
 	arguments []interface{}
 }
 
-// TODO: Export this
+// TODO: AN-1018 Export this
 type binding struct {
 	key   string
 	value interface{}
