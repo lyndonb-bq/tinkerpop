@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/google/uuid"
@@ -122,6 +123,13 @@ func TestGraphBinaryV1(t *testing.T) {
 				assert.Equal(t, x, readToValue(&buff))
 			}
 		})
+		t.Run("test bigint(big.Int)", func(t *testing.T) {
+			var bigIntArr = [7]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(127), big.NewInt(128), big.NewInt(-1), big.NewInt(-128), big.NewInt(-256)}
+			for _, x := range bigIntArr {
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x, readToValue(&buff))
+			}
+		})
 		t.Run("test string", func(t *testing.T) {
 			var x = "serialize this!"
 			writeToBuffer(x, &buff)
@@ -170,5 +178,20 @@ func TestGraphBinaryV1(t *testing.T) {
 		assert.Equal(t, x, res)
 		fmt.Println("expected: ", res)
 		fmt.Println("result: ", res)
+	})
+	t.Run("temp test to check big ints", func(t *testing.T) {
+		t.Run("test map", func(t *testing.T) {
+			x := big.NewInt(0)
+			y := big.NewInt(128)
+			z := big.NewInt(-256)
+			//fmt.Printf("%08b", []byte{12, 34})
+			fmt.Printf("%08b\n", getSignedBytesFromBigInt(x))
+			fmt.Printf("%08b\n", getSignedBytesFromBigInt(y))
+			fmt.Printf("%08b\n\n", getSignedBytesFromBigInt(z))
+			fmt.Printf("%08b\n", getBigIntFromSignedBytes(getSignedBytesFromBigInt(x)).Bytes())
+			fmt.Printf("%08b\n", getBigIntFromSignedBytes(getSignedBytesFromBigInt(y)).Bytes())
+			fmt.Printf("%08b\n", getBigIntFromSignedBytes(getSignedBytesFromBigInt(z)).Bytes())
+
+		})
 	})
 }

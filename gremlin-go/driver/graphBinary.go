@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math/big"
 	"reflect"
 
 	"github.com/google/uuid"
@@ -35,18 +36,19 @@ type DataType uint8
 
 // DataType defined as constants
 const (
-	NullType    DataType = 0xFE
-	IntType     DataType = 0x01
-	LongType    DataType = 0x02
-	StringType  DataType = 0x03
-	DoubleType  DataType = 0x07
-	FloatType   DataType = 0x08
-	ListType    DataType = 0x09
-	MapType     DataType = 0x0a
-	UUIDType    DataType = 0x0c
-	ByteType    DataType = 0x24
-	ShortType   DataType = 0x26
-	BooleanType DataType = 0x27
+	NullType       DataType = 0xFE
+	IntType        DataType = 0x01
+	LongType       DataType = 0x02
+	StringType     DataType = 0x03
+	DoubleType     DataType = 0x07
+	FloatType      DataType = 0x08
+	ListType       DataType = 0x09
+	MapType        DataType = 0x0a
+	UUIDType       DataType = 0x0c
+	ByteType       DataType = 0x24
+	ShortType      DataType = 0x26
+	BooleanType    DataType = 0x27
+	BigIntegerType DataType = 0x23
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -199,6 +201,90 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	return valMap, nil
 }
 
+func getSignedBytesFromBigInt(n *big.Int) []byte {
+	var one = big.NewInt(1)
+	switch n.Sign() {
+	case 0:
+		return []byte{}
+	case 1:
+		b := n.Bytes()
+		if b[0]&0x80 > 0 {
+			b = append([]byte{0}, b...)
+		}
+		return b
+	case -1:
+		length := uint(n.BitLen()/8+1) * 8
+		b := new(big.Int).Add(n, new(big.Int).Lsh(one, length)).Bytes()
+		if len(b) >= 2 && b[0] == 0xff && b[1]&0x80 != 0 {
+			b = b[1:]
+		}
+		return b
+	}
+	panic("unreachable")
+}
+
+func getBigIntFromSignedBytes(b []byte) *big.Int {
+	var newBigInt = big.NewInt(0).SetBytes(b)
+	var one = big.NewInt(1)
+	if len(b) == 0 {
+		return newBigInt
+	}
+	switch b[0] & 0x80 {
+	case 0x00:
+		newBigInt.SetBytes(b)
+		return newBigInt
+	case 0x80:
+		length := uint((len(b)*8)/8+1) * 8
+		b2 := new(big.Int).Sub(newBigInt, new(big.Int).Lsh(one, length)).Bytes()
+		b2 = b2[1:]
+		if b2[0] == 0x00 {
+			b2 = b2[1:]
+		}
+		newBigInt = big.NewInt(0)
+		newBigInt.SetBytes(b2)
+		newBigInt.Neg(newBigInt)
+		return newBigInt
+	}
+	panic("unreachable")
+}
+
+// Format: {length}{value_0}...{value_n}
+func bigIntWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*big.Int)
+	signedBytes := getSignedBytesFromBigInt(v)
+	err := binary.Write(buffer, binary.BigEndian, int32(len(signedBytes)))
+	if err != nil {
+		return nil, err
+	}
+	if len(signedBytes) < 1 {
+		return buffer.Bytes(), nil
+	}
+	for i := 0; i < len(signedBytes); i++ {
+		err := binary.Write(buffer, binary.BigEndian, signedBytes[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buffer.Bytes(), nil
+}
+
+func bigIntReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	var size int32
+	err := binary.Read(buffer, binary.BigEndian, &size)
+	if err != nil {
+		return nil, err
+	}
+	var valList = make([]byte, size)
+	for i := 0; i < int(size); i++ {
+		err := binary.Read(buffer, binary.BigEndian, &valList[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	newBigInt := getBigIntFromSignedBytes(valList)
+	return newBigInt, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -216,6 +302,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			_, err = buffer.WriteString(value.(string))
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: ""}, nil
+	case *big.Int:
+		return &graphBinaryTypeSerializer{dataType: BigIntegerType, writer: bigIntWriter, reader: nil, nullFlagReturn: big.NewInt(0)}, nil
 	case int64, int, uint32:
 		return &graphBinaryTypeSerializer{dataType: LongType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 			switch v := value.(type) {
@@ -294,6 +382,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			_, err = buffer.Read(valBytes)
 			return string(valBytes), err
 		}, nullFlagReturn: ""}, nil
+	case BigIntegerType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: BigIntegerType, writer: nil, reader: bigIntReader, nullFlagReturn: 0}, nil
 	case LongType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: LongType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 			var val int64
