@@ -179,19 +179,4 @@ func TestGraphBinaryV1(t *testing.T) {
 		fmt.Println("expected: ", res)
 		fmt.Println("result: ", res)
 	})
-	t.Run("temp test to check big ints", func(t *testing.T) {
-		t.Run("test map", func(t *testing.T) {
-			x := big.NewInt(0)
-			y := big.NewInt(128)
-			z := big.NewInt(-256)
-			//fmt.Printf("%08b", []byte{12, 34})
-			fmt.Printf("%08b\n", getSignedBytesFromBigInt(x))
-			fmt.Printf("%08b\n", getSignedBytesFromBigInt(y))
-			fmt.Printf("%08b\n\n", getSignedBytesFromBigInt(z))
-			fmt.Printf("%08b\n", getBigIntFromSignedBytes(getSignedBytesFromBigInt(x)).Bytes())
-			fmt.Printf("%08b\n", getBigIntFromSignedBytes(getSignedBytesFromBigInt(y)).Bytes())
-			fmt.Printf("%08b\n", getBigIntFromSignedBytes(getSignedBytesFromBigInt(z)).Bytes())
-
-		})
-	})
 }
