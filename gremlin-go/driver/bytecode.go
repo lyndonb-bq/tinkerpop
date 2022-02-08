@@ -60,24 +60,24 @@ func (bytecode *bytecode) createInstruction(operator string, args ...interface{}
 	return instruction, nil
 }
 
-func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) (err error) {
+func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) error {
 	instruction, err := bytecode.createInstruction(sourceName, args...)
 	if err != nil {
-		return
+		return err
 	}
 
 	bytecode.sourceInstructions = append(bytecode.sourceInstructions, *instruction)
-	return
+	return err
 }
 
-func (bytecode *bytecode) addStep(stepName string, args ...interface{}) (err error) {
+func (bytecode *bytecode) addStep(stepName string, args ...interface{}) error {
 	instruction, err := bytecode.createInstruction(stepName, args...)
 	if err != nil {
-		return
+		return err
 	}
 
 	bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
-	return
+	return err
 }
 
 func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) {
