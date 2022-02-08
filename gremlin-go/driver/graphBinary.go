@@ -201,26 +201,33 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	return valMap, nil
 }
 
+// Golang stores BigIntegers with big.Int types
+// it contains an unsigned representation of the number and uses a boolean to track +ve and -ve
+// getSignedBytesFromBigInt gives us the signed(two's complement) byte array that represents the unsigned byte array in
+// big.Int
 func getSignedBytesFromBigInt(n *big.Int) []byte {
 	var one = big.NewInt(1)
 	switch n.Sign() {
 	case 0:
 		return []byte{}
 	case 1:
+		// add a buffer 0x00 byte to the start of byte array if number is positive and has a 1 in its MSB
 		b := n.Bytes()
 		if b[0]&0x80 > 0 {
 			b = append([]byte{0}, b...)
 		}
 		return b
 	case -1:
+		// Convert Unsigned byte array to signed byte array
 		length := uint(n.BitLen()/8+1) * 8
 		b := new(big.Int).Add(n, new(big.Int).Lsh(one, length)).Bytes()
+		// Strip any redundant 0xff bytes from the front of the byte array if the following byte starts with a 1
 		if len(b) >= 2 && b[0] == 0xff && b[1]&0x80 != 0 {
 			b = b[1:]
 		}
 		return b
 	}
-	panic("unreachable")
+	return []byte{0}
 }
 
 func getBigIntFromSignedBytes(b []byte) *big.Int {
@@ -229,14 +236,18 @@ func getBigIntFromSignedBytes(b []byte) *big.Int {
 	if len(b) == 0 {
 		return newBigInt
 	}
+	// If the first bit in the first element of the byte array is a 1, we need to interpret the byte array as a two's complement representation
 	switch b[0] & 0x80 {
 	case 0x00:
 		newBigInt.SetBytes(b)
 		return newBigInt
 	case 0x80:
+		// Undo two's complement to byte array and set negative boolean to true
 		length := uint((len(b)*8)/8+1) * 8
 		b2 := new(big.Int).Sub(newBigInt, new(big.Int).Lsh(one, length)).Bytes()
+		// strip the resulting 0xff byte at the start of array
 		b2 = b2[1:]
+		// strip any redundant 0x00 byte at the start of array
 		if b2[0] == 0x00 {
 			b2 = b2[1:]
 		}
@@ -245,7 +256,7 @@ func getBigIntFromSignedBytes(b []byte) *big.Int {
 		newBigInt.Neg(newBigInt)
 		return newBigInt
 	}
-	panic("unreachable")
+	return big.NewInt(0)
 }
 
 // Format: {length}{value_0}...{value_n}
@@ -255,9 +266,6 @@ func bigIntWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 	err := binary.Write(buffer, binary.BigEndian, int32(len(signedBytes)))
 	if err != nil {
 		return nil, err
-	}
-	if len(signedBytes) < 1 {
-		return buffer.Bytes(), nil
 	}
 	for i := 0; i < len(signedBytes); i++ {
 		err := binary.Write(buffer, binary.BigEndian, signedBytes[i])
@@ -275,14 +283,13 @@ func bigIntReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerialize
 		return nil, err
 	}
 	var valList = make([]byte, size)
-	for i := 0; i < int(size); i++ {
+	for i := int32(0); i < size; i++ {
 		err := binary.Read(buffer, binary.BigEndian, &valList[i])
 		if err != nil {
 			return nil, err
 		}
 	}
-	newBigInt := getBigIntFromSignedBytes(valList)
-	return newBigInt, nil
+	return getBigIntFromSignedBytes(valList), nil
 }
 
 const (
