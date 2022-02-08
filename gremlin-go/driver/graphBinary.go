@@ -207,27 +207,25 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 // big.Int
 func getSignedBytesFromBigInt(n *big.Int) []byte {
 	var one = big.NewInt(1)
-	switch n.Sign() {
-	case 0:
+	if n.Sign() == 0 {
 		return []byte{}
-	case 1:
+	}
+	if n.Sign() == 1 {
 		// add a buffer 0x00 byte to the start of byte array if number is positive and has a 1 in its MSB
 		b := n.Bytes()
 		if b[0]&0x80 > 0 {
 			b = append([]byte{0}, b...)
 		}
 		return b
-	case -1:
-		// Convert Unsigned byte array to signed byte array
-		length := uint(n.BitLen()/8+1) * 8
-		b := new(big.Int).Add(n, new(big.Int).Lsh(one, length)).Bytes()
-		// Strip any redundant 0xff bytes from the front of the byte array if the following byte starts with a 1
-		if len(b) >= 2 && b[0] == 0xff && b[1]&0x80 != 0 {
-			b = b[1:]
-		}
-		return b
 	}
-	return []byte{0}
+	// Convert Unsigned byte array to signed byte array
+	length := uint(n.BitLen()/8+1) * 8
+	b := new(big.Int).Add(n, new(big.Int).Lsh(one, length)).Bytes()
+	// Strip any redundant 0xff bytes from the front of the byte array if the following byte starts with a 1
+	if len(b) >= 2 && b[0] == 0xff && b[1]&0x80 != 0 {
+		b = b[1:]
+	}
+	return b
 }
 
 func getBigIntFromSignedBytes(b []byte) *big.Int {
@@ -237,26 +235,23 @@ func getBigIntFromSignedBytes(b []byte) *big.Int {
 		return newBigInt
 	}
 	// If the first bit in the first element of the byte array is a 1, we need to interpret the byte array as a two's complement representation
-	switch b[0] & 0x80 {
-	case 0x00:
+	if b[0]&0x80 == 0x00 {
 		newBigInt.SetBytes(b)
 		return newBigInt
-	case 0x80:
-		// Undo two's complement to byte array and set negative boolean to true
-		length := uint((len(b)*8)/8+1) * 8
-		b2 := new(big.Int).Sub(newBigInt, new(big.Int).Lsh(one, length)).Bytes()
-		// strip the resulting 0xff byte at the start of array
-		b2 = b2[1:]
-		// strip any redundant 0x00 byte at the start of array
-		if b2[0] == 0x00 {
-			b2 = b2[1:]
-		}
-		newBigInt = big.NewInt(0)
-		newBigInt.SetBytes(b2)
-		newBigInt.Neg(newBigInt)
-		return newBigInt
 	}
-	return big.NewInt(0)
+	// Undo two's complement to byte array and set negative boolean to true
+	length := uint((len(b)*8)/8+1) * 8
+	b2 := new(big.Int).Sub(newBigInt, new(big.Int).Lsh(one, length)).Bytes()
+	// strip the resulting 0xff byte at the start of array
+	b2 = b2[1:]
+	// strip any redundant 0x00 byte at the start of array
+	if b2[0] == 0x00 {
+		b2 = b2[1:]
+	}
+	newBigInt = big.NewInt(0)
+	newBigInt.SetBytes(b2)
+	newBigInt.Neg(newBigInt)
+	return newBigInt
 }
 
 // Format: {length}{value_0}...{value_n}
