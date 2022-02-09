@@ -207,9 +207,6 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 // big.Int
 func getSignedBytesFromBigInt(n *big.Int) []byte {
 	var one = big.NewInt(1)
-	if n.Sign() == 0 {
-		return []byte{}
-	}
 	if n.Sign() == 1 {
 		// add a buffer 0x00 byte to the start of byte array if number is positive and has a 1 in its MSB
 		b := n.Bytes()
@@ -217,15 +214,17 @@ func getSignedBytesFromBigInt(n *big.Int) []byte {
 			b = append([]byte{0}, b...)
 		}
 		return b
+	} else if n.Sign() == -1 {
+		// Convert Unsigned byte array to signed byte array
+		length := uint(n.BitLen()/8+1) * 8
+		b := new(big.Int).Add(n, new(big.Int).Lsh(one, length)).Bytes()
+		// Strip any redundant 0xff bytes from the front of the byte array if the following byte starts with a 1
+		if len(b) >= 2 && b[0] == 0xff && b[1]&0x80 != 0 {
+			b = b[1:]
+		}
+		return b
 	}
-	// Convert Unsigned byte array to signed byte array
-	length := uint(n.BitLen()/8+1) * 8
-	b := new(big.Int).Add(n, new(big.Int).Lsh(one, length)).Bytes()
-	// Strip any redundant 0xff bytes from the front of the byte array if the following byte starts with a 1
-	if len(b) >= 2 && b[0] == 0xff && b[1]&0x80 != 0 {
-		b = b[1:]
-	}
-	return b
+	return []byte{}
 }
 
 func getBigIntFromSignedBytes(b []byte) *big.Int {
