@@ -124,11 +124,29 @@ func TestGraphBinaryV1(t *testing.T) {
 			}
 		})
 		t.Run("test bigint(big.Int)", func(t *testing.T) {
-			var bigIntArr = [7]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(127), big.NewInt(128), big.NewInt(-1), big.NewInt(-128), big.NewInt(-256)}
-			for _, x := range bigIntArr {
-				writeToBuffer(x, &buff)
-				assert.Equal(t, x, readToValue(&buff))
-			}
+			// Examples from Tinkerpop IO reference
+			var bigIntArr = [7]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(127), big.NewInt(128), big.NewInt(-1), big.NewInt(-128), big.NewInt(-129)}
+			t.Run("test reader and writer", func(t *testing.T) {
+				for _, x := range bigIntArr {
+					writeToBuffer(x, &buff)
+					assert.Equal(t, x, readToValue(&buff))
+				}
+			})
+			t.Run("test getSignedBytesFromBigInt and getBigIntFromSignedBytes func", func(t *testing.T) {
+				var byteArr = [][]byte{{}, {0x01}, {0x7f}, {0x00, 0x80}, {0xff}, {0x80}, {0xff, 0x7f}}
+				for i := 0; i < len(bigIntArr); i++ {
+					assert.Equal(t, byteArr[i], getSignedBytesFromBigInt(bigIntArr[i]))
+					assert.Equal(t, bigIntArr[i], getBigIntFromSignedBytes(byteArr[i]))
+				}
+			})
+			// stress test:
+			//for i := -1000; i < 1000; i++ {
+			//	c := big.NewInt(128)
+			//	n := big.NewInt(int64(i))
+			//	r := getBigIntFromSignedBytes(getSignedBytesFromBigInt(n))
+			//	assert.Equal(t, n, r)
+			//	c.Not(c)
+			//}
 		})
 		t.Run("test string", func(t *testing.T) {
 			var x = "serialize this!"
