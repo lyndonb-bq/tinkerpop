@@ -49,6 +49,7 @@ const (
 	ShortType      DataType = 0x26
 	BooleanType    DataType = 0x27
 	BigIntegerType DataType = 0x23
+	VertexType     DataType = 0x11
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -288,6 +289,37 @@ func bigIntReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface
 	return getBigIntFromSignedBytes(valList), nil
 }
 
+// Format: {id}{label}{properties}
+func vertexWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*Vertex)
+	_, err := typeSerializer.write(v.id, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(v.label, buffer)
+	if err != nil {
+		return nil, err
+	}
+	// Note that as TinkerPop currently send "references" only, properties will always be null
+	buffer.Write(nullBytes)
+	return buffer.Bytes(), nil
+}
+
+func vertexReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	v := new(Vertex)
+	newUUID, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	v.id = newUUID.(uuid.UUID)
+	newLabel, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	v.label = newLabel.(string)
+	return v, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -357,6 +389,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			err := binary.Write(buffer, binary.BigEndian, value)
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
+	case *Vertex:
+		return &graphBinaryTypeSerializer{dataType: VertexType, writer: vertexWriter, reader: nil, nullFlagReturn: 0}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -436,6 +470,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			err := binary.Read(buffer, binary.BigEndian, &val)
 			return val, err
 		}, nullFlagReturn: 0}, nil
+	case VertexType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: VertexType, writer: nil, reader: vertexReader, nullFlagReturn: 0}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 	case ListType.getCodeByte():

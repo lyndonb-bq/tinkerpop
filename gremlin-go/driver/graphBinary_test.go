@@ -150,6 +150,17 @@ func TestGraphBinaryV1(t *testing.T) {
 			writeToBuffer(x, &buff)
 			assert.Equal(t, x, readToValue(&buff))
 		})
+
+		t.Run("test vertex", func(t *testing.T) {
+			x := new(Vertex)
+			x.id, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
+			x.label = "Test label"
+			writeToBuffer(x, &buff)
+			v := readToValue(&buff).(*Vertex)
+			assert.Equal(t, x, v)
+			assert.Equal(t, x.id, v.id)
+			assert.Equal(t, x.label, v.label)
+		})
 	})
 
 	t.Run("test nested types", func(t *testing.T) {
