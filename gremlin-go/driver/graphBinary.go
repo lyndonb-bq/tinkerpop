@@ -241,10 +241,10 @@ func getBigIntFromSignedBytes(b []byte) *big.Int {
 	// Undo two's complement to byte array and set negative boolean to true
 	length := uint((len(b)*8)/8+1) * 8
 	b2 := new(big.Int).Sub(newBigInt, new(big.Int).Lsh(one, length)).Bytes()
-	
+
 	// Strip the resulting 0xff byte at the start of array
 	b2 = b2[1:]
-	
+
 	// Strip any redundant 0x00 byte at the start of array
 	if b2[0] == 0x00 {
 		b2 = b2[1:]
@@ -256,7 +256,7 @@ func getBigIntFromSignedBytes(b []byte) *big.Int {
 }
 
 // Format: {length}{value_0}...{value_n}
-func bigIntWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+func bigIntWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
 	v := value.(*big.Int)
 	signedBytes := getSignedBytesFromBigInt(v)
 	err := binary.Write(buffer, binary.BigEndian, int32(len(signedBytes)))
@@ -272,7 +272,7 @@ func bigIntWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 	return buffer.Bytes(), nil
 }
 
-func bigIntReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+func bigIntReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface{}, error) {
 	var size int32
 	err := binary.Read(buffer, binary.BigEndian, &size)
 	if err != nil {
