@@ -139,14 +139,6 @@ func TestGraphBinaryV1(t *testing.T) {
 					assert.Equal(t, bigIntArr[i], getBigIntFromSignedBytes(byteArr[i]))
 				}
 			})
-			// stress test:
-			//for i := -1000; i < 1000; i++ {
-			//	c := big.NewInt(128)
-			//	n := big.NewInt(int64(i))
-			//	r := getBigIntFromSignedBytes(getSignedBytesFromBigInt(n))
-			//	assert.Equal(t, n, r)
-			//	c.Not(c)
-			//}
 		})
 		t.Run("test string", func(t *testing.T) {
 			var x = "serialize this!"
