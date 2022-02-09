@@ -241,9 +241,11 @@ func getBigIntFromSignedBytes(b []byte) *big.Int {
 	// Undo two's complement to byte array and set negative boolean to true
 	length := uint((len(b)*8)/8+1) * 8
 	b2 := new(big.Int).Sub(newBigInt, new(big.Int).Lsh(one, length)).Bytes()
-	// strip the resulting 0xff byte at the start of array
+	
+	// Strip the resulting 0xff byte at the start of array
 	b2 = b2[1:]
-	// strip any redundant 0x00 byte at the start of array
+	
+	// Strip any redundant 0x00 byte at the start of array
 	if b2[0] == 0x00 {
 		b2 = b2[1:]
 	}
