@@ -122,7 +122,7 @@ func responseHandler(resultSets map[string]ResultSet, response response) error {
 		return errors.New("authentication is not currently supported")
 	} else {
 		resultSets[responseIDString].Close()
-		return errors.New(fmt.Sprint("statusCode: ", statusCode))
+		return errors.New(fmt.Sprint("Error in read loop, error message '", response.responseStatus, "'. statusCode: ", statusCode))
 	}
 	return nil
 }

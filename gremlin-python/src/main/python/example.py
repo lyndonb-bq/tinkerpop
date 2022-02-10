@@ -33,21 +33,15 @@ def main():
     # which starts it in "console" mode with an empty in-memory TinkerGraph ready to go bound to a
     # variable named "g" as referenced in the following line.
 
-    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8181/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
 
     # add some data - be sure to use a terminating step like iterate() so that the traversal
     # "executes". iterate() does not return any data and is used to just generate side-effects
     # (i.e. write data to the database)
-    g.addV('person').property('name', 'marko').as_('m'). \
-        addV('person').property('name', 'vadas').as_('v'). \
-        addE('knows').from_('m').to('v').iterate()
-
-    # retrieve the data from the "marko" vertex
-    print("marko: " + to_string(g.V().has('person', 'name', 'marko').valueMap().next()))
-
-    # find the "marko" vertex and then traverse to the people he "knows" and return their data
-    print("who marko knows: " + to_string(g.V().has('person', 'name', 'marko').out('knows').valueMap().next()))
-
+    foo = g.V().count().toList()
+    bar = g.V().hasLabel("Test").count().toList()
+    print(foo)
+    print(bar)
 
 if __name__ == "__main__":
     main()

@@ -19,7 +19,10 @@ under the License.
 
 package gremlingo
 
-import "reflect"
+import (
+	"errors"
+	"reflect"
+)
 
 type bytecode struct {
 	sourceInstructions []instruction
@@ -49,14 +52,15 @@ func (bytecode *bytecode) createInstruction(operator string, args ...interface{}
 		arguments: make([]interface{}, 0),
 	}
 
-	for _, arg := range args {
-		converted, err := bytecode.convertArgument(arg)
-		if err != nil {
-			return nil, err
+	if args != nil && !(len(args) == 1 && args[0] == nil) {
+		for _, arg := range args {
+			converted, err := bytecode.convertArgument(arg)
+			if err != nil {
+				return nil, err
+			}
+			instruction.arguments = append(instruction.arguments, converted)
 		}
-		instruction.arguments = append(instruction.arguments, converted)
 	}
-
 	return instruction, nil
 }
 
@@ -71,13 +75,22 @@ func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) erro
 }
 
 func (bytecode *bytecode) addStep(stepName string, args ...interface{}) error {
-	instruction, err := bytecode.createInstruction(stepName, args...)
-	if err != nil {
+	if args == nil {
+		instruction, err := bytecode.createInstruction(stepName)
+		if err != nil {
+			return err
+		}
+		bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
+		return err
+	} else {
+		instruction, err := bytecode.createInstruction(stepName, args...)
+		if err != nil {
+			return err
+		}
+		bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
 		return err
 	}
 
-	bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
-	return err
 }
 
 func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) {
@@ -123,14 +136,14 @@ func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) 
 				key:   v.key,
 				value: convertedValue,
 			}, nil
-		// TODO: AN-970 Traversal
-		//case Traversal:
-		//if arg.graph != nil {
-		//	return errors.New()
-		//}
-		//for k, v := range arg.bytecode.bindings {
-		//	bytecode.bindings[k] = v
-		//}
+		case Traversal:
+			if v.graph != nil {
+				return nil, errors.New("the child traversal was not spawned anonymously - use the __ class rather than a TraversalSource to construct the child traversal")
+			}
+			for k, val := range v.bytecode.bindings {
+				bytecode.bindings[k] = val
+			}
+			return v.bytecode, nil
 		default:
 			return arg, nil
 		}

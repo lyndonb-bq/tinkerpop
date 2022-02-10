@@ -20,6 +20,8 @@ under the License.
 package gremlingo
 
 type Traverser struct {
+	bulk  int64
+	value interface{}
 }
 
 type Traversal struct {

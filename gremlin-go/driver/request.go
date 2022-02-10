@@ -46,7 +46,7 @@ func makeStringRequest(stringGremlin string) (req request) {
 	}
 }
 
-const bytecodeOp = "eval"
+const bytecodeOp = "bytecode"
 const bytecodeProcessor = "traversal"
 
 func makeBytecodeRequest(bytecodeGremlin *bytecode) (req request) {

@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math/big"
 	"strings"
 
@@ -39,12 +40,12 @@ type serializer interface {
 
 // graphBinarySerializer serializes/deserializes message to/from GraphBinary
 type graphBinarySerializer struct {
-	serializer *graphBinaryTypeSerializer
+	ser *graphBinaryTypeSerializer
 }
 
 func newGraphBinarySerializer(handler *logHandler) serializer {
-	serializer := graphBinaryTypeSerializer{NullType, nil, nil, nil, handler}
-	return graphBinarySerializer{&serializer}
+	ser := graphBinaryTypeSerializer{NullType, nil, nil, nil, handler}
+	return graphBinarySerializer{&ser}
 }
 
 const versionByte byte = 0x81
@@ -58,7 +59,7 @@ func convertArgs(request *request, gs graphBinarySerializer) (map[string]interfa
 		switch gremlin.(type) {
 		case bytecode:
 			buffer := bytes.Buffer{}
-			gremlinBuffer, err := gs.serializer.write(gremlin, &buffer)
+			gremlinBuffer, err := gs.ser.write(gremlin, &buffer)
 			if err != nil {
 				return nil, err
 			}
@@ -144,26 +145,44 @@ func (gs *graphBinarySerializer) buildMessage(id uuid.UUID, mimeLen byte, op str
 	// args
 	err = binary.Write(&buffer, binary.BigEndian, uint32(len(args)))
 	for k, v := range args {
-		_, err = gs.serializer.writeValue(k, &buffer, true)
+
+		// Python:
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129  54   6 193  42 112 245 79 138 169  36 151 150 34 33 237 190 0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 2 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 3 0 0 0 0 7 97 108 105 97 115 101 115 10 0 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 178 142 53 137 183 117 64 25 165 170 74 181 172 244 93 186 0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108   0 0 0 2 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 2 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 3 0 0 0 0 7 97 108 105 97 115 101 115 ?? ? 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]464 <nil>
+
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 178 142 53 137 183 117 64 25 165 170 74 181 172 244 93 186 0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108   0 0 0 2 3 0 0 0 0 7 97 108 105 97 115 101 115 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 2 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0]464 <nil>
+
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 178 142 53 137 183 117 64 25 165 170 74 181 172 244 93 186 0 0 0   8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 3 0 0 0 0 7 97 108 105 97 115 101 115 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 2 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0]
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 231 219  57 118 230  91 67  94 129 216 250  84 57 41 102 153 0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 2 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 0 0 0 0 7 97 108 105 97 115 101 115 10 0 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 60 126 3 108 39 219 79 62 181 126 242 146 238 210 8 87       0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 2 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 0 0 0 0 7 97 108 105 97 115 101 115 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]
+
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 71 225 169 72 3 97 78 34 172 195 198 124 59 219 245 12        0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 3 0 0 0 1 86 0 0 0 0 0 0 0 8 104 97 115 76 97 98 101 108 0 0 0 1 3 0 0 0 0 4 84 101 115 116 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 3 0 0 0 0 7 97 108 105 97 115 101 115 10 0 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 20 203 174 148 119 209 74 130 190 153 100 232 208 148 122 142 0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 3 0 0 0 1 86 0 0 0 0 0 0 0 8 104 97 115 76 97 98 101 108 0 0 0 1 0 0 0 1 9 0 0 0 0 1 3 0 0 0 0 4 84 101 115 116 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 3 0 0 0 0 7 97 108 105 97 115 101 115 10 0 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]
+		// [32 97 112 112 108 105 99 97 116 105 111 110 47 118 110 100 46 103 114 97 112 104 98 105 110 97 114 121 45 118 49 46 48 129 104 219 81 107 98 88 77 57 150 62 54 87 186 60 145 236        0 0 0 8 98 121 116 101 99 111 100 101 0 0 0 9 116 114 97 118 101 114 115 97 108 0 0 0 2 3 0 0 0 0 7 103 114 101 109 108 105 110 21 0 0 0 0 5 0 0 0 1 86 0 0 0 0 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 1 86 0 0 0 0 0 0 0 8 104 97 115 76 97 98 101 108 0 0 0 1 0 0 0 1 9 0 0 0 0 1 3 0 0 0 0 4 84 101 115 116 0 0 0 5 99 111 117 110 116 0 0 0 0 0 0 0 0 3 0 0 0 0 7 97 108 105 97 115 101 115 10 0 0 0 0 1 3 0 0 0 0 1 103 3 0 0 0 0 1 103]
+		_, err = gs.ser.write(k, &buffer)
 		if err != nil {
 			return nil, err
 		}
 
 		switch v.(type) {
 		case []byte:
-			buffer.Write(v.([]byte))
-			_, err = gs.serializer.writeValue(v, &buffer, true)
+			_, err = buffer.Write(v.([]byte))
+			break
 		default:
-			_, err = gs.serializer.writeValue(v, &buffer, true)
+			_, err = gs.ser.write(v, &buffer)
+			break
 		}
 		if err != nil {
 			return nil, err
 		}
 	}
-
+	fmt.Println(fmt.Printf("%v", buffer.Bytes()))
 	return buffer.Bytes(), nil
 }
 
+/**
+bytearray(b' application/vnd.graphbinary-v1.0\x814gZ\xca\xe2\x9eG\x1a\xa9@\x99\x97q\x85\xac\x92\x00\x00\x00\x08bytecode\x00\x00\x00\ttraversal\x00\x00\x00\x02\x03\x00\x00\x00\x00\x07gremlin\x15\x00\x00\x00\x00\x02\x00\x00\x00\x01V\x00\x00\x00\x00\x00\x00\x00\x05count\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x07aliases\n\x00\x00\x00\x00\x01\x03\x00\x00\x00\x00\x01g\x03\x00\x00\x00\x00\x01g')
+*/
 func uuidToBigInt(requestID uuid.UUID) big.Int {
 	var bigInt big.Int
 	bigInt.SetString(strings.Replace(requestID.String(), "-", "", 4), 16)
@@ -194,7 +213,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		if err != nil {
 			return nil, err
 		} else if keyType != StringType {
-			return nil, errors.New("expected string key for map")
+			return nil, errors.New(fmt.Sprintf("expected string key for map, got type='0x%x'", keyType))
 		}
 		var nullable byte
 		err = binary.Read(buffer, binary.BigEndian, &nullable)
@@ -206,7 +225,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		if err != nil {
 			return nil, err
 		}
-		mapData[k], err = gs.serializer.read(buffer)
+		mapData[k], err = gs.ser.read(buffer)
 		if err != nil {
 			return nil, err
 		}
@@ -279,7 +298,7 @@ func (gs graphBinarySerializer) deserializeMessage(responseMessage []byte) (resp
 	}
 
 	// Result data
-	data, err := gs.serializer.read(&buffer)
+	data, err := gs.ser.read(&buffer)
 	if err != nil {
 		return msg, err
 	}
@@ -306,19 +325,19 @@ func (gs *graphBinarySerializer) deserializeRequestMessage(requestMessage *[]byt
 	if err != nil {
 		return msg, err
 	}
-	msgUUID, err := gs.serializer.readValue(&buffer, byte(UUIDType), false)
+	msgUUID, err := gs.ser.readValue(&buffer, byte(UUIDType), false)
 	if err != nil {
 		return msg, err
 	}
-	msgOp, err := gs.serializer.readValue(&buffer, byte(StringType), false)
+	msgOp, err := gs.ser.readValue(&buffer, byte(StringType), false)
 	if err != nil {
 		return msg, err
 	}
-	msgProc, err := gs.serializer.readValue(&buffer, byte(StringType), false)
+	msgProc, err := gs.ser.readValue(&buffer, byte(StringType), false)
 	if err != nil {
 		return msg, err
 	}
-	msgArgs, err := gs.serializer.readValue(&buffer, byte(MapType), false)
+	msgArgs, err := gs.ser.readValue(&buffer, byte(MapType), false)
 	if err != nil {
 		return msg, err
 	}
@@ -339,32 +358,32 @@ func (gs *graphBinarySerializer) serializeResponseMessage(response *response) ([
 	buffer.WriteByte(versionByte)
 
 	// requestID
-	_, err := gs.serializer.writeValue(response.responseID, &buffer, true)
+	_, err := gs.ser.writeValue(response.responseID, &buffer, true)
 	if err != nil {
 		return nil, err
 	}
 	// Status Code
-	_, err = gs.serializer.writeValue(response.responseStatus.code, &buffer, false)
+	_, err = gs.ser.writeValue(response.responseStatus.code, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Status message
-	_, err = gs.serializer.writeValue(response.responseStatus.message, &buffer, true)
+	_, err = gs.ser.writeValue(response.responseStatus.message, &buffer, true)
 	if err != nil {
 		return nil, err
 	}
 	// Status attributes
-	_, err = gs.serializer.writeValue(response.responseStatus.attributes, &buffer, false)
+	_, err = gs.ser.writeValue(response.responseStatus.attributes, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Result meta
-	_, err = gs.serializer.writeValue(response.responseResult.meta, &buffer, false)
+	_, err = gs.ser.writeValue(response.responseResult.meta, &buffer, false)
 	if err != nil {
 		return nil, err
 	}
 	// Result
-	_, err = gs.serializer.write(response.responseResult.data, &buffer)
+	_, err = gs.ser.write(response.responseResult.data, &buffer)
 	if err != nil {
 		return nil, err
 	}

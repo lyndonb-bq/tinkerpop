@@ -40,7 +40,39 @@ func (r *Result) ToString() string {
 
 // GetString gets the string representation of the result
 func (r *Result) GetString() string {
-	return fmt.Sprintf("%v", r.result)
+	fmt.Println("Type ", reflect.TypeOf(r.result).Name())
+	fmt.Println("Type ", reflect.TypeOf(r.result).Kind())
+	data := r.result
+
+	switch r.result.(type) {
+	case []interface{}:
+		{
+			data = r.result.([]interface{})[0]
+			switch data.(type) {
+			case []interface{}:
+				{
+					data = data.([]interface{})[0]
+					break
+				}
+			case Traverser:
+				{
+					data = data.(Traverser).value
+					break
+				}
+			default:
+				break
+			}
+			break
+		}
+	case Traverser:
+		{
+			data = r.result.(Traverser).value
+			break
+		}
+	default:
+		break
+	}
+	return fmt.Sprintf("%v", data)
 }
 
 // GetInt gets the result by coercing it into an int, else returns an error if not parsable
