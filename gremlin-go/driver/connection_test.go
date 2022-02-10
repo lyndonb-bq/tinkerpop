@@ -26,11 +26,48 @@ import (
 	"golang.org/x/text/language"
 )
 
-const runIntegration = false
+const runIntegration = true
 const testHost string = "localhost"
-const testPort int = 8182
+const testPort int = 8181
 
 func TestConnection(t *testing.T) {
+	t.Run("Test g.V().count()", func(t *testing.T) {
+		if runIntegration {
+			remote, err := NewDriverRemoteConnection(testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := _Traversal().WithRemote(remote)
+
+			// Read count, expect there to be 0 vertices.
+			results, err := g.V().Count().ToList()
+			assert.Nil(t, err)
+			assert.NotNil(t, results)
+			assert.Equal(t, 1, len(results))
+			var count int32
+			count, err = results[0].GetInt32()
+			assert.Nil(t, err)
+			assert.Equal(t, 0, count)
+
+			// Add 5 vertices.
+			_, err = g.AddV("person").Property("name", "Lyndon").
+				AddV("person").Property("name", "Simon").
+				AddV("person").Property("name", "Yang").
+				AddV("person").Property("name", "Rithin").
+				AddV("person").Property("name", "Alexey").
+				Iterate()
+			assert.Nil(t, err)
+
+			// Read count again, should be 5.
+			results, err = g.V().Count().ToList()
+			assert.Nil(t, err)
+			assert.NotNil(t, results)
+			assert.Equal(t, 1, len(results))
+			count, err = results[0].GetInt32()
+			assert.Nil(t, err)
+			assert.Equal(t, 5, count)
+			g.V().Drop().Iterate()
+		}
+	})
 	t.Run("Test createConnection", func(t *testing.T) {
 		if runIntegration {
 			connection, err := createConnection(newLogHandler(&defaultLogger{}, Info, language.English), testHost, testPort)

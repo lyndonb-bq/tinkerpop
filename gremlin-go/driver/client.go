@@ -80,18 +80,7 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 }
 
 // SubmitBytecode submits bytecode to the server to execute and returns a ResultSet
-func (client *Client) SubmitBytecode(traversalString string) (ResultSet, error) {
-	request := makeStringRequest(traversalString)
-	if client.connection == nil {
-		client.connection = &connection{
-			host:            client.host,
-			port:            client.port,
-			transporterType: client.transporterType,
-			logHandler:      client.logHandler,
-			transporter:     nil,
-			protocol:        nil,
-		}
-	}
-
+func (client *Client) SubmitBytecode(bytecode *bytecode) (ResultSet, error) {
+	request := makeBytecodeRequest(bytecode)
 	return client.connection.write(&request)
 }

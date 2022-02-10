@@ -45,7 +45,7 @@ type DriverRemoteConnection struct {
 func NewDriverRemoteConnection(
 	host string,
 	port int,
-	configurations ...func(settings *DriverRemoteConnectionSettings)) *DriverRemoteConnection {
+	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
 		TraversalSource: "g",
 		Username:        "",
@@ -64,14 +64,12 @@ func NewDriverRemoteConnection(
 	}
 
 	// TODO: Full constructor blocked on client
-	client := &Client{
-		host:            host,
-		port:            port,
-		transporterType: settings.TransporterType,
-		logHandler:      newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language),
+	client, err := NewClient(host, port)
+	if err != nil {
+		return nil, err
 	}
 
-	return &DriverRemoteConnection{client: client}
+	return &DriverRemoteConnection{client: client}, nil
 }
 
 // Close closes the DriverRemoteConnection
@@ -79,16 +77,14 @@ func (driver *DriverRemoteConnection) Close() error {
 	return driver.client.Close()
 }
 
-// Submit sends a traversal to the server
-// TODO: Take in Bytecode when implemented
+// Submit sends a string traversal to the server
 func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet, error) {
 	return driver.client.Submit(traversalString)
 }
 
-// Submit sends a traversal to the server
-// TODO: Take in Bytecode when implemented
-func (driver *DriverRemoteConnection) SubmitBytecode(bytecode bytecode) (ResultSet, error) {
-	return driver.client.Submit(bytecode)
+// SubmitBytecode sends a bytecode traversal to the server
+func (driver *DriverRemoteConnection) SubmitBytecode(bytecode *bytecode) (ResultSet, error) {
+	return driver.client.SubmitBytecode(bytecode)
 }
 
 // TODO: Bytecode, OptionsStrategy, RequestOptions

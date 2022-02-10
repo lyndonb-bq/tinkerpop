@@ -27,37 +27,44 @@ type Traversal struct {
 	traversalStrategies *TraversalStrategies
 	bytecode            *bytecode
 	traverser           *Traverser
-}
-
-const host string = "localhost"
-const port int = 8182
-
-var remote = DriverRemoteConnection{
-	client: NewClient(host, port),
+	remote              *DriverRemoteConnection
 }
 
 // ToList returns the result in a list
 // TODO use TraversalStrategies instead of direct remote after they are implemented
-func (t *Traversal) ToList() []*Result {
-	remote.s
-	results, _ := remote.Submit(t.bytecode.())
-	return results.All()
+func (t *Traversal) ToList() ([]*Result, error) {
+	results, err := t.remote.SubmitBytecode(t.bytecode)
+	if err != nil {
+		return nil, err
+	}
+	return results.All(), nil
 }
 
 // ToSet returns the results in a set.
 // TODO Go doesn't have sets, determine the best structure for this
-func (t *Traversal) ToSet() map[*Result]bool {
-	set := make(map[*Result]bool)
-	results, _ := remote.Submit(t.bytecode.toString())
+func (t *Traversal) ToSet() (map[*Result]bool, error) {
+	set := map[*Result]bool{}
+	results, err := t.remote.SubmitBytecode(t.bytecode)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, r := range results.All() {
 		set[r] = true
 	}
-	return set
+	return set, nil
 }
 
-// Iterate iterate all the Traverser instances in the traversal and returns the empty traversal
-// TODO complete this when Traverser is implemented
-func (t *Traversal) Iterate() *Traversal {
-	t.bytecode.addStep("none")
-	return t
+// Iterate all the Traverser instances in the traversal and returns the empty traversal
+func (t *Traversal) Iterate() (*Traversal, error) {
+	err := t.bytecode.addStep("none")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = t.remote.SubmitBytecode(t.bytecode)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }

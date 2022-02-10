@@ -55,7 +55,7 @@ class DriverRemoteConnection(RemoteConnection):
         self.__session = session
         self.__transport_kwargs = transport_kwargs
         if message_serializer is None:
-            message_serializer = serializer.GraphSONMessageSerializer(
+            message_serializer = serializer.GraphBinarySerializersV1(
                 reader=graphson_reader,
                 writer=graphson_writer)
         self._client = client.Client(url, traversal_source,

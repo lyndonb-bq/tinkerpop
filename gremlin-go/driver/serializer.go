@@ -49,9 +49,37 @@ func newGraphBinarySerializer(handler *logHandler) serializer {
 
 const versionByte byte = 0x81
 
+func convertArgs(request *request, gs graphBinarySerializer) (map[string]interface{}, error) {
+	// TODO: Remote transaction session processor is same as bytecode
+	if request.processor == bytecodeProcessor {
+		// Convert to format:
+		// args["gremlin"]: <serialized args["gremlin"]
+		gremlin := request.args["gremlin"]
+		switch gremlin.(type) {
+		case bytecode:
+			buffer := bytes.Buffer{}
+			gremlinBuffer, err := gs.serializer.write(gremlin, &buffer)
+			if err != nil {
+				return nil, err
+			}
+			request.args["gremlin"] = gremlinBuffer
+			return request.args, nil
+		default:
+			return nil, errors.New("<<<Error message here>>>")
+		}
+	} else {
+		// Use standard processor, which effectively does nothing.
+		return request.args, nil
+	}
+}
+
 // serializeMessage serializes a request message into GraphBinary
 func (gs graphBinarySerializer) serializeMessage(request *request) ([]byte, error) {
-	finalMessage, err := gs.buildMessage(request, 0x20)
+	args, err := convertArgs(request, gs)
+	if err != nil {
+		return nil, err
+	}
+	finalMessage, err := gs.buildMessage(request.requestID, byte(len(graphBinaryMimeType)), request.op, request.processor, args)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +95,7 @@ func writeStr(buffer bytes.Buffer, str string) error {
 	return err
 }
 
-func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte) ([]byte, error) {
+func (gs *graphBinarySerializer) buildMessage(id uuid.UUID, mimeLen byte, op string, processor string, args map[string]interface{}) ([]byte, error) {
 	buffer := bytes.Buffer{}
 
 	// mime header
@@ -78,7 +106,7 @@ func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte) ([
 	buffer.WriteByte(versionByte)
 
 	// Request uuid
-	bigIntUUID := uuidToBigInt(request.requestID)
+	bigIntUUID := uuidToBigInt(id)
 	lower := bigIntUUID.Uint64()
 	upperBigInt := bigIntUUID.Rsh(&bigIntUUID, 64)
 	upper := upperBigInt.Uint64()
@@ -92,36 +120,42 @@ func (gs *graphBinarySerializer) buildMessage(request *request, mimeLen byte) ([
 	}
 
 	// op
-	err = binary.Write(&buffer, binary.BigEndian, uint32(len(request.op)))
+	err = binary.Write(&buffer, binary.BigEndian, uint32(len(op)))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = buffer.WriteString(request.op)
+	_, err = buffer.WriteString(op)
 	if err != nil {
 		return nil, err
 	}
 
 	// processor
-	err = binary.Write(&buffer, binary.BigEndian, uint32(len(request.processor)))
+	err = binary.Write(&buffer, binary.BigEndian, uint32(len(processor)))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = buffer.WriteString(request.processor)
+	_, err = buffer.WriteString(processor)
 	if err != nil {
 		return nil, err
 	}
 
 	// args
-	err = binary.Write(&buffer, binary.BigEndian, uint32(len(request.args)))
-	for k, v := range request.args {
+	err = binary.Write(&buffer, binary.BigEndian, uint32(len(args)))
+	for k, v := range args {
 		_, err = gs.serializer.writeValue(k, &buffer, true)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = gs.serializer.writeValue(v, &buffer, true)
+		switch v.(type) {
+		case []byte:
+			buffer.Write(v.([]byte))
+			_, err = gs.serializer.writeValue(v, &buffer, true)
+		default:
+			_, err = gs.serializer.writeValue(v, &buffer, true)
+		}
 		if err != nil {
 			return nil, err
 		}

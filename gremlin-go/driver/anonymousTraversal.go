@@ -29,8 +29,7 @@ type AnonymousTraversalSource struct {
 
 func (ats *AnonymousTraversalSource) WithRemote(drc *DriverRemoteConnection) *GraphTraversalSource {
 	// TODO: For full Graph implementation => return ats.WithGraph(&Graph{}).WithRemote(drc)
-	NewDefaultGraphTraversalSource(nil, nil)
-	return ats.WithRemote(drc)
+	return NewDefaultGraphTraversalSource().WithRemote(drc)
 }
 
 func _Traversal() *AnonymousTraversalSource {
