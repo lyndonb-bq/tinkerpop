@@ -31,19 +31,21 @@ const testHost string = "localhost"
 const testPort int = 8182
 
 func TestConnection(t *testing.T) {
-	t.Run("Test connect", func(t *testing.T) {
+	t.Run("Test createConnection", func(t *testing.T) {
 		if runIntegration {
-			connection := connection{testHost, testPort, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil}
-			err := connection.connect()
+			connection, err := createConnection(newLogHandler(&defaultLogger{}, Info, language.English), testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, connection)
+			err = connection.close()
 			assert.Nil(t, err)
 		}
 	})
 
 	t.Run("Test write", func(t *testing.T) {
 		if runIntegration {
-			connection := connection{testHost, testPort, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil}
-			err := connection.connect()
+			connection, err := createConnection(newLogHandler(&defaultLogger{}, Info, language.English), testHost, testPort)
 			assert.Nil(t, err)
+			assert.NotNil(t, connection)
 			request := makeStringRequest("g.V().count()")
 			resultSet, err := connection.write(&request)
 			assert.Nil(t, err)
@@ -51,21 +53,24 @@ func TestConnection(t *testing.T) {
 			result := resultSet.one()
 			assert.NotNil(t, result)
 			assert.Equal(t, "[0]", result.GetString())
+			err = connection.close()
+			assert.Nil(t, err)
 		}
 	})
 
 	t.Run("Test client submit", func(t *testing.T) {
 		if runIntegration {
-			connection := connection{testHost, testPort, Gorilla, newLogHandler(&defaultLogger{}, Info, language.English), nil, nil, nil}
-			err := connection.connect()
+			client, err := NewClient(testHost, testPort)
 			assert.Nil(t, err)
-			client := NewClient(testHost, testPort)
+			assert.NotNil(t, client)
 			resultSet, err := client.Submit("g.V().count()")
 			assert.Nil(t, err)
 			assert.NotNil(t, resultSet)
 			result := resultSet.one()
 			assert.NotNil(t, result)
 			assert.Equal(t, "[0]", result.GetString())
+			err = client.Close()
+			assert.Nil(t, err)
 		}
 	})
 }
