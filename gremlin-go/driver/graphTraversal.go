@@ -37,7 +37,7 @@ func NewGraphTraversal(graph *Graph, traversalStrategies *TraversalStrategies, b
 
 // Clone make a copy of a traversal that is reset for iteration.
 func (g *GraphTraversal) Clone() *GraphTraversal {
-	return NewGraphTraversal(g.graph, g.traversalStrategies, g.bytecode, g.remote)
+	return NewGraphTraversal(g.graph, g.traversalStrategies, newBytecode(g.bytecode), g.remote)
 }
 
 // V adds the v step to the GraphTraversal
@@ -150,11 +150,7 @@ func (g *GraphTraversal) Constant(args ...interface{}) *GraphTraversal {
 
 // Count adds the count step to the GraphTraversal
 func (g *GraphTraversal) Count(args ...interface{}) *GraphTraversal {
-	if args == nil {
-		g.bytecode.addStep("count")
-	} else {
-		g.bytecode.addStep("count", args...)
-	}
+	g.bytecode.addStep("count", args...)
 	return g
 }
 

@@ -69,14 +69,14 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets map[string]ResultSe
 		}
 
 		// Deserialize message and unpack.
-		response, err := protocol.serializer.deserializeMessage(msg)
+		resp, err := protocol.serializer.deserializeMessage(msg)
 		if err != nil {
 			log.logger.Log(Error, err)
 			readErrorHandler(resultSets, errorCallback, err, log)
 			return
 		}
 
-		err = responseHandler(resultSets, response)
+		err = responseHandler(resultSets, resp, log)
 		if err != nil {
 			readErrorHandler(resultSets, errorCallback, err, log)
 			return
@@ -93,7 +93,7 @@ func readErrorHandler(resultSets map[string]ResultSet, errorCallback func(), err
 	errorCallback()
 }
 
-func responseHandler(resultSets map[string]ResultSet, response response) error {
+func responseHandler(resultSets map[string]ResultSet, response response, log *logHandler) error {
 	responseID, statusCode, metadata, data := response.responseID, response.responseStatus.code,
 		response.responseResult.meta, response.responseResult.data
 	responseIDString := responseID.String()
@@ -108,11 +108,13 @@ func responseHandler(resultSets map[string]ResultSet, response response) error {
 	if statusCode == http.StatusNoContent {
 		resultSets[responseIDString].addResult(&Result{make([]interface{}, 0)})
 		resultSets[responseIDString].Close()
+		log.logf(Info, readComplete, responseIDString)
 	} else if statusCode == http.StatusOK {
 		// Add data and status attributes to the ResultSet.
 		resultSets[responseIDString].addResult(&Result{data})
 		resultSets[responseIDString].setStatusAttributes(response.responseStatus.attributes)
 		resultSets[responseIDString].Close()
+		log.logf(Info, readComplete, responseIDString)
 	} else if statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
 		resultSets[responseIDString].addResult(&Result{data})
@@ -145,8 +147,13 @@ func (protocol *gremlinServerWSProtocol) close() (err error) {
 }
 
 func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, host string, port int, results map[string]ResultSet, errorCallback func()) (protocol, error) {
+	transport, err := getTransportLayer(transporterType, host, port)
+	if err != nil {
+		return nil, err
+	}
+
 	gremlinProtocol := &gremlinServerWSProtocol{
-		protocolBase:     &protocolBase{},
+		protocolBase:     &protocolBase{transporter: transport},
 		serializer:       newGraphBinarySerializer(handler),
 		logHandler:       handler,
 		maxContentLength: 1,
@@ -155,8 +162,7 @@ func newGremlinServerWSProtocol(handler *logHandler, transporterType Transporter
 		closed:           false,
 		mux:              sync.Mutex{},
 	}
-	gremlinProtocol.transporter = getTransportLayer(transporterType, host, port)
-	err := gremlinProtocol.transporter.Connect()
+	err = gremlinProtocol.transporter.Connect()
 	if err != nil {
 		return nil, err
 	}

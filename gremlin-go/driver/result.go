@@ -40,8 +40,6 @@ func (r *Result) ToString() string {
 
 // GetString gets the string representation of the result
 func (r *Result) GetString() string {
-	fmt.Println("Type ", reflect.TypeOf(r.result).Name())
-	fmt.Println("Type ", reflect.TypeOf(r.result).Kind())
 	data := r.result
 
 	switch r.result.(type) {

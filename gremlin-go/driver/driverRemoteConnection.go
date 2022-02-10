@@ -63,10 +63,18 @@ func NewDriverRemoteConnection(
 		configuration(settings)
 	}
 
-	// TODO: Full constructor blocked on client
-	client, err := NewClient(host, port)
+	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
+	connection, err := createConnection(host, port, logHandler)
 	if err != nil {
 		return nil, err
+	}
+
+	client := &Client{
+		host:            host,
+		port:            port,
+		transporterType: settings.TransporterType,
+		logHandler:      logHandler,
+		connection:      connection,
 	}
 
 	return &DriverRemoteConnection{client: client}, nil
