@@ -31,7 +31,7 @@ import (
 
 // Version 1.0
 
-// DataType graphbinary types
+// DataType graphBinary types
 type DataType uint8
 
 // DataType defined as constants
@@ -49,6 +49,9 @@ const (
 	ShortType      DataType = 0x26
 	BooleanType    DataType = 0x27
 	BigIntegerType DataType = 0x23
+	VertexType     DataType = 0x11
+	EdgeType       DataType = 0x0d
+	PropertyType   DataType = 0x0f
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -288,6 +291,125 @@ func bigIntReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface
 	return getBigIntFromSignedBytes(valList), nil
 }
 
+// Format: {id}{label}{properties}
+func vertexWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*Vertex)
+	_, err := typeSerializer.write(v.id, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(v.label, buffer)
+	if err != nil {
+		return nil, err
+	}
+	// Note that as TinkerPop currently send "references" only, properties will always be null
+	buffer.Write(nullBytes)
+	return buffer.Bytes(), nil
+}
+
+func vertexReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	v := new(Vertex)
+	newUUID, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	v.id = newUUID.(uuid.UUID)
+	newLabel, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	v.label = newLabel.(string)
+	// read null byte
+	_, _ = typeSerializer.read(buffer)
+	return v, nil
+}
+
+// Format: {id}{label}{inVId}{inVLabel}{outVId}{outVLabel}{parent}{properties}
+func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	e := value.(*Edge)
+	_, err := typeSerializer.write(e.id, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(e.label, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = vertexWriter(&e.inV, buffer, typeSerializer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = vertexWriter(&e.outV, buffer, typeSerializer)
+	if err != nil {
+		return nil, err
+	}
+	// Note that as TinkerPop currently send "references" only, parent and properties  will always be null
+	buffer.Write(nullBytes)
+	buffer.Write(nullBytes)
+	return buffer.Bytes(), nil
+}
+
+func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	e := new(Edge)
+	newUUID, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	e.id = newUUID.(uuid.UUID)
+	newLabel, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	e.label = newLabel.(string)
+	newInV, err := vertexReader(buffer, typeSerializer)
+	if err != nil {
+		return nil, err
+	}
+	e.inV = *newInV.(*Vertex)
+	newOutV, err := vertexReader(buffer, typeSerializer)
+	if err != nil {
+		return nil, err
+	}
+	e.outV = *newOutV.(*Vertex)
+	// read null bytes
+	_, _ = typeSerializer.read(buffer)
+	_, _ = typeSerializer.read(buffer)
+	return e, nil
+}
+
+//Format: {key}{value}{parent}
+func propertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*Property)
+	_, err := typeSerializer.write(v.key, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(v.value, buffer)
+	if err != nil {
+		return nil, err
+	}
+	// Note that as TinkerPop currently send "references" only, parent and properties  will always be null
+	buffer.Write(nullBytes)
+	return buffer.Bytes(), nil
+}
+
+func propertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	p := new(Property)
+	newKey, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	p.key = newKey.(string)
+	newValue, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	p.value = newValue
+	// read null byte
+	_, _ = typeSerializer.read(buffer)
+	return p, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -357,6 +479,12 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			err := binary.Write(buffer, binary.BigEndian, value)
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0}, nil
+	case *Vertex:
+		return &graphBinaryTypeSerializer{dataType: VertexType, writer: vertexWriter, reader: nil, nullFlagReturn: 0}, nil
+	case *Edge:
+		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: edgeWriter, reader: nil, nullFlagReturn: 0}, nil
+	case *Property:
+		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, reader: nil, nullFlagReturn: 0}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -436,6 +564,12 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			err := binary.Read(buffer, binary.BigEndian, &val)
 			return val, err
 		}, nullFlagReturn: 0}, nil
+	case VertexType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: VertexType, writer: nil, reader: vertexReader, nullFlagReturn: 0}, nil
+	case EdgeType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: nil, reader: edgeReader, nullFlagReturn: 0}, nil
+	case PropertyType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: nil, reader: propertyReader, nullFlagReturn: 0}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 	case ListType.getCodeByte():
