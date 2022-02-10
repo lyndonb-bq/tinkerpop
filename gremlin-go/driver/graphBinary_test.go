@@ -209,6 +209,20 @@ func TestGraphBinaryV1(t *testing.T) {
 			assert.Equal(t, x.label, v.label)
 			assert.Equal(t, x.value, v.value)
 		})
+		t.Run("test path", func(t *testing.T) {
+			x := new(Path)
+			var m = map[interface{}]interface{}{
+				"marko": int32(666),
+				"noone": "blah",
+			}
+			x.labels = []string{"str1", "str2", "str3"}
+			x.objects = []interface{}{"String1", m}
+			writeToBuffer(x, &buff)
+			p := readToValue(&buff).(*Path)
+			assert.Equal(t, x, p)
+			assert.Equal(t, x.labels, p.labels)
+			assert.Equal(t, x.objects, p.objects)
+		})
 	})
 
 	t.Run("test nested types", func(t *testing.T) {

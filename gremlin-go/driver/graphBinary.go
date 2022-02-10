@@ -456,6 +456,37 @@ func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeS
 	return vp, nil
 }
 
+//Format: {labels}{objects}
+func pathWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	p := value.(*Path)
+	_, err := typeSerializer.write(p.labels, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(p.objects, buffer)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	p := new(Path)
+	newLabels, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	for _, param := range newLabels.([]interface{}) {
+		p.labels = append(p.labels, param.(string))
+	}
+	newObjects, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	p.objects = newObjects.([]interface{})
+	return p, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -533,6 +564,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, reader: nil, nullFlagReturn: 0}, nil
 	case *VertexProperty:
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, reader: nil, nullFlagReturn: 0}, nil
+	case *Path:
+		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, reader: nil, nullFlagReturn: 0}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -620,6 +653,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: nil, reader: propertyReader, nullFlagReturn: 0}, nil
 	case VertexPropertyType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: nil, reader: vertexPropertyReader, nullFlagReturn: 0}, nil
+	case PathType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: PathType, writer: nil, reader: pathReader, nullFlagReturn: 0}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 	case ListType.getCodeByte():
