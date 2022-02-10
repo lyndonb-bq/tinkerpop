@@ -211,23 +211,23 @@ func instructionSetWriter(instructions []instruction, buffer *bytes.Buffer, type
 	}
 
 	// Write {step_0} to {step_n}.
-	for i := range instructions {
+	for _, instruction := range instructions {
 		// Write {name} of {step_i}.
 		// Note: {name} follows string writing, therefore write string length followed by actual string.
-		_, err = typeSerializer.writeValue(instructions[i].operator, buffer, false)
+		_, err = typeSerializer.writeValue(instruction.operator, buffer, false)
 		if err != nil {
 			return err
 		}
 
 		// Write {values_length} of {step_i}.
-		err = binary.Write(buffer, binary.BigEndian, int32(len(instructions[i].arguments)))
+		err = binary.Write(buffer, binary.BigEndian, int32(len(instruction.arguments)))
 		if err != nil {
 			return err
 		}
 
 		// Write {values_0} to {values_n}.
-		for j := range instructions[i].arguments {
-			_, err = typeSerializer.write(instructions[i].arguments[j], buffer)
+		for _, argument := range instruction.arguments {
+			_, err = typeSerializer.write(argument, buffer)
 			if err != nil {
 				return err
 			}

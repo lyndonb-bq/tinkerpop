@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"reflect"
 	"strings"
 
 	"github.com/google/uuid"
@@ -54,7 +55,7 @@ func convertArgs(request *request, gs graphBinarySerializer) (map[string]interfa
 	// TODO: Remote transaction session processor is same as bytecode
 	if request.processor == bytecodeProcessor {
 		// Convert to format:
-		// args["gremlin"]: <serialized args["gremlin"]
+		// args["gremlin"]: <serialized args["gremlin"]>
 		gremlin := request.args["gremlin"]
 		switch gremlin.(type) {
 		case bytecode:
@@ -66,7 +67,7 @@ func convertArgs(request *request, gs graphBinarySerializer) (map[string]interfa
 			request.args["gremlin"] = gremlinBuffer
 			return request.args, nil
 		default:
-			return nil, errors.New("<<<Error message here>>>")
+			return nil, errors.New(fmt.Sprintf("Failed to find serializer for type '%s'.", reflect.TypeOf(gremlin).Name()))
 		}
 	} else {
 		// Use standard processor, which effectively does nothing.

@@ -24,7 +24,7 @@ type GraphTraversal struct {
 }
 
 func NewGraphTraversal(graph *Graph, traversalStrategies *TraversalStrategies, bytecode *bytecode, remote *DriverRemoteConnection) *GraphTraversal {
-	gt := GraphTraversal{
+	gt := &GraphTraversal{
 		Traversal: &Traversal{
 			graph:               graph,
 			traversalStrategies: traversalStrategies,
@@ -32,7 +32,7 @@ func NewGraphTraversal(graph *Graph, traversalStrategies *TraversalStrategies, b
 			remote:              remote,
 		},
 	}
-	return &gt
+	return gt
 }
 
 // Clone make a copy of a traversal that is reset for iteration.
