@@ -22,7 +22,7 @@ package gremlingo
 import (
 	"net/url"
 	"strconv"
-	
+
 	"github.com/gorilla/websocket"
 )
 

@@ -458,7 +458,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			return string(valBytes), err
 		}, nullFlagReturn: "", logHandler: serializer.logHandler}, nil
 	case BigIntegerType.getCodeByte():
-		return &graphBinaryTypeSerializer{dataType: BigIntegerType, writer: nil, reader: bigIntReader, nullFlagReturn: 0}, nil
+		return &graphBinaryTypeSerializer{dataType: BigIntegerType, writer: nil, reader: bigIntReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
 	case LongType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: LongType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 			var val int64

@@ -59,6 +59,7 @@ func (bytecode *bytecode) createInstruction(operator string, args ...interface{}
 		}
 		instruction.arguments = append(instruction.arguments, converted)
 	}
+
 	return instruction, nil
 }
 
@@ -69,7 +70,7 @@ func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) erro
 	}
 
 	bytecode.sourceInstructions = append(bytecode.sourceInstructions, *instruction)
-	return nil
+	return err
 }
 
 func (bytecode *bytecode) addStep(stepName string, args ...interface{}) error {
@@ -79,7 +80,7 @@ func (bytecode *bytecode) addStep(stepName string, args ...interface{}) error {
 	}
 
 	bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
-	return nil
+	return err
 }
 
 func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) {
