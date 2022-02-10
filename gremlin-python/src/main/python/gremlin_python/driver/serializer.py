@@ -260,10 +260,7 @@ class GraphBinarySerializersV1(object):
                 ba.extend(v)
             else:
                 self._graphbinary_writer.toDict(v, ba)
-        # print(values)
-        # print([v for v in values])
-        print(bytes(ba))
-        print(str([v for v in bytes(ba)]).replace(",", ""))
+
         return bytes(ba)
 
     def deserialize_message(self, message):

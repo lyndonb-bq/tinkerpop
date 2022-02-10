@@ -44,8 +44,8 @@ type graphBinarySerializer struct {
 }
 
 func newGraphBinarySerializer(handler *logHandler) serializer {
-	ser := graphBinaryTypeSerializer{NullType, nil, nil, nil, handler}
-	return graphBinarySerializer{&ser}
+	serializer := graphBinaryTypeSerializer{NullType, nil, nil, nil, handler}
+	return graphBinarySerializer{&serializer}
 }
 
 const versionByte byte = 0x81

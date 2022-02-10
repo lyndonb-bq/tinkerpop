@@ -52,14 +52,12 @@ func (bytecode *bytecode) createInstruction(operator string, args ...interface{}
 		arguments: make([]interface{}, 0),
 	}
 
-	if args != nil && !(len(args) == 1 && args[0] == nil) {
-		for _, arg := range args {
-			converted, err := bytecode.convertArgument(arg)
-			if err != nil {
-				return nil, err
-			}
-			instruction.arguments = append(instruction.arguments, converted)
+	for _, arg := range args {
+		converted, err := bytecode.convertArgument(arg)
+		if err != nil {
+			return nil, err
 		}
+		instruction.arguments = append(instruction.arguments, converted)
 	}
 	return instruction, nil
 }
@@ -71,26 +69,17 @@ func (bytecode *bytecode) addSource(sourceName string, args ...interface{}) erro
 	}
 
 	bytecode.sourceInstructions = append(bytecode.sourceInstructions, *instruction)
-	return err
+	return nil
 }
 
 func (bytecode *bytecode) addStep(stepName string, args ...interface{}) error {
-	if args == nil {
-		instruction, err := bytecode.createInstruction(stepName)
-		if err != nil {
-			return err
-		}
-		bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
-		return err
-	} else {
-		instruction, err := bytecode.createInstruction(stepName, args...)
-		if err != nil {
-			return err
-		}
-		bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
+	instruction, err := bytecode.createInstruction(stepName, args...)
+	if err != nil {
 		return err
 	}
 
+	bytecode.stepInstructions = append(bytecode.stepInstructions, *instruction)
+	return nil
 }
 
 func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) {

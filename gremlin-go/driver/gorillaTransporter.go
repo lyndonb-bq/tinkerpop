@@ -20,9 +20,10 @@ under the License.
 package gremlingo
 
 import (
-	"github.com/gorilla/websocket"
 	"net/url"
 	"strconv"
+	
+	"github.com/gorilla/websocket"
 )
 
 type gorillaTransporter struct {
