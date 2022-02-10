@@ -36,22 +36,24 @@ type DataType uint8
 
 // DataType defined as constants
 const (
-	NullType       DataType = 0xFE
-	IntType        DataType = 0x01
-	LongType       DataType = 0x02
-	StringType     DataType = 0x03
-	DoubleType     DataType = 0x07
-	FloatType      DataType = 0x08
-	ListType       DataType = 0x09
-	MapType        DataType = 0x0a
-	UUIDType       DataType = 0x0c
-	ByteType       DataType = 0x24
-	ShortType      DataType = 0x26
-	BooleanType    DataType = 0x27
-	BigIntegerType DataType = 0x23
-	VertexType     DataType = 0x11
-	EdgeType       DataType = 0x0d
-	PropertyType   DataType = 0x0f
+	NullType           DataType = 0xFE
+	IntType            DataType = 0x01
+	LongType           DataType = 0x02
+	StringType         DataType = 0x03
+	DoubleType         DataType = 0x07
+	FloatType          DataType = 0x08
+	ListType           DataType = 0x09
+	MapType            DataType = 0x0a
+	UUIDType           DataType = 0x0c
+	ByteType           DataType = 0x24
+	ShortType          DataType = 0x26
+	BooleanType        DataType = 0x27
+	BigIntegerType     DataType = 0x23
+	VertexType         DataType = 0x11
+	EdgeType           DataType = 0x0d
+	PropertyType       DataType = 0x0f
+	VertexPropertyType DataType = 0x12
+	PathType           DataType = 0x0e
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -410,6 +412,50 @@ func propertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSeriali
 	return p, nil
 }
 
+//Format: {id}{label}{value}{parent}{properties}
+func vertexPropertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	vp := value.(*VertexProperty)
+	_, err := typeSerializer.write(vp.id, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(vp.label, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(vp.value, buffer)
+	if err != nil {
+		return nil, err
+	}
+	// Note that as TinkerPop currently send "references" only, parent and properties will always be null
+	buffer.Write(nullBytes)
+	buffer.Write(nullBytes)
+	return buffer.Bytes(), nil
+}
+
+func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	vp := new(VertexProperty)
+	newUUID, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	vp.id = newUUID.(uuid.UUID)
+	newLabel, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	vp.label = newLabel.(string)
+	newValue, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	vp.value = newValue
+	// read null byte
+	_, _ = typeSerializer.read(buffer)
+	_, _ = typeSerializer.read(buffer)
+	return vp, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -485,6 +531,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: edgeWriter, reader: nil, nullFlagReturn: 0}, nil
 	case *Property:
 		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, reader: nil, nullFlagReturn: 0}, nil
+	case *VertexProperty:
+		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, reader: nil, nullFlagReturn: 0}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -570,6 +618,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: nil, reader: edgeReader, nullFlagReturn: 0}, nil
 	case PropertyType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: nil, reader: propertyReader, nullFlagReturn: 0}, nil
+	case VertexPropertyType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: nil, reader: vertexPropertyReader, nullFlagReturn: 0}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 	case ListType.getCodeByte():
