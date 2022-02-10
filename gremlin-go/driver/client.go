@@ -53,7 +53,7 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	conn, err := createConnection(logHandler, host, port)
+	conn, err := createConnection(host, port, logHandler)
 	if err != nil {
 		return nil, err
 	}

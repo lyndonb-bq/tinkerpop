@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"errors"
-	"golang.org/x/text/language"
 )
 
 type connectionState int
@@ -66,11 +65,11 @@ func (connection *connection) write(request *request) (ResultSet, error) {
 	return connection.results[requestID], connection.protocol.write(request)
 }
 
-func createConnection(logHandler *logHandler, host string, port int) (*connection, error) {
-	conn := &connection{newLogHandler(&defaultLogger{}, Info, language.English), nil, map[string]ResultSet{}, initialized}
+func createConnection(host string, port int, logHandler *logHandler) (*connection, error) {
+	conn := &connection{logHandler, nil, map[string]ResultSet{}, initialized}
 	logHandler.log(Info, connectConnection)
-	var err error = nil
-	conn.protocol, err = newGremlinServerWSProtocol(logHandler, Gorilla, host, port, conn.results, conn.errorCallback)
+	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, host, port, conn.results, conn.errorCallback)
+	conn.protocol = protocol
 	if err == nil {
 		conn.state = established
 		return conn, err
