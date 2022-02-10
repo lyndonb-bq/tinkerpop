@@ -85,6 +85,12 @@ func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet,
 	return driver.client.Submit(traversalString)
 }
 
+// Submit sends a traversal to the server
+// TODO: Take in Bytecode when implemented
+func (driver *DriverRemoteConnection) SubmitBytecode(bytecode bytecode) (ResultSet, error) {
+	return driver.client.Submit(bytecode)
+}
+
 // TODO: Bytecode, OptionsStrategy, RequestOptions
 //func extractRequestOptions(bytecode Bytecode) RequestOptions {
 //	var optionsStrategy OptionsStrategy = nil

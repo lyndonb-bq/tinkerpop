@@ -19,33 +19,34 @@ under the License.
 
 package gremlingo
 
-type Graph struct {
-}
-
 type TraversalStrategies struct {
 }
 
 type GraphTraversalSource struct {
 	graph               *Graph
 	traversalStrategies *TraversalStrategies
-	bytecode            bytecode
-	g                   *GraphTraversal
+	bytecode            *bytecode
 	remoteConnection    *DriverRemoteConnection
 }
 
 // NewGraphTraversalSource creates a graph traversal source, the primary DSL of the Gremlin traversal machine
-func NewGraphTraversalSource(graph *Graph, traversalStrategies *TraversalStrategies, bytecode bytecode, graphTraversal *GraphTraversal) *GraphTraversalSource {
-	return &GraphTraversalSource{graph: graph, traversalStrategies: traversalStrategies, bytecode: bytecode, g: graphTraversal}
+func NewGraphTraversalSource(graph *Graph, traversalStrategies *TraversalStrategies, bytecode *bytecode) *GraphTraversalSource {
+	return &GraphTraversalSource{graph: graph, traversalStrategies: traversalStrategies, bytecode: bytecode}
+}
+
+// NewDefaultGraphTraversalSource creates a new graph GraphTraversalSource without a graph, strategy, or existing traversal
+func NewDefaultGraphTraversalSource(graphTraversal *GraphTraversal) *GraphTraversalSource {
+	return &GraphTraversalSource{graph: nil, traversalStrategies: nil, bytecode: newBytecode(nil)}
 }
 
 // GetBytecode gets the traversal bytecode associated with this graph traversal source
-func (gts *GraphTraversalSource) GetBytecode() bytecode {
+func (gts *GraphTraversalSource) GetBytecode() *bytecode {
 	return gts.bytecode
 }
 
 // GetGraphTraversal gets the graph traversal associated with this graph traversal source
 func (gts *GraphTraversalSource) GetGraphTraversal() *GraphTraversal {
-	return gts.g
+	return &GraphTraversal{t: &Traversal{graph: gts.graph, traversalStrategies: gts.traversalStrategies, bytecode: gts.bytecode, traverser: nil}}
 }
 
 // GetTraversalStrategies gets the graph traversal strategies associated with this graph traversal source
@@ -54,7 +55,7 @@ func (gts *GraphTraversalSource) GetTraversalStrategies() *TraversalStrategies {
 }
 
 func (gts *GraphTraversalSource) clone() *GraphTraversalSource {
-	return NewGraphTraversalSource(gts.graph, gts.traversalStrategies, gts.bytecode, gts.g)
+	return NewGraphTraversalSource(gts.graph, gts.traversalStrategies, gts.bytecode)
 }
 
 // WithBulk allows for control of bulking operations
@@ -106,12 +107,10 @@ func (gts *GraphTraversalSource) With(key interface{}, value interface{}) *Graph
 	return source
 }
 
-// TODO: Add to this when implementing traversal strategies
-//func (g *GraphTraversalSource) WithRemote(remoteConnection DriverRemoteConnection) *GraphTraversalSource {
-//	source := g.clone()
-//	source.traversalStrategies.addStrategy(RemoteStrategy(remoteConnection))
-//	return source
-//}
+func (gts *GraphTraversalSource) WithRemote(remoteConnection *DriverRemoteConnection) *GraphTraversalSource {
+	gts.remoteConnection = remoteConnection
+	return gts.clone()
+}
 
 // E reads edges from the graph to start the traversal
 func (gts *GraphTraversalSource) E(args ...interface{}) *GraphTraversal {

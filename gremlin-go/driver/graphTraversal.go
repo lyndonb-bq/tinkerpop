@@ -23,7 +23,7 @@ type GraphTraversal struct {
 	t *Traversal
 }
 
-func NewGraphTraversal(graph *Graph, traversalStrategies *TraversalStrategies, bytecode bytecode) *GraphTraversal {
+func NewGraphTraversal(graph *Graph, traversalStrategies *TraversalStrategies, bytecode *bytecode) *GraphTraversal {
 	return &GraphTraversal{t: &Traversal{
 		graph:               graph,
 		traversalStrategies: traversalStrategies,

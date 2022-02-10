@@ -25,7 +25,7 @@ type Traverser struct {
 type Traversal struct {
 	graph               *Graph
 	traversalStrategies *TraversalStrategies
-	bytecode            bytecode
+	bytecode            *bytecode
 	traverser           *Traverser
 }
 
@@ -39,7 +39,8 @@ var remote = DriverRemoteConnection{
 // ToList returns the result in a list
 // TODO use TraversalStrategies instead of direct remote after they are implemented
 func (t *Traversal) ToList() []*Result {
-	results, _ := remote.Submit(t.bytecode.toString())
+	remote.s
+	results, _ := remote.Submit(t.bytecode.())
 	return results.All()
 }
 
