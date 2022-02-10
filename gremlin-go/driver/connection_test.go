@@ -20,7 +20,7 @@ func TestConnection(t *testing.T) {
 		}
 	})
 
-	t.Run("Test write", func(t *testing.T) {
+	t.Run("Test connection.write()", func(t *testing.T) {
 		if runIntegration {
 			connection, err := createConnection("localhost", 8181, newLogHandler(&defaultLogger{}, Info, language.English))
 			assert.Nil(t, err)
@@ -37,7 +37,7 @@ func TestConnection(t *testing.T) {
 		}
 	})
 
-	t.Run("Test client submit", func(t *testing.T) {
+	t.Run("Test client.submit()", func(t *testing.T) {
 		if runIntegration {
 			client, err := NewClient("localhost", 8181)
 			assert.Nil(t, err)
