@@ -27,10 +27,10 @@ import (
 type connectionState int
 
 const (
-	initialized      connectionState = iota
-	established      connectionState = iota
-	closed           connectionState = iota
-	closedDueToError connectionState = iota
+	initialized connectionState = iota
+	established
+	closed
+	closedDueToError
 )
 
 type connection struct {
@@ -41,6 +41,7 @@ type connection struct {
 }
 
 func (connection *connection) errorCallback() {
+	connection.logHandler.log(Error, errorCallback)
 	connection.state = closedDueToError
 	_ = connection.protocol.close()
 }
@@ -60,14 +61,15 @@ func (connection *connection) close() (err error) {
 func (connection *connection) write(request *request) (ResultSet, error) {
 	connection.logHandler.log(Info, writeRequest)
 	requestID := request.requestID.String()
-	connection.logHandler.logger.Log(Info, "Creating request with id ", requestID)
+	connection.logHandler.logger.Log(Info, "Created request with id ", requestID)
 	connection.results[requestID] = newChannelResultSet(requestID)
 	return connection.results[requestID], connection.protocol.write(request)
 }
 
-func createConnection(logHandler *logHandler, host string, port int) (conn *connection, err error) {
-	conn = &connection{newLogHandler(&defaultLogger{}, Info, language.English), nil, map[string]ResultSet{}, initialized}
+func createConnection(logHandler *logHandler, host string, port int) (*connection, error) {
+	conn := &connection{newLogHandler(&defaultLogger{}, Info, language.English), nil, map[string]ResultSet{}, initialized}
 	logHandler.log(Info, connectConnection)
+	var err error = nil
 	conn.protocol, err = newGremlinServerWSProtocol(logHandler, Gorilla, host, port, conn.results, conn.errorCallback)
 	if err == nil {
 		conn.state = established

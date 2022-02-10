@@ -14,5 +14,6 @@
   "FAILED_CONNECTION" : "Failed to connect, connection is closed.",
   "OPENING_CONNECTION": "Connecting.",
   "WRITE_REQUEST": "Writing request.",
-  "READ_LOOP_ERROR": "Read loop error '%s', closing read loop."
+  "READ_LOOP_ERROR": "Read loop error '%s', closing read loop.",
+  "ERROR_CALLBACK": "Connection error callback invoked, closing protocol."
 }

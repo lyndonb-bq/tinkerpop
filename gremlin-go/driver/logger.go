@@ -109,4 +109,5 @@ const (
 	failedConnection         errorKey = "FAILED_CONNECTION"
 	writeRequest             errorKey = "WRITE_REQUEST"
 	readLoopError            errorKey = "READ_LOOP_ERROR"
+	errorCallback            errorKey = "ERROR_CALLBACK"
 )

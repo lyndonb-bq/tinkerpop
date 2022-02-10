@@ -63,8 +63,8 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets map[string]ResultSe
 		if err != nil {
 			// Ignore error here, we already got an error on read, cannot do anything with this.
 			_ = protocol.transporter.Close()
-			log.logger.Log(Error, err.Error())
-			readErrorHandler(resultSets, errorCallback)
+			log.logf(Error, readLoopError, err.Error())
+			readErrorHandler(resultSets, errorCallback, err, log)
 			return
 		}
 
@@ -72,21 +72,21 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets map[string]ResultSe
 		response, err := protocol.serializer.deserializeMessage(msg)
 		if err != nil {
 			log.logger.Log(Error, err)
-			readErrorHandler(resultSets, errorCallback)
+			readErrorHandler(resultSets, errorCallback, err, log)
 			return
 		}
 
 		err = responseHandler(resultSets, response)
 		if err != nil {
-			log.logger.Log(Error, err)
-			readErrorHandler(resultSets, errorCallback)
+			readErrorHandler(resultSets, errorCallback, err, log)
 			return
 		}
 	}
 }
 
 // If there is an error, we need to close the ResultSets and then pass the error back.
-func readErrorHandler(resultSets map[string]ResultSet, errorCallback func()) {
+func readErrorHandler(resultSets map[string]ResultSet, errorCallback func(), err error, log *logHandler) {
+	log.logf(Error, readLoopError, err.Error())
 	for _, resultSet := range resultSets {
 		resultSet.Close()
 	}
