@@ -145,8 +145,13 @@ func (protocol *gremlinServerWSProtocol) close() (err error) {
 }
 
 func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, host string, port int, results map[string]ResultSet, errorCallback func()) (protocol, error) {
+	transporter, err := getTransportLayer(transporterType, host, port)
+	if err != nil {
+		return nil, err
+	}
+
 	gremlinProtocol := &gremlinServerWSProtocol{
-		protocolBase:     &protocolBase{},
+		protocolBase:     &protocolBase{transporter: transporter},
 		serializer:       newGraphBinarySerializer(handler),
 		logHandler:       handler,
 		maxContentLength: 1,
@@ -155,11 +160,7 @@ func newGremlinServerWSProtocol(handler *logHandler, transporterType Transporter
 		closed:           false,
 		mux:              sync.Mutex{},
 	}
-	gremlinProtocol.transporter = getTransportLayer(transporterType, host, port)
-	err := gremlinProtocol.transporter.Connect()
-	if err != nil {
-		return nil, err
-	}
+
 	go gremlinProtocol.readLoop(results, errorCallback, handler)
 	return gremlinProtocol, nil
 }

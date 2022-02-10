@@ -12,7 +12,7 @@ const runIntegration = true
 func TestConnection(t *testing.T) {
 	t.Run("Test createConnection", func(t *testing.T) {
 		if runIntegration {
-			connection, err := createConnection(newLogHandler(&defaultLogger{}, Info, language.English), "localhost", 8181)
+			connection, err := createConnection("localhost", 8181, newLogHandler(&defaultLogger{}, Info, language.English))
 			assert.Nil(t, err)
 			assert.NotNil(t, connection)
 			err = connection.close()
@@ -22,7 +22,7 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test write", func(t *testing.T) {
 		if runIntegration {
-			connection, err := createConnection(newLogHandler(&defaultLogger{}, Info, language.English), "localhost", 8181)
+			connection, err := createConnection("localhost", 8181, newLogHandler(&defaultLogger{}, Info, language.English))
 			assert.Nil(t, err)
 			assert.NotNil(t, connection)
 			request := makeStringRequest("g.V().count()")
