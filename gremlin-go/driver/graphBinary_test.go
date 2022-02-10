@@ -161,7 +161,6 @@ func TestGraphBinaryV1(t *testing.T) {
 			assert.Equal(t, x.id, v.id)
 			assert.Equal(t, x.label, v.label)
 		})
-
 		t.Run("test edge", func(t *testing.T) {
 			x := new(Edge)
 			x.id, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
@@ -181,6 +180,18 @@ func TestGraphBinaryV1(t *testing.T) {
 			assert.Equal(t, x.label, e.label)
 			assert.Equal(t, x.inV, e.inV)
 			assert.Equal(t, x.outV, e.outV)
+		})
+		t.Run("test property", func(t *testing.T) {
+			x := new(Property)
+			x.key = "TestKey"
+			var m = map[interface{}]interface{}{
+				"marko": int32(666),
+				"noone": "blah",
+			}
+			x.value = m
+			writeToBuffer(x, &buff)
+			p := readToValue(&buff).(*Property)
+			assert.Equal(t, x, p)
 		})
 	})
 

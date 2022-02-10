@@ -51,6 +51,7 @@ const (
 	BigIntegerType DataType = 0x23
 	VertexType     DataType = 0x11
 	EdgeType       DataType = 0x0d
+	PropertyType   DataType = 0x0f
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -370,7 +371,43 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 		return nil, err
 	}
 	e.outV = *newOutV.(*Vertex)
+	// read null bytes
+	_, _ = typeSerializer.read(buffer)
+	_, _ = typeSerializer.read(buffer)
 	return e, nil
+}
+
+//Format: {key}{value}{parent}
+func propertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*Property)
+	_, err := typeSerializer.write(v.key, buffer)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.write(v.value, buffer)
+	if err != nil {
+		return nil, err
+	}
+	// Note that as TinkerPop currently send "references" only, parent and properties  will always be null
+	buffer.Write(nullBytes)
+	return buffer.Bytes(), nil
+}
+
+func propertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	p := new(Property)
+	newKey, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	p.key = newKey.(string)
+	newValue, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	p.value = newValue
+	// read null byte
+	_, _ = typeSerializer.read(buffer)
+	return p, nil
 }
 
 const (
@@ -446,6 +483,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: VertexType, writer: vertexWriter, reader: nil, nullFlagReturn: 0}, nil
 	case *Edge:
 		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: edgeWriter, reader: nil, nullFlagReturn: 0}, nil
+	case *Property:
+		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, reader: nil, nullFlagReturn: 0}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -529,6 +568,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: VertexType, writer: nil, reader: vertexReader, nullFlagReturn: 0}, nil
 	case EdgeType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: nil, reader: edgeReader, nullFlagReturn: 0}, nil
+	case PropertyType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: nil, reader: propertyReader, nullFlagReturn: 0}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil}, nil
 	case ListType.getCodeByte():
