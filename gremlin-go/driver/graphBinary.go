@@ -476,8 +476,13 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	if err != nil {
 		return nil, err
 	}
+	var tempList []string
 	for _, param := range newLabels.([]interface{}) {
-		p.labels = append(p.labels, param.(string))
+		tempList = []string{}
+		for _, l := range param.([]interface{}) {
+			tempList = append(tempList, l.(string))
+		}
+		p.labels = append(p.labels, tempList)
 	}
 	newObjects, err := typeSerializer.read(buffer)
 	if err != nil {
