@@ -203,7 +203,7 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	return valMap, nil
 }
 
-func instructionSetWriter(instructions []instruction, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) error {
+func instructionWriter(instructions []instruction, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) error {
 	// Write {steps_length}, i.e number of steps.
 	err := binary.Write(buffer, binary.BigEndian, int32(len(instructions)))
 	if err != nil {
@@ -247,11 +247,11 @@ func bytecodeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *gra
 	bc := value.(bytecode)
 
 	// Write {steps_length} and {step_0} through {step_n}, then {sources_length} and {source_0} through {source_n}
-	err := instructionSetWriter(bc.stepInstructions, buffer, typeSerializer)
+	err := instructionWriter(bc.stepInstructions, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
-	err = instructionSetWriter(bc.sourceInstructions, buffer, typeSerializer)
+	err = instructionWriter(bc.sourceInstructions, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
