@@ -20,8 +20,8 @@ under the License.
 package gremlingo
 
 import (
+	"sort"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
@@ -30,82 +30,136 @@ import (
 const runIntegration = true
 const testHost string = "localhost"
 const testPort int = 8182
+const personLabel = "Person"
+const testLabel = "Test"
+const nameKey = "name"
+
+func dropGraph(t *testing.T, g *GraphTraversalSource) {
+	// Drop vertices that were added.
+	_, promise, err := g.V().Drop().Iterate()
+	assert.Nil(t, err)
+	assert.NotNil(t, promise)
+	<-promise
+}
+
+func getTestNames() []string {
+	return []string{"Lyndon", "Yang", "Simon", "Rithin", "Alexey"}
+}
+
+func addTestData(t *testing.T, g *GraphTraversalSource) {
+	testNames := getTestNames()
+
+	// Add vertices to traversal.
+	var traversal *GraphTraversal
+	for _, name := range testNames {
+		if traversal == nil {
+			traversal = g.AddV(personLabel).Property(nameKey, name)
+		} else {
+			traversal = traversal.AddV(personLabel).Property(nameKey, name)
+		}
+	}
+
+	// Commit traversal.
+	_, promise, err := traversal.Iterate()
+	assert.Nil(t, err)
+	<-promise
+}
+
+func readTestDataVertexProperties(t *testing.T, g *GraphTraversalSource) {
+	// Read names from graph
+	var sortedNames []string
+	results, err := g.V().HasLabel(personLabel).Properties(nameKey).ToList()
+	for _, result := range results {
+		vp, err := result.GetVertexProperty()
+		assert.Nil(t, err)
+		sortedNames = append(sortedNames, vp.value.(string))
+	}
+	assert.Nil(t, err)
+	assert.NotNil(t, sortedNames)
+
+	// Sort names on both sides.
+	testNames := getTestNames()
+	sort.Slice(sortedNames, func(i, j int) bool {
+		return sortedNames[i] < sortedNames[j]
+	})
+	sort.Slice(testNames, func(i, j int) bool {
+		return testNames[i] < testNames[j]
+	})
+	assert.Equal(t, sortedNames, testNames)
+}
+
+func readTestDataValues(t *testing.T, g *GraphTraversalSource) {
+	// Read names from graph
+	var sortedNames []string
+	results, err := g.V().HasLabel(personLabel).Values(nameKey).ToList()
+	for _, result := range results {
+		sortedNames = append(sortedNames, result.GetString())
+	}
+	assert.Nil(t, err)
+	assert.NotNil(t, sortedNames)
+
+	// Sort names on both sides.
+	testNames := getTestNames()
+	sort.Slice(sortedNames, func(i, j int) bool {
+		return sortedNames[i] < sortedNames[j]
+	})
+	sort.Slice(testNames, func(i, j int) bool {
+		return testNames[i] < testNames[j]
+	})
+	assert.Equal(t, sortedNames, testNames)
+}
+
+func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int) {
+	// Generate traversal.
+	var traversal *GraphTraversal
+	if label != "" {
+		traversal = g.V().HasLabel(label).Count()
+	} else {
+		traversal = g.V().Count()
+	}
+
+	// Get results from traversal.
+	results, err := traversal.ToList()
+	assert.Equal(t, 1, len(results))
+
+	// Read count from results.
+	var count int32
+	count, err = results[0].GetInt32()
+	assert.Nil(t, err)
+
+	// Check count.
+	assert.Equal(t, int32(expected), count)
+}
 
 func TestConnection(t *testing.T) {
-	t.Run("Test g.V().count()", func(t *testing.T) {
+	t.Run("Test DriverRemoteConnction GraphTraversal", func(t *testing.T) {
 		if runIntegration {
 			remote, err := NewDriverRemoteConnection(testHost, testPort)
 			assert.Nil(t, err)
 			assert.NotNil(t, remote)
-			g := _Traversal().WithRemote(remote)
+			g := Traversal_().WithRemote(remote)
 
-			// Drop vertices that were added.
-			_, err = g.V().Drop().Iterate()
-			assert.Nil(t, err)
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
 
-			// Read count again, should be 0.
-			results, err := g.V().Count().ToList()
-			assert.Nil(t, err)
-			assert.NotNil(t, results)
-			assert.Equal(t, 1, len(results))
-			var count int32
-			count, err = results[0].GetInt32()
-			assert.Nil(t, err)
-			assert.Equal(t, int32(0), count)
-			time.Sleep(50 * time.Millisecond)
+			// Add data and check that the size of the graph is correct.
+			addTestData(t, g)
+			readCount(t, g, "", len(getTestNames()))
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, len(getTestNames()))
 
-			// Read count again, should be 0, same as above.
-			results, err = g.V().HasLabel("Test").Count().ToList()
-			assert.Nil(t, err)
-			assert.NotNil(t, results)
-			assert.Equal(t, 1, len(results))
-			count, err = results[0].GetInt32()
-			assert.Nil(t, err)
-			assert.Equal(t, int32(0), count)
-			time.Sleep(50 * time.Millisecond)
+			// Read test data out of the graph and check that it is correct.
+			readTestDataVertexProperties(t, g)
+			readTestDataValues(t, g)
 
-			// Add 5 vertices.
-			_, err = g.
-				AddV("person").Property("name", "Lyndon").
-				AddV("person").Property("name", "Simon").
-				AddV("person").Property("name", "Yang").
-				AddV("person").Property("name", "Rithin").
-				AddV("person").Property("name", "Alexey").
-				Iterate()
-			assert.Nil(t, err)
-			time.Sleep(50 * time.Millisecond)
-
-			// Read count again, should be 5.
-			results, err = g.V().Count().ToList()
-			assert.Nil(t, err)
-			assert.NotNil(t, results)
-			assert.Equal(t, 1, len(results))
-			count, err = results[0].GetInt32()
-			assert.Nil(t, err)
-			assert.Equal(t, int32(5), count)
-			time.Sleep(50 * time.Millisecond)
-
-			// Drop vertices that were added.
-			_, err = g.V().Drop().Iterate()
-			assert.Nil(t, err)
-			time.Sleep(50 * time.Millisecond)
-		}
-	})
-
-	t.Run("Test addV()", func(t *testing.T) {
-		if runIntegration {
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
-			g := _Traversal().WithRemote(remote)
-
-			// Add 5 vertices.
-			_, err = g.
-				AddV("person").Property("name", "Lyndon").
-				AddV("person").Property("name", "Simon").
-				AddV("person").Property("name", "Yang").
-				AddV("person").Property("name", "Rithin").
-				AddV("person").Property("name", "Alexey").
-				Iterate()
-			assert.Nil(t, err)
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
 		}
 	})
 

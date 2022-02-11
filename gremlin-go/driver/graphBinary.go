@@ -357,7 +357,9 @@ func vertexWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 	if err != nil {
 		return nil, err
 	}
-	_, err = typeSerializer.write(v.label, buffer)
+
+	// Not fully qualified.
+	_, err = typeSerializer.writeValue(v.label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -367,13 +369,15 @@ func vertexWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 }
 
 func vertexReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	var err error
 	v := new(Vertex)
-	newUUID, err := typeSerializer.read(buffer)
+	v.id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	v.id = newUUID.(uuid.UUID)
-	newLabel, err := typeSerializer.read(buffer)
+
+	// Not fully qualified.
+	newLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +394,9 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 	if err != nil {
 		return nil, err
 	}
-	_, err = typeSerializer.write(e.label, buffer)
+
+	// Not fully qualified
+	_, err = typeSerializer.writeValue(e.label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -410,12 +416,14 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 
 func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	e := new(Edge)
-	newUUID, err := typeSerializer.read(buffer)
+	var err error
+	e.id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	e.id = newUUID.(uuid.UUID)
-	newLabel, err := typeSerializer.read(buffer)
+
+	// Not fully qualified
+	newLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
 	}
@@ -439,7 +447,9 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 //Format: {key}{value}{parent}
 func propertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := value.(*Property)
-	_, err := typeSerializer.write(v.key, buffer)
+
+	// Not fully qualified.
+	_, err := typeSerializer.writeValue(v.key, buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +464,9 @@ func propertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *gra
 
 func propertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	p := new(Property)
-	newKey, err := typeSerializer.read(buffer)
+
+	// Not fully qualified.
+	newKey, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +488,9 @@ func vertexPropertyWriter(value interface{}, buffer *bytes.Buffer, typeSerialize
 	if err != nil {
 		return nil, err
 	}
-	_, err = typeSerializer.write(vp.label, buffer)
+
+	// Not fully qualified.
+	_, err = typeSerializer.writeValue(vp.label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -493,8 +507,6 @@ func vertexPropertyWriter(value interface{}, buffer *bytes.Buffer, typeSerialize
 func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	var err error
 	vp := new(VertexProperty)
-
-	// ID - fully qualified.
 	vp.id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
@@ -505,20 +517,14 @@ func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeS
 	if err != nil {
 		return nil, err
 	}
-
-	// Value - fully qualified.
 	vp.value, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-
-	// Parent - fully qualified.
 	_, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-
-	// Properties - fully qualified.
 	_, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
@@ -827,14 +833,6 @@ func (serializer *graphBinaryTypeSerializer) readValue(buffer *bytes.Buffer, typ
 	if buffer == nil {
 		serializer.logHandler.log(Error, nullInput)
 		return nil, errors.New("input cannot be null")
-	}
-	typeCode, err := buffer.ReadByte()
-	if err != nil {
-		return nil, err
-	}
-	if typeCode != typ {
-		serializer.logHandler.logf(Error, unmatchedDataType)
-		return nil, errors.New("datatype readType from input buffer different from requested datatype")
 	}
 	typeSerializer, _ := serializer.getSerializerToRead(typ)
 	val, _ := typeSerializer.readTypeValue(buffer, typeSerializer, nullable)
