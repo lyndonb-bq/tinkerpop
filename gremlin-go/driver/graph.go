@@ -74,6 +74,7 @@ type Property struct {
 // A list of labels and a list of objects is maintained in the path.
 // The list of labels are the labels of the steps traversed, and the objects are the objects that are traversed.
 type Path struct {
+	// TODO: Need to update labels to List of multiple Set of strings.
 	labels  [][]string
 	objects []interface{}
 }
