@@ -25,7 +25,8 @@ for early testing purposes only.
 # Getting Started
 #### Prerequisites
 
-* A basic understanding of [Go Modules](https://go.dev/blog/using-go-modules)
+* `gremlin-go` requires Golang 1.17 or later, please see [Go Download][go] for more details on installing Golang.
+* A basic understanding of [Go Modules][gomods]
 * A project set up which uses Go Modules
 
 To install the Gremlin-Go as a dependency for your project, run the following in the root directory of your project that contains your `go.mod` file:
@@ -42,18 +43,11 @@ module gremlin-go-example
 go 1.17
 
 require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
-
-require (
-	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/nicksnyder/go-i18n/v2 v2.1.2 // indirect
-	golang.org/x/text v0.3.7 // indirect
-)
 ```
 
 If it does, then this means Gremlin-Go was successfully installed as a dependency of your project.
 
-Here is a simple example of using Gremlin-Go as an import in a sample project's `main.go` file. This example should run, provided that it is configured to point to a compatible `gremlin-server`. In this example, a simple local server is running, and this will print`[2]` as an output. If no server is available, this code can still be executed to print an error as output.
+Here is a simple example of using Gremlin-Go as an import in a sample project's `main.go` file. This example should run, provided that it is configured to point to a compatible `gremlin-server`. In this example, a simple local server is running on port 8182, and this will print`[2]` as an output. If no server is available, this code can still be executed to print an error as output.
 
 ```go
 package main
@@ -84,6 +78,24 @@ func main() {
 
 Note: The exact import name as well as the module prefix for `NewDriverRemoteConnection` may change in the future.
 
+You may need to run `go mod tidy` to import the remaining dependencies of the `gremlin-go` driver, after which you should see an updated `go.mod` file:
+
+```
+module gremlin-go-example
+
+go 1.17
+
+require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
+
+require (
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.1.2 // indirect
+	golang.org/x/text v0.3.7 // indirect
+)
+```
+As well as a populated `go.sum` file.
+
 # Go Gremlin Language Variant
 
 [Apache TinkerPop™][tk] is a graph computing framework for both graph databases (OLTP) and graph analytic systems
@@ -94,8 +106,7 @@ property graph.
 Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. Go's syntax 
 has the same constructs as Java including "dot notation" for function chaining (a.b.c), round bracket function arguments
 (a(b,c)), and support for global namespaces (a(b()) vs a(__.b())). One important distinction with Go and Java is that 
-the functions are capitalized, as is required to export functions is Go. As such, anyone familiar with Gremlin-Java 
-will immediately be able to work with Gremlin-Go.
+the functions are capitalized, as is required to export functions is Go. 
 
 Gremlin-Go is designed to connect to a "server" that is hosting a TinkerPop-enabled graph system. That "server"
 could be [Gremlin Server][gs] or a [remote Gremlin provider][rgp] that exposes protocols by which Gremlin-Go
@@ -113,8 +124,6 @@ remote graph:
 TODO: Add Go code example of a Gremlin traversal query.
 -->
 
-# The following material is currently Work-in-progress: 
-
 ## Sample Traversals
 <!--
 TODO: Add Go specific changes to following paragraph:
@@ -124,14 +133,23 @@ examples:
 of Go-specific documentation and examples."
 -->
 The Gremlin language allows users to write highly expressive graph traversals and has a broad list of functions that
-cover a wide body of features. The [Reference Documentation][steps] describes these functions and other aspects of the
-TinkerPop ecosystem including some specifics on [Gremlin in Go][docs] itself. Most of the examples found in the
-documentation use Groovy language syntax in the [Gremlin Console][console]. For the most part, these examples
-should generally translate to Go with [little modification][differences]. Given the strong correspondence
-between canonical Gremlin in Java and its variants like Go, there is a limited amount of Go-specific
-documentation and examples. This strong correspondence among variants ensures that the general Gremlin reference
-documentation is applicable to all variants and that users moving between development languages can easily adopt the
-Gremlin variant for that language.
+cover a wide body of features. 
+
+[//]: # (The [Reference Documentation][steps] describes these functions and other aspects of the)
+
+[//]: # (TinkerPop ecosystem including some specifics on [Gremlin in Go][docs] itself. Most of the examples found in the)
+
+[//]: # (documentation use Groovy language syntax in the [Gremlin Console][console]. For the most part, these examples)
+
+[//]: # (should generally translate to Go with [little modification][differences]. Given the strong correspondence)
+
+[//]: # (between canonical Gremlin in Java and its variants like Go, there is a limited amount of Go-specific)
+
+[//]: # (documentation and examples. This strong correspondence among variants ensures that the general Gremlin reference)
+
+[//]: # (documentation is applicable to all variants and that users moving between development languages can easily adopt the)
+
+[//]: # (Gremlin variant for that language.)
 
 ### Create Vertex
 <!--
@@ -160,3 +178,5 @@ TODO: Add Go code for Update Vertex.
 [console]: https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/
 [steps]: https://tinkerpop.apache.org/docs/current/reference/#graph-traversal-steps
 [differences]: https://tinkerpop.apache.org/docs/current/reference/#gremlin-go-differences
+[go]: https://go.dev/dl/
+[gomods]: https://go.dev/blog/using-go-modules
