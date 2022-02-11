@@ -23,8 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type Graph struct {
@@ -33,7 +31,7 @@ type Graph struct {
 // Element is the base structure for both Vertex and Edge.
 // The inherited identifier must be unique to the inheriting classes.
 type Element struct {
-	id    uuid.UUID
+	id    interface{}
 	label string
 }
 
@@ -74,11 +72,11 @@ type Path struct {
 }
 
 func (v *Vertex) String() string {
-	return fmt.Sprintf("v[%s]", v.id.String())
+	return fmt.Sprintf("v[%s]", v.id)
 }
 
 func (e *Edge) String() string {
-	return fmt.Sprintf("e[%s][%s-%s->%s]", e.id.String(), e.outV.id.String(), e.label, e.inV.id.String())
+	return fmt.Sprintf("e[%s][%s-%s->%s]", e.id, e.outV.id, e.label, e.inV.id)
 }
 
 func (vp *VertexProperty) String() string {

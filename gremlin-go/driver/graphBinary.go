@@ -491,25 +491,38 @@ func vertexPropertyWriter(value interface{}, buffer *bytes.Buffer, typeSerialize
 }
 
 func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	var err error
 	vp := new(VertexProperty)
-	newUUID, err := typeSerializer.read(buffer)
+
+	// ID - fully qualified.
+	vp.id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	vp.id = newUUID.(uuid.UUID)
-	newLabel, err := typeSerializer.read(buffer)
+
+	// Label - NOT fully qualified.
+	vp.label, err = readString(buffer)
 	if err != nil {
 		return nil, err
 	}
-	vp.label = newLabel.(string)
-	newValue, err := typeSerializer.read(buffer)
+
+	// Value - fully qualified.
+	vp.value, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	vp.value = newValue
-	// read null byte
-	_, _ = typeSerializer.read(buffer)
-	_, _ = typeSerializer.read(buffer)
+
+	// Parent - fully qualified.
+	_, err = typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Properties - fully qualified.
+	_, err = typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
 	return vp, nil
 }
 
@@ -653,7 +666,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 			if err != nil {
 				return nil, err
 			}
-			return traverser, err
+			return traverser, nil
 		}, nullFlagReturn: "", logHandler: serializer.logHandler}, nil
 	case StringType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: StringType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {

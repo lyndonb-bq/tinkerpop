@@ -108,16 +108,19 @@ func responseHandler(resultSets map[string]ResultSet, response response, log *lo
 	if statusCode == http.StatusNoContent {
 		resultSets[responseIDString].addResult(&Result{make([]interface{}, 0)})
 		resultSets[responseIDString].Close()
+		log.logger.Log(Info, "No content.")
 		log.logf(Info, readComplete, responseIDString)
 	} else if statusCode == http.StatusOK {
 		// Add data and status attributes to the ResultSet.
 		resultSets[responseIDString].addResult(&Result{data})
 		resultSets[responseIDString].setStatusAttributes(response.responseStatus.attributes)
 		resultSets[responseIDString].Close()
+		log.logger.Logf(Info, "OK %v===>%v", response.responseStatus, data)
 		log.logf(Info, readComplete, responseIDString)
 	} else if statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
 		resultSets[responseIDString].addResult(&Result{data})
+		log.logger.Logf(Info, "Partial %v===>%v", response.responseStatus, data)
 	} else if statusCode == http.StatusProxyAuthRequired {
 		// TODO AN-989: Implement authentication (including handshaking).
 		resultSets[responseIDString].Close()

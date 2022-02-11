@@ -19,6 +19,10 @@ under the License.
 
 package gremlingo
 
+import (
+	"reflect"
+)
+
 type Traverser struct {
 	bulk  int64
 	value interface{}
@@ -32,41 +36,64 @@ type Traversal struct {
 	remote              *DriverRemoteConnection
 }
 
-// ToList returns the result in a list
-// TODO use TraversalStrategies instead of direct remote after they are implemented
+// ToList returns the result in a list.
 func (t *Traversal) ToList() ([]*Result, error) {
 	results, err := t.remote.SubmitBytecode(t.bytecode)
 	if err != nil {
 		return nil, err
 	}
-	return results.All(), nil
+	resultSlice := make([]*Result, 0)
+	for _, r := range results.All() {
+		if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
+			for _, v := range r.result.([]interface{}) {
+				if reflect.TypeOf(v) == reflect.TypeOf(Traverser{}) {
+					resultSlice = append(resultSlice, &Result{(v.(Traverser)).value})
+				} else {
+					resultSlice = append(resultSlice, &Result{v})
+				}
+			}
+		} else {
+			resultSlice = append(resultSlice, &Result{r.result})
+		}
+	}
+
+	return resultSlice, nil
 }
 
 // ToSet returns the results in a set.
-// TODO Go doesn't have sets, determine the best structure for this
 func (t *Traversal) ToSet() (map[*Result]bool, error) {
-	set := map[*Result]bool{}
-	results, err := t.remote.SubmitBytecode(t.bytecode)
+	list, err := t.ToList()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, r := range results.All() {
+	set := map[*Result]bool{}
+	for _, r := range list {
 		set[r] = true
 	}
 	return set, nil
 }
 
 // Iterate all the Traverser instances in the traversal and returns the empty traversal
-func (t *Traversal) Iterate() (*Traversal, error) {
+func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 	err := t.bytecode.addStep("none")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	_, err = t.remote.SubmitBytecode(t.bytecode)
+	res, err := t.remote.SubmitBytecode(t.bytecode)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return t, nil
+
+	r := make(chan bool)
+	go func() {
+		defer close(r)
+
+		// Force waiting until complete.
+		_ = res.All()
+		r <- true
+	}()
+
+	return t, r, nil
 }
