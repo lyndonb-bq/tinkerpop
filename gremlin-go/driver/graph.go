@@ -73,9 +73,8 @@ type Property struct {
 // Path denotes a particular walk through a Graph as defined by a traversal.
 // A list of labels and a list of objects is maintained in the path.
 // The list of labels are the labels of the steps traversed, and the objects are the objects that are traversed.
-// TODO change labels to be []<set of string> after implementing set in AN-1022 and update the GetPathObject accordingly
+// TODO: change labels to be []<set of string> after implementing set in AN-1022 and update the GetPathObject accordingly
 type Path struct {
-	// TODO: Need to update labels to List of multiple Set of strings.
 	labels  [][]string
 	objects []interface{}
 }
