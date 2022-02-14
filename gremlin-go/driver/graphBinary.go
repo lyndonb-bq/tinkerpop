@@ -58,6 +58,7 @@ const (
 	VertexPropertyType DataType = 0x12
 	PathType           DataType = 0x0e
 	DateType           DataType = 0x04
+	TimestampType      DataType = 0x05
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -781,7 +782,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: nil, reader: vertexPropertyReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
 	case PathType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: nil, reader: pathReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
-	case DateType.getCodeByte():
+	case DateType.getCodeByte(), TimestampType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: DateType, reader: timeReader, nullFlagReturn: time.Time{}, logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil

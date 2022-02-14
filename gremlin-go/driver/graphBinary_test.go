@@ -222,7 +222,7 @@ func TestGraphBinaryV1(t *testing.T) {
 		})
 
 		t.Run("Test Time types", func(t *testing.T) {
-			t.Run("Test Date type", func(t *testing.T) {
+			t.Run("Test DateType/TimestampType", func(t *testing.T) {
 				x := time.Now()
 				writeToBuffer(x, &buff)
 				assert.Equal(t, x.UnixMilli(), readToValue(&buff).(time.Time).UnixMilli())
