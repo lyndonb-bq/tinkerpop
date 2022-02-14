@@ -227,6 +227,11 @@ func TestGraphBinaryV1(t *testing.T) {
 				writeToBuffer(x, &buff)
 				assert.Equal(t, x.UnixMilli(), readToValue(&buff).(time.Time).UnixMilli())
 			})
+			t.Run("Test DurationType", func(t *testing.T) {
+				x := time.Duration(1000000)
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x.Seconds(), readToValue(&buff).(time.Duration).Seconds())
+			})
 		})
 	})
 
