@@ -25,6 +25,7 @@ import (
 	"errors"
 	"math/big"
 	"reflect"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -56,6 +57,7 @@ const (
 	PropertyType       DataType = 0x0f
 	VertexPropertyType DataType = 0x12
 	PathType           DataType = 0x0e
+	DateType           DataType = 0x04
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -577,6 +579,23 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	return p, nil
 }
 
+func timeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	t := value.(time.Time)
+	_, err := typeSerializer.write(t.UnixMilli(), buffer)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func timeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	newTime, err := typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+	return time.UnixMilli(newTime.(int64)), nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -658,6 +677,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
 	case *Path:
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+	case time.Time:
+		return &graphBinaryTypeSerializer{dataType: DateType, writer: timeWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -760,6 +781,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: nil, reader: vertexPropertyReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
 	case PathType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: nil, reader: pathReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+	case DateType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: DateType, reader: timeReader, nullFlagReturn: time.Time{}, logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	case ListType.getCodeByte():

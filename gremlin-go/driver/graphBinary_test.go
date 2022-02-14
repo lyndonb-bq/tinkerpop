@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -217,6 +218,14 @@ func TestGraphBinaryV1(t *testing.T) {
 				assert.Equal(t, x, p)
 				assert.Equal(t, x.labels, p.labels)
 				assert.Equal(t, x.objects, p.objects)
+			})
+		})
+
+		t.Run("Test Time types", func(t *testing.T) {
+			t.Run("Test Date type", func(t *testing.T) {
+				x := time.Now()
+				writeToBuffer(x, &buff)
+				assert.Equal(t, x.UnixMilli(), readToValue(&buff).(time.Time).UnixMilli())
 			})
 		})
 	})
