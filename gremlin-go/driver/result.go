@@ -207,12 +207,12 @@ func (r *Result) GetTraverser() (*Traverser, error) {
 	return &res, nil
 }
 
-func (r *Result) GetSlice() ([]interface{}, error) {
+func (r *Result) GetSlice() (*[]interface{}, error) {
 	res, ok := r.result.([]interface{})
 	if !ok {
-		return nil, errors.New("result is not a Slice")
+		return nil, errors.New("result is not a VertexProperty")
 	}
-	return res, nil
+	return &res, nil
 }
 
 // GetType returns the type of the result

@@ -132,7 +132,7 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 }
 
 func TestConnection(t *testing.T) {
-	t.Run("Test DriverRemoteConnction GraphTraversal", func(t *testing.T) {
+	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
 		if runIntegration {
 			remote, err := NewDriverRemoteConnection(testHost, testPort)
 			assert.Nil(t, err)

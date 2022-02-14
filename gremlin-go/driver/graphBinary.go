@@ -382,6 +382,7 @@ func vertexReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerialize
 		return nil, err
 	}
 	v.label = newLabel.(string)
+
 	// read null byte
 	_, _ = typeSerializer.read(buffer)
 	return v, nil
@@ -400,6 +401,7 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = vertexWriter(&e.inV, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
@@ -408,6 +410,7 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 	if err != nil {
 		return nil, err
 	}
+
 	// Note that as TinkerPop currently send "references" only, parent and properties  will always be null
 	buffer.Write(nullBytes)
 	buffer.Write(nullBytes)
@@ -428,16 +431,19 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 		return nil, err
 	}
 	e.label = newLabel.(string)
+
 	newInV, err := vertexReader(buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
 	e.inV = *newInV.(*Vertex)
+
 	newOutV, err := vertexReader(buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
 	e.outV = *newOutV.(*Vertex)
+
 	// read null bytes
 	_, _ = typeSerializer.read(buffer)
 	_, _ = typeSerializer.read(buffer)
@@ -453,6 +459,7 @@ func propertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *gra
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = typeSerializer.write(v.value, buffer)
 	if err != nil {
 		return nil, err
@@ -471,11 +478,13 @@ func propertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSeriali
 		return nil, err
 	}
 	p.key = newKey.(string)
+
 	newValue, err := typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
 	p.value = newValue
+
 	// read null byte
 	_, _ = typeSerializer.read(buffer)
 	return p, nil
@@ -552,8 +561,13 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	if err != nil {
 		return nil, err
 	}
+	var tempList []string
 	for _, param := range newLabels.([]interface{}) {
-		p.labels = append(p.labels, param.(string))
+		tempList = []string{}
+		for _, l := range param.([]interface{}) {
+			tempList = append(tempList, l.(string))
+		}
+		p.labels = append(p.labels, tempList)
 	}
 	newObjects, err := typeSerializer.read(buffer)
 	if err != nil {
@@ -663,7 +677,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 	switch typ {
 	case TraverserType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: TraverserType, writer: nil, reader: func(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
-			traverser := Traverser{}
+			traverser := new(Traverser)
 			err := binary.Read(buffer, binary.BigEndian, &traverser.bulk)
 			if err != nil {
 				return nil, err

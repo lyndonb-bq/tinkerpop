@@ -46,8 +46,8 @@ func (t *Traversal) ToList() ([]*Result, error) {
 	for _, r := range results.All() {
 		if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
 			for _, v := range r.result.([]interface{}) {
-				if reflect.TypeOf(v) == reflect.TypeOf(Traverser{}) {
-					resultSlice = append(resultSlice, &Result{(v.(Traverser)).value})
+				if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
+					resultSlice = append(resultSlice, &Result{(v.(*Traverser)).value})
 				} else {
 					resultSlice = append(resultSlice, &Result{v})
 				}
