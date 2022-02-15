@@ -273,6 +273,7 @@ SetType             DataType = 0x0b     // see limitations
 ### Current Limitations
 - The `set` data type is currently not implemented, as `go` does not have an underlying `set` data structure. Any `set` type code from server will be deserialized into `slices` with the `list` type implementation. Set implemented with the `go` convention of using a `map` will be serialized as `map`.
 - The `path` data type serialization is currently incomplete as labels are represented as list of lists instead of list of sets. Fully functional Path serialization will be implemented when `set` is implemented in the next milestone. `Path` can be successfully deserialized. 
+- Traversal step functions currently take `string` arguments with double quotes only. Operations using Gremlin keywords, such as `By(label)`, will be supported in the next milestone. 
 ## Test Coverage
 
 [tk]: https://tinkerpop.apache.org
