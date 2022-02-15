@@ -32,7 +32,7 @@ To install the Gremlin-Go as a dependency for your project, run the following in
 
 `go get github.com/lyndonb-bq/tinkerpop/gremlin-go@gremlin-go-ms2`
 
-Note: Currently as of Milestone #1, Gremlin-Go exists in the `lyndonb-bq` fork on the `gremlin-go` branch. Expect this to change in the future when the project is closer to a completed state.
+Note: Currently as of Milestone #2, Gremlin-Go exists in the `lyndonb-bq` fork on the `gremlin-go` branch. Expect this to change in the future when the project is closer to a completed state.
 
 After running the `go get` command, your `go.mod` file should contain something similar to the following:
 
