@@ -21,9 +21,8 @@ for early testing purposes only.
  under the License.
 
 -->
-
 # Getting Started
-#### Prerequisites
+### Prerequisites
 
 * `gremlin-go` requires Golang 1.17 or later, please see [Go Download][go] for more details on installing Golang.
 * A basic understanding of [Go Modules][gomods]
@@ -59,20 +58,32 @@ import (
 
 func main() {
 	// Creating the connection to the server.
-	driverRemoteConnection := gremlingo.NewDriverRemoteConnection("localhost", 8182)
-	// Cleanup
-	defer driverRemoteConnection.Close()
-	// Submit a traversal (string format in milestone 1).
-	resultSet, err := driverRemoteConnection.Submit("1 + 1")
-	// Check for traversal execution errors, print them if there are any and exit.
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	// Cleanup
+	defer func(driverRemoteConnection *gremlingo.DriverRemoteConnection) {
+		err := driverRemoteConnection.Close()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}(driverRemoteConnection)
+	
+	// Submit a simple string traversal
+	resultSet, err := driverRemoteConnection.Submit("1 + 1")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	
 	// Grab the first result from all the results in the ResultSet.
 	result := resultSet.All()[0]
+	
 	// Print the first result.
-	fmt.Println(result.AsString())
+	fmt.Println(result.GetString())
 }
 ```
 
@@ -103,9 +114,7 @@ As well as a populated `go.sum` file.
 data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's
 property graph.
 
-Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. Go's syntax 
-has the same constructs as Java including "dot notation" for function chaining (a.b.c), round bracket function arguments
-(a(b,c)), and support for global namespaces (a(b()) vs a(__.b())). One important distinction with Go and Java is that 
+Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. One important distinction with Go and Java is that 
 the functions are capitalized, as is required to export functions is Go. 
 
 Gremlin-Go is designed to connect to a "server" that is hosting a TinkerPop-enabled graph system. That "server"
@@ -114,59 +123,126 @@ can connect.
 
 A typical connection to a server running on "localhost" that supports the Gremlin Server protocol using websockets
 looks like this:
-<!--
-TODO: Add Go code example of connection to server.
--->
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+)
+
+func main() {
+	// Creating the connection to the server.
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
+	// Handle error
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// Create an anonymous traversal source with remote
+	g := gremlingo.Traversal_().WithRemote(driverRemoteConnection)
+}
+```
 
 Once "g" has been created using a connection, it is then possible to start writing Gremlin traversals to query the
 remote graph:
-<!--
-TODO: Add Go code example of a Gremlin traversal query.
--->
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+)
+
+func main() {
+	// Creating the connection to the server.
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
+	// Handle error
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// Create an anonymous traversal source with remote
+	g := gremlingo.Traversal_().WithRemote(driverRemoteConnection)
+
+	// Add a vertex with properties to the graph with the terminal step Iterate()
+	_, promise, err := g.AddV("gremlin").Property("language", "go").Iterate()
+	if err != nil {
+		fmt.Println(err)
+		return 
+	}
+	<-promise
+	
+	// Get the value of the property
+	result, err := g.V().HasLabel("gremlin").Values("language").ToList()
+	if err != nil {
+		fmt.Println(err)
+		return 
+	}
+	// Print the result
+	for _, r := range result {
+		fmt.Println(r.GetString())
+	}
+}
+```
 
 ## Sample Traversals
 <!--
 TODO: Add Go specific changes to following paragraph:
-examples:
-"For the most part, these examples should generally translate to Go with [little modification][differences]"
-"Given the strong correspondence between canonical Gremlin in Java and its variants like Go, there is a limited amount 
-of Go-specific documentation and examples."
 -->
 The Gremlin language allows users to write highly expressive graph traversals and has a broad list of functions that
-cover a wide body of features. 
+cover a wide body of features. Traversal in `Go` is very similar to other GLV, with the exception that all step functions are capitalized.
 
-[//]: # (The [Reference Documentation][steps] describes these functions and other aspects of the)
-
-[//]: # (TinkerPop ecosystem including some specifics on [Gremlin in Go][docs] itself. Most of the examples found in the)
-
-[//]: # (documentation use Groovy language syntax in the [Gremlin Console][console]. For the most part, these examples)
-
-[//]: # (should generally translate to Go with [little modification][differences]. Given the strong correspondence)
-
-[//]: # (between canonical Gremlin in Java and its variants like Go, there is a limited amount of Go-specific)
-
-[//]: # (documentation and examples. This strong correspondence among variants ensures that the general Gremlin reference)
-
-[//]: # (documentation is applicable to all variants and that users moving between development languages can easily adopt the)
-
-[//]: # (Gremlin variant for that language.)
+<!--
+The [Reference Documentation][steps] describes these functions and other aspects of the
+TinkerPop ecosystem including some specifics on [Gremlin in Go][docs] itself. Most of the examples found in the
+documentation use Groovy language syntax in the [Gremlin Console][console]. For the most part, these examples
+should generally translate to Go with [little modification][differences]. Given the strong correspondence
+between canonical Gremlin in Java and its variants like Go, there is a limited amount of Go-specific
+documentation and examples. This strong correspondence among variants ensures that the general Gremlin reference
+documentation is applicable to all variants and that users moving between development languages can easily adopt the
+Gremlin variant for that language.
+-->
 
 ### Create Vertex
-<!--
-TODO: Add Go code to create a vertex.
--->
-
+Adding a vertex with properties.
+```go
+_, promise, err :=g.AddV("gremlin").Property("language", "java").Iterate()
+// Handle error
+if err != nil {
+	fmt.Println(err)
+    return
+}
+// Wait for all steps to finish execution
+<-promise
+```
 ### Find Vertices
-<!--
-TODO: Add Go code for Find Vertices.
--->
+Getting the property value associated with the added vertex. We currently only support `ToList()` for submitting the remote traversal. Support for `Next()` will be implemented in the subsequent milestones. 
+```go
+result, err := g.V().HasLabel("gremlin").Values("language").ToList()
+// Handle error
+if err != nil {
+fmt.Println(err)
+return
+}
+// Print result
+for _, r := range result {
+fmt.Println(r.GetString())
+}
+```
 
 ### Update Vertex
-<!--
-TODO: Add Go code for Update Vertex.
--->
-
-
+Updating vertex by adding another property to it. 
+```go
+_, promise, err :=g.AddV("gremlin").Property("language", "go").Iterate()
+// Handle error
+if err != nil {
+	fmt.Println(err)
+    return
+}
+// Wait for all steps to finish execution
+<-promise
+```
 
 ## Test Coverage
 
