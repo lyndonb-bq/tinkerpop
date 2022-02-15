@@ -46,7 +46,38 @@ require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-5492063
 
 If it does, then this means Gremlin-Go was successfully installed as a dependency of your project.
 
-Here is a simple example of using Gremlin-Go as an import in a sample project's `main.go` file. This example should run, provided that it is configured to point to a compatible `gremlin-server`. In this example, a simple local server is running on port 8182, and this will print`[2]` as an output. If no server is available, this code can still be executed to print an error as output.
+Here is a simple example of using Gremlin-Go as an import in a sample project's `main.go` file. 
+```go
+package main
+
+import (
+	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+)
+
+func main() {
+	// Simple stub to use the import. See subsequent section for actual usage. 
+	_, _ = gremlingo.NewDriverRemoteConnection("localhost", 8182)
+}
+```
+You will need to run `go mod tidy` to import the remaining dependencies of the `gremlin-go` driver (if your IDE does not do so automatically), after which you should see an updated `go.mod` file:
+
+```
+module gremlin-go-example
+
+go 1.17
+
+require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
+
+require (
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.1.2 // indirect
+	golang.org/x/text v0.3.7 // indirect
+)
+```
+As well as a populated `go.sum` file.
+
+This following example should run, provided that it is configured to point to a compatible `gremlin-server`. In this example, a simple local server is running on port 8182, and this will print`[2]` as an output. If no server is available, this code can still be executed to print an error as output.
 
 ```go
 package main
@@ -64,13 +95,7 @@ func main() {
 		return
 	}
 	// Cleanup
-	defer func(driverRemoteConnection *gremlingo.DriverRemoteConnection) {
-		err := driverRemoteConnection.Close()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}(driverRemoteConnection)
+	defer driverRemoteConnection.Close()
 	
 	// Submit a simple string traversal
 	resultSet, err := driverRemoteConnection.Submit("1 + 1")
@@ -88,24 +113,6 @@ func main() {
 ```
 
 Note: The exact import name as well as the module prefix for `NewDriverRemoteConnection` may change in the future.
-
-You may need to run `go mod tidy` to import the remaining dependencies of the `gremlin-go` driver, after which you should see an updated `go.mod` file:
-
-```
-module gremlin-go-example
-
-go 1.17
-
-require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
-
-require (
-	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/nicksnyder/go-i18n/v2 v2.1.2 // indirect
-	golang.org/x/text v0.3.7 // indirect
-)
-```
-As well as a populated `go.sum` file.
 
 # Go Gremlin Language Variant
 
@@ -132,7 +139,7 @@ import (
 )
 
 func main() {
-	// Creating the connection to the server.
+	// Creating the connection to the server with default settings.
 	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
 	// Handle error
 	if err != nil {
@@ -143,7 +150,30 @@ func main() {
 	g := gremlingo.Traversal_().WithRemote(driverRemoteConnection)
 }
 ```
+We can also customize the remote connection settings. (See code documentation for additional parameters and their usage).
+```go
+package main
 
+import (
+	"fmt"
+	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+)
+
+func main() {
+	// Creating the connection to the server, changing the log verbosity to Debug.
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+		settings.LogVerbosity = gremlingo.Debug
+	})
+	// Handle error
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// Create an anonymous traversal source with remote
+	g := gremlingo.Traversal_().WithRemote(driverRemoteConnection)
+	// Use g with traversal as detailed in the next section.
+}
+```
 Once "g" has been created using a connection, it is then possible to start writing Gremlin traversals to query the
 remote graph:
 ```go
@@ -171,6 +201,7 @@ func main() {
 		fmt.Println(err)
 		return 
 	}
+	// The returned promised is a go channel, to wait for all submitted steps to finish execution.
 	<-promise
 	
 	// Get the value of the property
