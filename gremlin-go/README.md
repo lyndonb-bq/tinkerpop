@@ -244,6 +244,32 @@ if err != nil {
 <-promise
 ```
 
+# Specifications
+The current `go` driver supports the following GraphBinary serialization types. 
+```
+NullType            DataType = 0xFE
+IntType             DataType = 0x01
+LongType            DataType = 0x02
+StringType          DataType = 0x03
+DoubleType          DataType = 0x07
+FloatType           DataType = 0x08
+ListType            DataType = 0x09
+MapType             DataType = 0x0a
+SetType             DataType = 0x0b
+UUIDType            DataType = 0x0c
+BytecodeType        DataType = 0x15
+TraverserType       DataType = 0x21
+ByteType            DataType = 0x24
+ShortType           DataType = 0x26
+BooleanType         DataType = 0x27
+BigIntegerType      DataType = 0x23
+VertexType          DataType = 0x11
+EdgeType            DataType = 0x0d
+PropertyType        DataType = 0x0f
+VertexPropertyType  DataType = 0x12
+PathType            DataType = 0x0e
+```
+Note that because `go` does not have an underlying `set` type, we are currently using the `list` type implementation. Compatibility for `go` convention of implementing `set` via `map` will be supported in later milestone.
 ## Test Coverage
 
 [tk]: https://tinkerpop.apache.org
