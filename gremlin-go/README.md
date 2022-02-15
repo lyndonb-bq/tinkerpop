@@ -256,7 +256,6 @@ DoubleType          DataType = 0x07
 FloatType           DataType = 0x08
 ListType            DataType = 0x09
 MapType             DataType = 0x0a
-SetType             DataType = 0x0b     // see limitations
 UUIDType            DataType = 0x0c
 BytecodeType        DataType = 0x15
 TraverserType       DataType = 0x21
@@ -269,6 +268,7 @@ EdgeType            DataType = 0x0d
 PropertyType        DataType = 0x0f
 VertexPropertyType  DataType = 0x12
 PathType            DataType = 0x0e     // see limitations
+SetType             DataType = 0x0b     // see limitations
 ```
 ### Current Limitations
 - The `set` data type is currently not implemented, as `go` does not have an underlying `set` data structure. Any `set` type code from server will be deserialized into `slices` with the `list` type implementation. Set implemented with the `go` convention of using a `map` will be serialized as `map`.
