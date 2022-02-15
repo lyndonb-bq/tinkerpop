@@ -245,6 +245,7 @@ if err != nil {
 ```
 
 # Specifications
+### Supported Data Types
 The current `go` driver supports the following GraphBinary serialization types. 
 ```
 NullType            DataType = 0xFE
@@ -255,7 +256,7 @@ DoubleType          DataType = 0x07
 FloatType           DataType = 0x08
 ListType            DataType = 0x09
 MapType             DataType = 0x0a
-SetType             DataType = 0x0b
+SetType             DataType = 0x0b     // see limitations
 UUIDType            DataType = 0x0c
 BytecodeType        DataType = 0x15
 TraverserType       DataType = 0x21
@@ -267,9 +268,11 @@ VertexType          DataType = 0x11
 EdgeType            DataType = 0x0d
 PropertyType        DataType = 0x0f
 VertexPropertyType  DataType = 0x12
-PathType            DataType = 0x0e
+PathType            DataType = 0x0e     // see limitations
 ```
-Note that because `go` does not have an underlying `set` type, we are currently using the `list` type implementation. Compatibility for `go` convention of implementing `set` via `map` will be supported in later milestone.
+### Current Limitations
+- The `set` data type is currently not implemented, as `go` does not have an underlying `set` data structure. Any `set` type code from server will be deserialized into `slices` with the `list` type implementation. Set implemented with the `go` convention of using a `map` will be serialized as `map`.
+- The `path` data type serialization is currently incomplete as labels are represented as list of lists instead of list of sets. Fully functional Path serialization will be implemented when `set` is implemented in the next milestone. `Path` can be successfully deserialized. 
 ## Test Coverage
 
 [tk]: https://tinkerpop.apache.org
