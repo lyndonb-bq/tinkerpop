@@ -225,7 +225,6 @@ jobs:
 
       - name: Test and generate coverage
         run: go test -v ./... -race -covermode=atomic -coverprofile="coverage.out"
-
   imports:
     name: Imports
     runs-on: ubuntu-latest
