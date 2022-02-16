@@ -14,6 +14,11 @@ jobs:
           distribution: 'temurin'
       - name: Build with Maven
         run: mvn clean install -DskipTests -Dci --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+      - name: Print rat
+        if: always()
+        run: |
+          pwd
+          cat tinkerpop/tinkerpop/target/rat.txt
   java-jdk11:
     name: mvn clean install - jdk11
     timeout-minutes: 45
@@ -223,3 +228,4 @@ jobs:
           touch gremlin-go/.glv
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-gremlin-dotnet,-:gremlin-dotnet-source,-:gremlin-dotnet-tests,-:gremlint -q -DskipTests -Dci
           mvn verify -pl :gremlin-go -DincludeNeo4j
+          
