@@ -18,7 +18,7 @@ jobs:
         if: always()
         run: |
           pwd
-          cat tinkerpop/tinkerpop/target/rat.txt
+          cat target/rat.txt
   java-jdk11:
     name: mvn clean install - jdk11
     timeout-minutes: 45
