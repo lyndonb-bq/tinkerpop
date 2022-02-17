@@ -14,6 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 module github.com/lyndonb-bq/tinkerpop/gremlin-go
 
 go 1.17
