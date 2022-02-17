@@ -31,15 +31,8 @@ services:
       - GREMLIN_SERVER_PORT=8182
       - RUN_INTEGRATION_TESTS=true
     working_dir: /go_app
-    command:
-      [
-        "go",
-        "test",
-        "-v",
-        "./...",
-        "-race",
-        "-covermode=atomic",
-        "-coverprofile=\"coverage.out\""
-      ]
+    command: >
+        bash -c "go install github.com/haveyoudebuggedit/gotestfmt/v2/cmd/gotestfmt@latest
+        && go test -v -json ./... -race -covermode=atomic -coverprofile=\"coverage.out\" | gotestfmt"
     depends_on:
       - gremlin-server
