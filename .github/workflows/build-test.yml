@@ -211,7 +211,12 @@ jobs:
     name: Go
     timeout-minutes: 20
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: { matrix.os }
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+        go_version: [ '1.17' ]
     steps:
       - name: Set up Go version
         uses: actions/setup-go@v2
