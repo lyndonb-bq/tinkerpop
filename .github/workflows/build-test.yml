@@ -210,12 +210,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Set up gotestfmt
-        uses: haveyoudebuggedit/gotestfmt-action@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Execute Go tests
         working-directory: ./gremlin-go
         run: |
