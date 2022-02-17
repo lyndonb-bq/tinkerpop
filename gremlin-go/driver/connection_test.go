@@ -20,6 +20,8 @@ under the License.
 package gremlingo
 
 import (
+	"fmt"
+	"gitlab.com/avarf/getenvs"
 	"sort"
 	"testing"
 
@@ -27,9 +29,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-const runIntegration = true
-const testHost string = "localhost"
-const testPort int = 8182
 const personLabel = "Person"
 const testLabel = "Test"
 const nameKey = "name"
@@ -132,6 +131,11 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 }
 
 func TestConnection(t *testing.T) {
+	testHost := getenvs.GetEnvString("GREMLIN_SERVER_HOSTNAME", "localhost")
+	testPort, _ := getenvs.GetEnvInt("GREMLIN_SERVER_PORT", 8182)
+	runIntegration, _ := getenvs.GetEnvBool("RUN_INTEGRATION_TESTS", true)
+
+	fmt.Println("Hostname: " + testHost)
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
 		if runIntegration {
 			remote, err := NewDriverRemoteConnection(testHost, testPort)
