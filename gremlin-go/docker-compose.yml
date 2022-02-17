@@ -39,7 +39,9 @@ services:
         "./...",
         "-race",
         "-covermode=atomic",
-        "-coverprofile=\"coverage.out\""
+        "-coverprofile=\"coverage.out\"",
+        "|",
+        "gotestfmt"
       ]
     depends_on:
       - gremlin-server
