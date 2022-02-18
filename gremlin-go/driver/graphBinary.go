@@ -651,15 +651,15 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			return buffer.Bytes(), err
 		}, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
 	case *Vertex:
-		return &graphBinaryTypeSerializer{dataType: VertexType, writer: vertexWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: VertexType, writer: vertexWriter, logHandler: serializer.logHandler}, nil
 	case *Edge:
-		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: edgeWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: EdgeType, writer: edgeWriter, logHandler: serializer.logHandler}, nil
 	case *Property:
-		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, logHandler: serializer.logHandler}, nil
 	case *VertexProperty:
-		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, logHandler: serializer.logHandler}, nil
 	case *Path:
-		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, reader: nil, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
