@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -119,4 +120,39 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	} else {
 		return nil, errors.New(fmt.Sprintf("Path does not contain a label of '%s'.", key))
 	}
+}
+
+// Set is a custom declaration since Go does not natively provide this feature.
+// Creates a new Set from a slice using the createNewSet function.
+// createNewSet will remove all duplicate values from a slice and this new Set Object can then be serialized.
+type Set struct {
+	objects []interface{}
+}
+
+func createNewSet(slice interface{}) (*Set, error) {
+	interfaceSlice := []interface{}{}
+	switch reflect.TypeOf(slice).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(slice)
+		for i := 0; i < s.Len(); i++ {
+			interfaceSlice = append(interfaceSlice, s.Index(i).Interface())
+		}
+	default:
+		return nil, errors.New("slice is not of type Slice")
+	}
+	ns := new(Set)
+	ns.objects = removeDuplicateValues(interfaceSlice)
+	return ns, nil
+}
+
+func removeDuplicateValues(slice []interface{}) []interface{} {
+	keys := make(map[interface{}]bool)
+	filtered := []interface{}{}
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			filtered = append(filtered, entry)
+		}
+	}
+	return filtered
 }

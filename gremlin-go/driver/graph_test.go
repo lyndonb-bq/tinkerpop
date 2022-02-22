@@ -96,3 +96,17 @@ func TestGraphStructureFunctions(t *testing.T) {
 		assert.NotNil(t, err)
 	})
 }
+
+func TestCustomStructs(t *testing.T) {
+	t.Run("Test Set creation from slice", func(t *testing.T) {
+		slice := []interface{}{"a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3}
+		sliceAsSet := []interface{}{"a", "b", "c", 1, 2, 3}
+		newSet, err := createNewSet(slice)
+		if err != nil {
+			assert.Fail(t, "slice not passed while creating Set.")
+		}
+		assert.Equal(t, sliceAsSet, newSet.objects)
+		fmt.Println(sliceAsSet)
+		fmt.Println(newSet.objects)
+	})
+}
