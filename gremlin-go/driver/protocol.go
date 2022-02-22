@@ -26,6 +26,8 @@ import (
 	"sync"
 )
 
+// protocol handles invoking serialization and deserialization, as well as handling the lifecycle of raw data passed to
+// and received from the transport layer
 type protocol interface {
 	readLoop(resultSets map[string]ResultSet, errorCallback func(), log *logHandler)
 	write(request *request) error
@@ -144,6 +146,7 @@ func (protocol *gremlinServerWSProtocol) close() (err error) {
 	protocol.mux.Lock()
 	if !protocol.closed {
 		err = protocol.transporter.Close()
+		protocol.closed = true
 	}
 	protocol.mux.Unlock()
 	return
