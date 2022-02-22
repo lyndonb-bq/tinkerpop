@@ -600,8 +600,8 @@ func timeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 
 func durationWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	t := value.(time.Duration)
-	sec := t / time.Second
-	nanos := t % time.Second
+	sec := int64(t / time.Second)
+	nanos := int32(t % time.Second)
 	_, err := typeSerializer.write(sec, buffer)
 	if err != nil {
 		return nil, err
