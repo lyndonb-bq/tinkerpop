@@ -215,11 +215,11 @@ jobs:
         run: |
           docker-compose up --exit-code-from integration-tests integration-tests
           docker-compose down
-      - name: Go-Lint
-        uses: grandcolline/golang-github-actions@v1.1.0
-        with:
-          run: lint
-          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Go-Vet
+        working-directory: ./gremlin-go
+        run: |
+          go vet ./...
 
       - name: Go-StaticCheck
         uses: grandcolline/golang-github-actions@v1.1.0

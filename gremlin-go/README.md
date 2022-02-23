@@ -21,7 +21,32 @@ for early testing purposes only.
  under the License.
 
 -->
+
 # Getting Started
+
+## Building the Source Code
+
+If you would like to build the source code, you can do so with 
+
+### Testing with Docker
+
+Docker allows you to test the driver without installing any dependencies. The following command can be used to run docker:
+
+`docker-compose up --exit-code-from integration-tests integration-tests`
+
+### Building Directly
+
+To build the driver you must install `go`. The following command can be used to build the driver:
+`go build <path to source code>`
+
+### Using the Linter and staticcheck
+
+Before generating a pull request, you should manually run [go vet][https://pkg.go.dev/cmd/vet] and [staticcheck][https://staticcheck.io] and correct any errors.
+
+`go vet` is installed when you install go, and can be run with `go vet <path to source code>`.
+
+Please review the [staticcheck documentation][https://staticcheck.io/docs/getting-started] for more details on installing staticcheck. `staticcheck` can be run with `staticcheck <path to source code>`.
+
 ### Prerequisites
 
 * `gremlin-go` requires Golang 1.17 or later, please see [Go Download][go] for more details on installing Golang.
@@ -301,10 +326,12 @@ VertexPropertyType  DataType = 0x12
 PathType            DataType = 0x0e     // see limitations
 SetType             DataType = 0x0b     // see limitations
 ```
+
 ### Current Limitations
 - The `set` data type is currently not implemented, as `go` does not have an underlying `set` data structure. Any `set` type code from server will be deserialized into `slices` with the `list` type implementation. Set implemented with the `go` convention of using a `map` will be serialized as `map`.
 - The `path` data type serialization is currently incomplete as labels are represented as list of lists instead of list of sets. Fully functional Path serialization will be implemented when `set` is implemented in the next milestone. `Path` can be successfully deserialized. 
-- Traversal step functions currently take `string` arguments with double quotes only. Operations using Gremlin keywords, such as `By(label)`, will be supported in the next milestone. 
+- Traversal step functions currently take `string` arguments with double quotes only. Operations using Gremlin keywords, such as `By(label)`, will be supported in the next milestone.
+
 ## Test Coverage
 
 [tk]: https://tinkerpop.apache.org
