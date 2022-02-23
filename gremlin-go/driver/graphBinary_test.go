@@ -242,7 +242,7 @@ func TestGraphBinaryV1(t *testing.T) {
 		t.Run("test Set", func(t *testing.T) {
 			x, _ := createNewSet([]interface{}{"a", "b", "c", "a", int32(1), int32(2), int32(3), int32(2), int32(3), int32(3)})
 			writeToBuffer(x, &buff)
-			assert.Equal(t, *x, readToValue(&buff))
+			assert.Equal(t, x, readToValue(&buff))
 		})
 	})
 
