@@ -25,16 +25,14 @@ jobs:
 
       - name: Go-Vet
         working-directory: ./gremlin-go
-        run: |
-          go mod init gremlingo
-          go vet ./...
+        run: go vet ./...
 
       - name: Go-StaticCheck
         uses: grandcolline/golang-github-actions@v1.1.0
         with:
           run: staticcheck
           token: ${{ secrets.GITHUB_TOKEN }}
-          directory: ./gremlin-go/driver
+          directory: ./gremlin-go
 
       - name: Execute Go tests
         working-directory: ./gremlin-go
