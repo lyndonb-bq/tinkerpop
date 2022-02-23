@@ -26,7 +26,7 @@ for early testing purposes only.
 
 ## Building the Source Code
 
-If you would like to build the source code, you can do so with 
+If you would like to build and/or test the source code, you can do so with docker or directly with the go compiler, the instructions for both are listed below.
 
 ### Testing with Docker
 
