@@ -210,7 +210,9 @@ func TestGraphBinaryV1(t *testing.T) {
 			})
 			t.Run("test path", func(t *testing.T) {
 				x := new(Path)
-				x.labels = [][]string{{"str1", "str2", "str3"}, {"str4"}}
+				l1, _ := createNewSet([]string{"str1", "str2", "str3"})
+				l2, _ := createNewSet([]string{"str4"})
+				x.labels = []*Set{l1, l2}
 				x.objects = []interface{}{"String1", m}
 				writeToBuffer(x, &buff)
 				p := readToValue(&buff).(*Path)

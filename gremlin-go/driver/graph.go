@@ -69,7 +69,7 @@ type Property struct {
 // The list of labels are the labels of the steps traversed, and the objects are the objects that are traversed.
 // TODO: change labels to be []<set of string> after implementing set in AN-1022 and update the GetPathObject accordingly
 type Path struct {
-	labels  [][]string
+	labels  []*Set
 	objects []interface{}
 }
 
@@ -101,8 +101,8 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	var objectList []interface{}
 	var object interface{}
 	for i := 0; i < len(p.labels); i++ {
-		for j := 0; j < len(p.labels[i]); j++ {
-			if p.labels[i][j] == key {
+		for j := 0; j < len(p.labels[i].objects); j++ {
+			if p.labels[i].objects[j] == key {
 				if object == nil {
 					object = p.objects[i]
 				} else if objectList != nil {
