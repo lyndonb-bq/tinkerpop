@@ -30,7 +30,9 @@ jobs:
       - name: Go-StaticCheck
         uses: grandcolline/golang-github-actions@v1.1.0
         with:
-          run: staticcheck
+          run:  |
+            go mod init gremlingo
+            staticcheck
           token: ${{ secrets.GITHUB_TOKEN }}
           directory: ./gremlin-go/driver
 
