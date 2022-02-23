@@ -34,8 +34,6 @@ jobs:
         run: go vet ./...
 
       - name: Go-StaticCheck
-      - uses: actions/checkout@master
-      - name: check
         uses: grandcolline/golang-github-actions@v1.1.0
         with:
           run: staticcheck ./gremlin-go/driver
