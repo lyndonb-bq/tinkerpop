@@ -154,7 +154,7 @@ func TestGraphBinaryV1(t *testing.T) {
 		t.Run("test Graph Types", func(t *testing.T) {
 			var m = map[interface{}]interface{}{
 				"marko": int32(666),
-				"noone": "blah",
+				"none":  "blah",
 			}
 			t.Run("test vertex", func(t *testing.T) {
 				x := new(Vertex)
@@ -227,7 +227,7 @@ func TestGraphBinaryV1(t *testing.T) {
 			var x int32 = 666
 			var m = map[interface{}]interface{}{
 				"marko": x,
-				"noone": "blah",
+				"none":  "blah",
 			}
 			writeToBuffer(m, &buff)
 			assert.Equal(t, m, readToValue(&buff))
@@ -253,7 +253,7 @@ func TestGraphBinaryV1(t *testing.T) {
 		//var a int64 = 666
 		//var m = map[interface{}]interface{}{
 		//	"marko": a,
-		//	"noone": "blah",
+		//	"none": "blah",
 		//}
 		buff := bytes.Buffer{}
 		writeToBuffer(x, &buff)

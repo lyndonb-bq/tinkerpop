@@ -48,7 +48,7 @@ type Edge struct {
 	inV  Vertex
 }
 
-// VertexProperty is similar to propery in that it denotes a key/value pair associated with a Vertex, but is different
+// VertexProperty is similar to property in that it denotes a key/value pair associated with a Vertex, but is different
 // in that it also represents an entity that is an Element and can have properties of its own.
 type VertexProperty struct {
 	Element
@@ -96,7 +96,7 @@ func (p *Path) String() string {
 // GetPathObject returns the value that corresponds to the key for the Path and error if the value is not present or cannot be retrieved.
 func (p *Path) GetPathObject(key string) (interface{}, error) {
 	if len(p.objects) != len(p.labels) {
-		return nil, errors.New("Path is invalid because it does not contain an equal number of labels and objects.")
+		return nil, errors.New("path is invalid because it does not contain an equal number of labels and objects")
 	}
 	var objectList []interface{}
 	var object interface{}
@@ -123,14 +123,14 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 }
 
 // Set is a custom declaration since Go does not natively provide this feature.
-// Creates a new Set from a slice using the createNewSet function.
+// Usage: Create a new Set from a slice using the createNewSet function.
 // createNewSet will remove all duplicate values from a slice and this new Set Object can then be serialized.
 type Set struct {
 	objects []interface{}
 }
 
 func createNewSet(slice interface{}) (*Set, error) {
-	interfaceSlice := []interface{}{}
+	var interfaceSlice []interface{}
 	switch reflect.TypeOf(slice).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(slice)
@@ -147,7 +147,7 @@ func createNewSet(slice interface{}) (*Set, error) {
 
 func removeDuplicateValues(slice []interface{}) []interface{} {
 	keys := make(map[interface{}]bool)
-	filtered := []interface{}{}
+	var filtered []interface{}
 	for _, entry := range slice {
 		if _, value := keys[entry]; !value {
 			keys[entry] = true
