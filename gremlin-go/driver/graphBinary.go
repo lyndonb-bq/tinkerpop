@@ -579,6 +579,25 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	return p, nil
 }
 
+// Format: Same as List.
+// Mostly similar to listWriter and listReader with small changes
+func setWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	b, err := listWriter(value.(*Set).objects, buffer, typeSerializer)
+	if err != nil {
+		return nil, err
+	}
+	return b, err
+}
+
+func setReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	slice, err := listReader(buffer, typeSerializer)
+	if err != nil {
+		return nil, err
+	}
+	newS := Set{objects: slice.([]interface{})}
+	return newS, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -660,6 +679,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, logHandler: serializer.logHandler}, nil
 	case *Path:
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
+	case *Set:
+		return &graphBinaryTypeSerializer{dataType: SetType, writer: setWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -762,11 +783,12 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, reader: vertexPropertyReader, nullFlagReturn: VertexProperty{}, logHandler: serializer.logHandler}, nil
 	case PathType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: PathType, reader: pathReader, nullFlagReturn: Path{}, logHandler: serializer.logHandler}, nil
+	case SetType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: SetType, reader: setReader, nullFlagReturn: Set{}, logHandler: serializer.logHandler}, nil
+	case ListType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: ListType, reader: listReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
-	// TODO: Update after Set implementation
-	case ListType.getCodeByte(), SetType.getCodeByte():
-		return &graphBinaryTypeSerializer{dataType: IntType, writer: listWriter, reader: listReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
 		return nil, errors.New("unknown data type to deserialize")
