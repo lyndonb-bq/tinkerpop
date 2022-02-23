@@ -23,12 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Execute Go tests
-        working-directory: ./gremlin-go
-        run: |
-          docker-compose up --exit-code-from integration-tests integration-tests
-          docker-compose down
-
       - name: Go-Vet
         working-directory: ./gremlin-go
         run: go vet ./...
@@ -36,5 +30,12 @@ jobs:
       - name: Go-StaticCheck
         uses: grandcolline/golang-github-actions@v1.1.0
         with:
-          run: staticcheck ./gremlin-go/driver
+          run: staticcheck
           token: ${{ secrets.GITHUB_TOKEN }}
+          directory: ./gremlin-go/driver
+
+      - name: Execute Go tests
+        working-directory: ./gremlin-go
+        run: |
+          docker-compose up --exit-code-from integration-tests integration-tests
+          docker-compose down
