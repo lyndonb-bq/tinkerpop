@@ -583,48 +583,51 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	return p, nil
 }
 
-func timeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+func timeWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
 	t := value.(time.Time)
-	_, err := typeSerializer.write(t.UnixMilli(), buffer)
+	err := binary.Write(buffer, binary.BigEndian, t.UnixMilli())
 	if err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil
 }
 
-func timeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
-	newTime, err := typeSerializer.read(buffer)
+func timeReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface{}, error) {
+	var newMillis int64
+	err := binary.Read(buffer, binary.BigEndian, &newMillis)
 	if err != nil {
 		return nil, err
 	}
-	return time.UnixMilli(newTime.(int64)), nil
+	return time.UnixMilli(newMillis), nil
 }
 
-func durationWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+func durationWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
 	t := value.(time.Duration)
 	sec := int64(t / time.Second)
 	nanos := int32(t % time.Second)
-	_, err := typeSerializer.write(sec, buffer)
+	err := binary.Write(buffer, binary.BigEndian, sec)
 	if err != nil {
 		return nil, err
 	}
-	_, err = typeSerializer.write(nanos, buffer)
+	err = binary.Write(buffer, binary.BigEndian, nanos)
 	if err != nil {
 		return nil, err
 	}
 	return buffer.Bytes(), nil
 }
 
-func durationReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
-	sec, err := typeSerializer.read(buffer)
+func durationReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface{}, error) {
+	var sec int64
+	err := binary.Read(buffer, binary.BigEndian, &sec)
 	if err != nil {
 		return nil, err
 	}
-	nanosec, err := typeSerializer.read(buffer)
+	var nanos int32
+	err = binary.Read(buffer, binary.BigEndian, &nanos)
 	if err != nil {
 		return nil, err
 	}
-	total := sec.(int64)*int64(time.Second) + int64(nanosec.(int32))
+	total := sec*int64(time.Second) + int64(nanos)
 	newDuration := time.Duration(total)
 	return newDuration, nil
 }
@@ -709,7 +712,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 	case *VertexProperty:
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, logHandler: serializer.logHandler}, nil
 	case *Path:
-    		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
 	case time.Time:
 		return &graphBinaryTypeSerializer{dataType: DateType, writer: timeWriter, logHandler: serializer.logHandler}, nil
 	case time.Duration:
@@ -815,8 +818,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 	case VertexPropertyType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, reader: vertexPropertyReader, nullFlagReturn: VertexProperty{}, logHandler: serializer.logHandler}, nil
 	case PathType.getCodeByte():
-    		return &graphBinaryTypeSerializer{dataType: PathType, reader: pathReader, nullFlagReturn: Path{}, logHandler: serializer.logHandler}, nil
-		return &graphBinaryTypeSerializer{dataType: PathType, writer: nil, reader: pathReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: PathType, reader: pathReader, nullFlagReturn: Path{}, logHandler: serializer.logHandler}, nil
 	case DateType.getCodeByte(), TimestampType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: DateType, reader: timeReader, nullFlagReturn: time.Time{}, logHandler: serializer.logHandler}, nil
 	case DurationType.getCodeByte():
