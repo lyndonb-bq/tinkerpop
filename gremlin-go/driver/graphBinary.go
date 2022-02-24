@@ -822,7 +822,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 	case DateType.getCodeByte(), TimestampType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: DateType, reader: timeReader, nullFlagReturn: time.Time{}, logHandler: serializer.logHandler}, nil
 	case DurationType.getCodeByte():
-		return &graphBinaryTypeSerializer{dataType: DurationType, reader: durationReader, nullFlagReturn: 0, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: DurationType, reader: durationReader, nullFlagReturn: time.Duration(0), logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	// TODO: Update after Set implementation
