@@ -40,6 +40,8 @@ jobs:
 
       - name: Go-StaticCheck
         uses: grandcolline/golang-github-actions@v1.1.0
+        env:
+          GOROOT: ''
         with:
           run: staticcheck
           token: ${{ secrets.GITHUB_TOKEN }}
