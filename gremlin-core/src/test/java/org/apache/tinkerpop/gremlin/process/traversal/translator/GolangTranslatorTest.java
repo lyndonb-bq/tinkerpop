@@ -81,7 +81,7 @@ public class GolangTranslatorTest {
     }
 
     @Test
-    public void shouldTranslatePythonNamedSteps() {
+    public void shouldTranslateGoNamedSteps() {
         final String gremlinAsGo = translator.translate(
                 g.V().has("person", "name", "marko").
                         where(outE().count().is(2).and(__.not(inE().count().is(3)))).asAdmin().getBytecode()).getScript();

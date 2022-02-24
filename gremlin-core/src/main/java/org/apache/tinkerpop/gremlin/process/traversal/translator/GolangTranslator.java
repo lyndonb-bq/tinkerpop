@@ -54,11 +54,6 @@ import java.util.stream.Stream;
  * @author Simon Zhao (simonz@bitquilltech.com)
  */
 public final class GolangTranslator implements Translator.ScriptTranslator {
-
-    private static final Set<String> STEP_NAMES = Stream.of(GraphTraversal.class.getMethods()).filter(
-                    method -> Traversal.class.isAssignableFrom(method.getReturnType())).map(Method::getName).
-            collect(Collectors.toSet());
-
     private final String traversalSource;
     private final TypeTranslator typeTranslator;
 
@@ -180,7 +175,7 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
 
         @Override
         protected Script produceScript(final Set<?> o) {
-            // TODO: AN-1032 Change this when Set type is added in Gremlin-Go
+            // TODO: AN-1044 Change this when Set type is added in Gremlin-Go
             final Iterator<?> iterator = o.iterator();
             script.append("[]interface{}{");
             while(iterator.hasNext()) {
