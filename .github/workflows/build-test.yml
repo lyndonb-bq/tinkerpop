@@ -38,7 +38,7 @@ jobs:
       # - name: Execute Go tests
       #   working-directory: ./gremlin-go
       #   run: |
-      #     docker-compose up --exit-code-from gremlin-godog-tests gremlin-go-godog-tests
+      #     docker-compose up --exit-code-from gremlin-go-godog-tests gremlin-go-godog-tests
       #     docker-compose down
 
       - name: Go-Vet
