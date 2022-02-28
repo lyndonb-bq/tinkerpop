@@ -70,7 +70,7 @@ func readTestDataVertexProperties(t *testing.T, g *GraphTraversalSource) {
 	for _, result := range results {
 		vp, err := result.GetVertexProperty()
 		assert.Nil(t, err)
-		sortedNames = append(sortedNames, vp.value.(string))
+		sortedNames = append(sortedNames, vp.Value.(string))
 	}
 	assert.Nil(t, err)
 	assert.NotNil(t, sortedNames)

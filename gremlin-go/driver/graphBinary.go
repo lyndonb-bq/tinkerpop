@@ -355,16 +355,16 @@ func bigIntReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface
 	return getBigIntFromSignedBytes(valList), nil
 }
 
-// Format: {id}{label}{properties}
+// Format: {Id}{Label}{properties}
 func vertexWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := value.(*Vertex)
-	_, err := typeSerializer.write(v.id, buffer)
+	_, err := typeSerializer.write(v.Id, buffer)
 	if err != nil {
 		return nil, err
 	}
 
 	// Not fully qualified.
-	_, err = typeSerializer.writeValue(v.label, buffer, false)
+	_, err = typeSerializer.writeValue(v.Label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +376,7 @@ func vertexWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 func vertexReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	var err error
 	v := new(Vertex)
-	v.id, err = typeSerializer.read(buffer)
+	v.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -386,32 +386,32 @@ func vertexReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerialize
 	if err != nil {
 		return nil, err
 	}
-	v.label = newLabel.(string)
+	v.Label = newLabel.(string)
 
 	// read null byte
 	_, _ = typeSerializer.read(buffer)
 	return v, nil
 }
 
-// Format: {id}{label}{inVId}{inVLabel}{outVId}{outVLabel}{parent}{properties}
+// Format: {Id}{Label}{inVId}{inVLabel}{outVId}{outVLabel}{parent}{properties}
 func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	e := value.(*Edge)
-	_, err := typeSerializer.write(e.id, buffer)
+	_, err := typeSerializer.write(e.Id, buffer)
 	if err != nil {
 		return nil, err
 	}
 
 	// Not fully qualified
-	_, err = typeSerializer.writeValue(e.label, buffer, false)
+	_, err = typeSerializer.writeValue(e.Label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = vertexWriter(&e.inV, buffer, typeSerializer)
+	_, err = vertexWriter(&e.InV, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
-	_, err = vertexWriter(&e.outV, buffer, typeSerializer)
+	_, err = vertexWriter(&e.OutV, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	e := new(Edge)
 	var err error
-	e.id, err = typeSerializer.read(buffer)
+	e.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -435,19 +435,19 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	if err != nil {
 		return nil, err
 	}
-	e.label = newLabel.(string)
+	e.Label = newLabel.(string)
 
 	newInV, err := vertexReader(buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
-	e.inV = *newInV.(*Vertex)
+	e.InV = *newInV.(*Vertex)
 
 	newOutV, err := vertexReader(buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
-	e.outV = *newOutV.(*Vertex)
+	e.OutV = *newOutV.(*Vertex)
 
 	// read null bytes
 	_, _ = typeSerializer.read(buffer)
@@ -455,17 +455,17 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	return e, nil
 }
 
-//Format: {key}{value}{parent}
+//Format: {Key}{Value}{parent}
 func propertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := value.(*Property)
 
 	// Not fully qualified.
-	_, err := typeSerializer.writeValue(v.key, buffer, false)
+	_, err := typeSerializer.writeValue(v.Key, buffer, false)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = typeSerializer.write(v.value, buffer)
+	_, err = typeSerializer.write(v.Value, buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -482,33 +482,33 @@ func propertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSeriali
 	if err != nil {
 		return nil, err
 	}
-	p.key = newKey.(string)
+	p.Key = newKey.(string)
 
 	newValue, err := typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	p.value = newValue
+	p.Value = newValue
 
 	// read null byte
 	_, _ = typeSerializer.read(buffer)
 	return p, nil
 }
 
-//Format: {id}{label}{value}{parent}{properties}
+//Format: {Id}{Label}{Value}{parent}{properties}
 func vertexPropertyWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	vp := value.(*VertexProperty)
-	_, err := typeSerializer.write(vp.id, buffer)
+	_, err := typeSerializer.write(vp.Id, buffer)
 	if err != nil {
 		return nil, err
 	}
 
 	// Not fully qualified.
-	_, err = typeSerializer.writeValue(vp.label, buffer, false)
+	_, err = typeSerializer.writeValue(vp.Label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
-	_, err = typeSerializer.write(vp.value, buffer)
+	_, err = typeSerializer.write(vp.Value, buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -521,17 +521,17 @@ func vertexPropertyWriter(value interface{}, buffer *bytes.Buffer, typeSerialize
 func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	var err error
 	vp := new(VertexProperty)
-	vp.id, err = typeSerializer.read(buffer)
+	vp.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
 
 	// Label - NOT fully qualified.
-	vp.label, err = readString(buffer)
+	vp.Label, err = readString(buffer)
 	if err != nil {
 		return nil, err
 	}
-	vp.value, err = typeSerializer.read(buffer)
+	vp.Value, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -546,15 +546,15 @@ func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeS
 	return vp, nil
 }
 
-//Format: {labels}{objects}
-// TODO: Path serialization is currently incomplete as labels are represented as list of lists due to lack of native set types in go. Fully functional Path serialization will be implemented when set is implemented in AN-1032
+//Format: {Labels}{Objects}
+// TODO: Path serialization is currently incomplete as Labels are represented as list of lists due to lack of native set types in go. Fully functional Path serialization will be implemented when set is implemented in AN-1032
 func pathWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	p := value.(*Path)
-	_, err := typeSerializer.write(p.labels, buffer)
+	_, err := typeSerializer.write(p.Labels, buffer)
 	if err != nil {
 		return nil, err
 	}
-	_, err = typeSerializer.write(p.objects, buffer)
+	_, err = typeSerializer.write(p.Objects, buffer)
 	if err != nil {
 		return nil, err
 	}
@@ -573,13 +573,13 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 		for _, l := range param.([]interface{}) {
 			tempList = append(tempList, l.(string))
 		}
-		p.labels = append(p.labels, tempList)
+		p.Labels = append(p.Labels, tempList)
 	}
 	newObjects, err := typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	p.objects = newObjects.([]interface{})
+	p.Objects = newObjects.([]interface{})
 	return p, nil
 }
 
