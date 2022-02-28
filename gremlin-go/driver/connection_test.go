@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"gitlab.com/avarf/getenvs"
@@ -225,7 +226,9 @@ func TestConnection(t *testing.T) {
 				vp, err := res.GetVertexProperty()
 				assert.Nil(t, err)
 				names = append(names, vp.value.(string))
+				time.Sleep(1 * time.Second)
 			}
+			time.Sleep(1 * time.Second)
 			hasN, _ := traversal.HasNext()
 			assert.False(t, hasN)
 			assert.True(t, sortAndCompareTwoStringSlices(names, getTestNames()))
