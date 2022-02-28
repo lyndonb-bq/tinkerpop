@@ -19,7 +19,10 @@ under the License.
 
 package gremlingo
 
-import "reflect"
+import (
+	"reflect"
+	"sync"
+)
 
 const defaultCapacity = 1000
 
@@ -47,6 +50,7 @@ type channelResultSet struct {
 	statusAttributes map[string]interface{}
 	closed           bool
 	err              error
+	mux              sync.Mutex
 }
 
 func (channelResultSet *channelResultSet) GetError() error {
@@ -54,13 +58,19 @@ func (channelResultSet *channelResultSet) GetError() error {
 }
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
-	return channelResultSet.closed && len(channelResultSet.channel) == 0
+	channelResultSet.mux.Lock()
+	c1 := channelResultSet.closed
+	c2 := len(channelResultSet.channel) == 0
+	channelResultSet.mux.Unlock()
+	return c1 && c2
 }
 
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
+		channelResultSet.mux.Lock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
+		channelResultSet.mux.Unlock()
 	}
 }
 
@@ -115,7 +125,7 @@ func (channelResultSet *channelResultSet) addResult(r *Result) {
 }
 
 func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil}
+	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil, sync.Mutex{}}
 }
 
 func newChannelResultSet(requestID string) ResultSet {
