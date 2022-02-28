@@ -180,7 +180,7 @@ func TestConnection(t *testing.T) {
 			assert.NotNil(t, resultSet)
 			result := resultSet.one()
 			assert.NotNil(t, result)
-			assert.Equal(t, "[0]", result.GetString())
+			assert.Equal(t, "0", result.GetString())
 			err = connection.close()
 			assert.Nil(t, err)
 		}
@@ -196,7 +196,7 @@ func TestConnection(t *testing.T) {
 			assert.NotNil(t, resultSet)
 			result := resultSet.one()
 			assert.NotNil(t, result)
-			assert.Equal(t, "[0]", result.GetString())
+			assert.Equal(t, "0", result.GetString())
 			err = client.Close()
 			assert.Nil(t, err)
 		}
