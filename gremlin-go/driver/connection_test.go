@@ -42,7 +42,7 @@ func dropGraph(t *testing.T, g *GraphTraversalSource) {
 }
 
 func getTestNames() []string {
-	return []string{"Lyndon", "Yang", "Simon", "Rithin", "Alexey", "Stephen"}
+	return []string{"Lyndon", "Yang", "Simon", "Rithin", "Alexey", "Valentyn"}
 }
 
 func addTestData(t *testing.T, g *GraphTraversalSource) {
