@@ -101,8 +101,8 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	var objectList []interface{}
 	var object interface{}
 	for i := 0; i < len(p.labels); i++ {
-		for j := 0; j < len(p.labels[i].objects); j++ {
-			if p.labels[i].objects[j] == key {
+		for j := 0; j < len(p.labels[i].Objects); j++ {
+			if p.labels[i].Objects[j] == key {
 				if object == nil {
 					object = p.objects[i]
 				} else if objectList != nil {
@@ -126,7 +126,7 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 // Usage: Create a new Set from a slice using the createNewSet function.
 // createNewSet will remove all duplicate values from a slice and this new Set Object can then be serialized.
 type Set struct {
-	objects []interface{}
+	Objects []interface{}
 }
 
 func createNewSet(slice interface{}) (*Set, error) {
@@ -141,7 +141,7 @@ func createNewSet(slice interface{}) (*Set, error) {
 		return nil, errors.New("slice is not of type Slice")
 	}
 	ns := new(Set)
-	ns.objects = removeDuplicateValues(interfaceSlice)
+	ns.Objects = removeDuplicateValues(interfaceSlice)
 	return ns, nil
 }
 

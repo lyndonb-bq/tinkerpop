@@ -116,8 +116,8 @@ func TestCustomStructs(t *testing.T) {
 		if err != nil {
 			assert.Fail(t, "slice not passed while creating Set.")
 		}
-		assert.Equal(t, sliceAsSet, newSet.objects)
+		assert.Equal(t, sliceAsSet, newSet.Objects)
 		fmt.Println(sliceAsSet)
-		fmt.Println(newSet.objects)
+		fmt.Println(newSet.Objects)
 	})
 }
