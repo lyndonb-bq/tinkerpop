@@ -20,12 +20,13 @@ under the License.
 package gremlingo
 
 import (
-	"github.com/stretchr/testify/assert"
-	"gitlab.com/avarf/getenvs"
-	"golang.org/x/text/language"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gitlab.com/avarf/getenvs"
+	"golang.org/x/text/language"
 )
 
 const personLabel = "Person"
