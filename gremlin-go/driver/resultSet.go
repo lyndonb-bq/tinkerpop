@@ -59,10 +59,8 @@ func (channelResultSet *channelResultSet) GetError() error {
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
 	channelResultSet.mux.Lock()
-	c1 := channelResultSet.closed
-	c2 := len(channelResultSet.channel) == 0
-	channelResultSet.mux.Unlock()
-	return c1 && c2
+	defer channelResultSet.mux.Unlock()
+	return channelResultSet.closed && len(channelResultSet.channel) == 0
 }
 
 func (channelResultSet *channelResultSet) Close() {
