@@ -216,10 +216,14 @@ func TestConnection(t *testing.T) {
 			traversal := g.V().HasLabel(personLabel).Properties(nameKey)
 			var names []string
 			for i := 0; i < len(getTestNames()); i++ {
-				hasN, _ := traversal.HasNext()
+				hasN, err := traversal.HasNext()
+				assert.Nil(t, err)
 				assert.True(t, hasN)
-				res, _ := traversal.Next()
-				vp, _ := res.GetVertexProperty()
+				res, err := traversal.Next()
+				assert.Nil(t, err)
+				assert.NotNil(t, res)
+				vp, err := res.GetVertexProperty()
+				assert.Nil(t, err)
 				names = append(names, vp.value.(string))
 			}
 			hasN, _ := traversal.HasNext()
