@@ -19,6 +19,8 @@ under the License.
 
 package gremlingo
 
+import "reflect"
+
 const defaultCapacity = 1000
 
 // ResultSet interface to define the functions of a ResultSet.
@@ -98,8 +100,18 @@ func (channelResultSet *channelResultSet) All() []*Result {
 	return results
 }
 
-func (channelResultSet *channelResultSet) addResult(result *Result) {
-	channelResultSet.channel <- result
+func (channelResultSet *channelResultSet) addResult(r *Result) {
+	if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
+		for _, v := range r.result.([]interface{}) {
+			if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
+				channelResultSet.channel <- &Result{(v.(*Traverser)).value}
+			} else {
+				channelResultSet.channel <- &Result{v}
+			}
+		}
+	} else {
+		channelResultSet.channel <- &Result{r.result}
+	}
 }
 
 func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
