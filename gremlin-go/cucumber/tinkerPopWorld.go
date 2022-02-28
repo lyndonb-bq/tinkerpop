@@ -133,3 +133,13 @@ func getEdges(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Edge {
 	edgeMap := make(map[string]*gremlingo.Edge)
 	return edgeMap
 }
+
+func (t *TinkerPopWorld) closeAllDataGraph() error {
+	for _, name := range getGraphNames() {
+		err := t.getDataGraph(name).connection.Close()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

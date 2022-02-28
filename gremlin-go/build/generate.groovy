@@ -151,7 +151,7 @@ radishGremlinFile.withWriter('UTF-8') { Writer writer ->
     '           traversal := traversalFns[0]\n' +
     '           traversalFns = traversalFns[1:]\n' +
     '           return traversal(g, parameters), nil\n' +
-    '       } else {\n'
+    '       } else {\n' +
     '           return nil, errors.New("scenario for traversal not recognized")\n' +
     '       }\n' +
     '   }\n'

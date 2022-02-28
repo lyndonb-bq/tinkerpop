@@ -359,6 +359,9 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 		fmt.Println(tg)
 		tg.loadAllDataGraph()
 	})
+	ctx.AfterSuite(func() {
+		tg.closeAllDataGraph()
+	})
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
