@@ -118,7 +118,7 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	} else if object != nil {
 		return object, nil
 	} else {
-		return nil, errors.New(fmt.Sprintf("Path does not contain a label of '%s'.", key))
+		return nil, fmt.Errorf("path does not contain a label of '%s'", key)
 	}
 }
 

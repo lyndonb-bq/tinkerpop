@@ -25,6 +25,7 @@ import (
 	"errors"
 	"math/big"
 	"reflect"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -56,6 +57,9 @@ const (
 	PropertyType       DataType = 0x0f
 	VertexPropertyType DataType = 0x12
 	PathType           DataType = 0x0e
+	DateType           DataType = 0x04
+	TimestampType      DataType = 0x05
+	DurationType       DataType = 0x81
 	SetType            DataType = 0x0b
 )
 
@@ -597,6 +601,55 @@ func setReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	return new(Set).convertSliceToSet(slice.([]interface{}))
 }
 
+func timeWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
+	t := value.(time.Time)
+	err := binary.Write(buffer, binary.BigEndian, t.UnixMilli())
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func timeReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface{}, error) {
+	var newMillis int64
+	err := binary.Read(buffer, binary.BigEndian, &newMillis)
+	if err != nil {
+		return nil, err
+	}
+	return time.UnixMilli(newMillis), nil
+}
+
+func durationWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
+	t := value.(time.Duration)
+	sec := int64(t / time.Second)
+	nanos := int32(t % time.Second)
+	err := binary.Write(buffer, binary.BigEndian, sec)
+	if err != nil {
+		return nil, err
+	}
+	err = binary.Write(buffer, binary.BigEndian, nanos)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func durationReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface{}, error) {
+	var sec int64
+	err := binary.Read(buffer, binary.BigEndian, &sec)
+	if err != nil {
+		return nil, err
+	}
+	var nanos int32
+	err = binary.Read(buffer, binary.BigEndian, &nanos)
+	if err != nil {
+		return nil, err
+	}
+	total := sec*int64(time.Second) + int64(nanos)
+	newDuration := time.Duration(total)
+	return newDuration, nil
+}
+
 const (
 	valueFlagNull byte = 1
 	valueFlagNone byte = 0
@@ -680,6 +733,10 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
 	case SetTemplate:
 		return &graphBinaryTypeSerializer{dataType: SetType, writer: setWriter, logHandler: serializer.logHandler}, nil
+	case time.Time:
+		return &graphBinaryTypeSerializer{dataType: DateType, writer: timeWriter, logHandler: serializer.logHandler}, nil
+	case time.Duration:
+		return &graphBinaryTypeSerializer{dataType: DurationType, writer: durationWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
@@ -786,6 +843,10 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: SetType, reader: setReader, nullFlagReturn: Set{}, logHandler: serializer.logHandler}, nil
 	case ListType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: ListType, reader: listReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
+	case DateType.getCodeByte(), TimestampType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: DateType, reader: timeReader, nullFlagReturn: time.Time{}, logHandler: serializer.logHandler}, nil
+	case DurationType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: DurationType, reader: durationReader, nullFlagReturn: time.Duration(0), logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:
