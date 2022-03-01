@@ -56,10 +56,10 @@ func TestGraphStructureFunctions(t *testing.T) {
 		assert.Equal(t, "p[property-key->[0 1]]", p.String())
 	})
 
+	s1 := newSet([]interface{}{"foo"})
+	s2 := newSet([]interface{}{"bar"})
+	s3 := newSet([]interface{}{"baz"})
 	t.Run("Test Path.String()", func(t *testing.T) {
-		s1, _ := createNewSet([]string{"foo"})
-		s2, _ := createNewSet([]string{"bar"})
-		s3, _ := createNewSet([]string{"baz"})
 		keys := []*Set{s1, s2, s3}
 		data := []interface{}{1, 2, "hello"}
 		p := Path{keys, data}
@@ -67,9 +67,6 @@ func TestGraphStructureFunctions(t *testing.T) {
 	})
 
 	t.Run("Test Path.GetPathObject() with valid Path", func(t *testing.T) {
-		s1, _ := createNewSet([]string{"foo"})
-		s2, _ := createNewSet([]string{"bar"})
-		s3, _ := createNewSet([]string{"baz"})
 		keys := []*Set{s1, s2, s3}
 		data := []interface{}{1, 2, "hello"}
 		p := Path{keys, data}
@@ -85,9 +82,6 @@ func TestGraphStructureFunctions(t *testing.T) {
 	})
 
 	t.Run("Test Path.GetPathObject() with invalid Path", func(t *testing.T) {
-		s1, _ := createNewSet([]string{"foo"})
-		s2, _ := createNewSet([]string{"bar"})
-		s3, _ := createNewSet([]string{"baz"})
 		keys := []*Set{s1, s2, s3}
 		data := []interface{}{1, 2}
 		p := Path{keys, data}
@@ -97,8 +91,6 @@ func TestGraphStructureFunctions(t *testing.T) {
 	})
 
 	t.Run("Test Path.GetPathObject() with invalid key", func(t *testing.T) {
-		s1, _ := createNewSet([]string{"foo"})
-		s2, _ := createNewSet([]string{"bar"})
 		keys := []*Set{s1, s2}
 		data := []interface{}{1, 2}
 		p := Path{keys, data}
@@ -112,12 +104,7 @@ func TestCustomStructs(t *testing.T) {
 	t.Run("Test Set creation from slice", func(t *testing.T) {
 		slice := []interface{}{"a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3}
 		sliceAsSet := []interface{}{"a", "b", "c", 1, 2, 3}
-		newSet, err := createNewSet(slice)
-		if err != nil {
-			assert.Fail(t, "slice not passed while creating Set.")
-		}
-		assert.Equal(t, sliceAsSet, newSet.Objects)
-		fmt.Println(sliceAsSet)
-		fmt.Println(newSet.Objects)
+		set := newSet(slice)
+		assert.Equal(t, sliceAsSet, set.Objects)
 	})
 }

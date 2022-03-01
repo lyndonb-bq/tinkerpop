@@ -122,27 +122,52 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	}
 }
 
-// Set is a custom declaration since Go does not natively provide this feature.
-// Usage: Create a new Set from a slice using the createNewSet function.
-// createNewSet will remove all duplicate values from a slice and this new Set Object can then be serialized.
+// SetTemplate describes the necessary methods that need to be implemented to make a user-defined Set implementation.
+// Set is the default implementation that should be used but SetTemplate can be used for a custom implementation if needed.
+type SetTemplate interface {
+	convertSetToSlice() ([]interface{}, error)
+	convertSliceToSet([]interface{}) (SetTemplate, error)
+}
+
+// Set is a default custom declaration since Go does not natively provide this feature.
 type Set struct {
 	Objects []interface{}
 }
 
-func createNewSet(slice interface{}) (*Set, error) {
+func (s *Set) convertSetToSlice() ([]interface{}, error) {
+	return s.Objects, nil
+}
+
+func (s *Set) convertSliceToSet(in []interface{}) (SetTemplate, error) {
+	slice, err := interfaceToSlice(in)
+	if err != nil {
+		return nil, err
+	}
+	s.Objects = slice
+	return s, nil
+}
+
+// Construct a new Set with filtered values
+func newSet(in interface{}) *Set {
+	slice, _ := interfaceToSlice(in)
+	filtered := removeDuplicateValues(slice)
+	s := new(Set)
+	s.Objects = filtered
+	return s
+}
+
+func interfaceToSlice(in interface{}) ([]interface{}, error) {
 	var interfaceSlice []interface{}
-	switch reflect.TypeOf(slice).Kind() {
+	switch reflect.TypeOf(in).Kind() {
 	case reflect.Slice:
-		s := reflect.ValueOf(slice)
-		for i := 0; i < s.Len(); i++ {
-			interfaceSlice = append(interfaceSlice, s.Index(i).Interface())
+		slice := reflect.ValueOf(in)
+		for i := 0; i < slice.Len(); i++ {
+			interfaceSlice = append(interfaceSlice, slice.Index(i).Interface())
 		}
 	default:
-		return nil, errors.New("slice is not of type Slice")
+		return nil, errors.New("input is not a slice")
 	}
-	ns := new(Set)
-	ns.Objects = removeDuplicateValues(interfaceSlice)
-	return ns, nil
+	return interfaceSlice, nil
 }
 
 func removeDuplicateValues(slice []interface{}) []interface{} {

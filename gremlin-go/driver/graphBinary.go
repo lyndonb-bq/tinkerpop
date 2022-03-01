@@ -577,7 +577,12 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 // Format: Same as List.
 // Mostly similar to listWriter and listReader with small changes
 func setWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	b, err := listWriter(value.(*Set).Objects, buffer, typeSerializer)
+	slice, err := value.(SetTemplate).convertSetToSlice()
+	sliceFiltered := removeDuplicateValues(slice)
+	if err != nil {
+		return nil, err
+	}
+	b, err := listWriter(sliceFiltered, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -589,8 +594,7 @@ func setReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	if err != nil {
 		return nil, err
 	}
-	newS := Set{Objects: slice.([]interface{})}
-	return &newS, nil
+	return new(Set).convertSliceToSet(slice.([]interface{}))
 }
 
 const (
@@ -674,7 +678,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, logHandler: serializer.logHandler}, nil
 	case *Path:
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
-	case *Set:
+	case SetTemplate:
 		return &graphBinaryTypeSerializer{dataType: SetType, writer: setWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
