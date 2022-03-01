@@ -89,8 +89,10 @@ func (t *Traversal) HasNext() (bool, error) {
 
 func (t *Traversal) Next() (*Result, error) {
 	results, err := t.getResults()
-	if err != nil || (*results).IsEmpty() {
+	if err != nil {
 		return nil, err
+	} else if (*results).IsEmpty() {
+		return nil, errors.New("There are no results left.")
 	}
 	return (*results).one(), nil
 }
