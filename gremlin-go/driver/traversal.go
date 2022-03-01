@@ -184,3 +184,113 @@ const (
 	AddAll  Operator = "addAll"
 	SumLong Operator = "sumLong"
 )
+
+type p struct {
+	operator string
+	values   []interface{}
+}
+
+var P *p = &p{}
+
+func newP(operator string, values []interface{}) p {
+	return p{operator: operator, values: values}
+}
+
+func newPWithP(operator string, pp p, values []interface{}) p {
+	pSlice := make([]interface{}, len(values)+1)
+	copy(pSlice, values)
+	pSlice[len(pSlice)-1] = pp
+	return p{operator: operator, values: pSlice}
+}
+
+func (_ *p) Between(args ...interface{}) p {
+	return newP("between", args)
+}
+
+func (_ *p) Eq(args ...interface{}) p {
+	return newP("eq", args)
+}
+
+func (_ *p) Gt(args ...interface{}) p {
+	return newP("gt", args)
+}
+
+func (_ *p) Gte(args ...interface{}) p {
+	return newP("gte", args)
+}
+
+func (_ *p) Inside(args ...interface{}) p {
+	return newP("inside", args)
+}
+
+func (_ *p) Lt(args ...interface{}) p {
+	return newP("lt", args)
+}
+
+func (_ *p) Lte(args ...interface{}) p {
+	return newP("lte", args)
+}
+
+func (_ *p) Neq(args ...interface{}) p {
+	return newP("neq", args)
+}
+
+func (_ *p) Not(args ...interface{}) p {
+	return newP("not", args)
+}
+
+func (_ *p) Outside(args ...interface{}) p {
+	return newP("outside", args)
+}
+
+func (_ *p) Test(args ...interface{}) p {
+	return newP("test", args)
+}
+
+func (_ *p) Within(args ...interface{}) p {
+	return newP("within", args)
+}
+
+func (_ *p) Without(args ...interface{}) p {
+	return newP("without", args)
+}
+
+func (pp *p) And(args ...interface{}) p {
+	return newPWithP("and", *pp, args)
+}
+
+func (pp *p) Or(args ...interface{}) p {
+	return newPWithP("or", *pp, args)
+}
+
+type textP p
+
+var TextP *textP = &textP{}
+
+func newTextP(operator string, values []interface{}) textP {
+	return textP{operator: operator, values: values}
+}
+
+func (tp *textP) Containing(args ...interface{}) textP {
+	return newTextP("containing", args)
+}
+
+func (tp *textP) EndingWith(args ...interface{}) textP {
+	return newTextP("endingWith", args)
+}
+
+func (tp *textP) NotContaining(args ...interface{}) textP {
+	return newTextP("notContaining", args)
+}
+
+func (tp *textP) NotEndingWith(args ...interface{}) textP {
+	return newTextP("notEndingWith", args)
+}
+
+func (tp *textP) NotStartingWith(args ...interface{}) textP {
+	return newTextP("notStartingWith", args)
+}
+
+func (tp *textP) StartingWith(args ...interface{}) textP {
+	return newTextP("startingWith", args)
+}
