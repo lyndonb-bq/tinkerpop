@@ -20,7 +20,6 @@ under the License.
 package gremlingo
 
 import (
-	"fmt"
 	"sort"
 	"testing"
 
@@ -131,7 +130,14 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 	assert.Equal(t, int32(expected), count)
 }
 
-//func readUsingAnonymousTraversal(t *testing.T, g *GraphTraversalSource, expected int)
+func readUsingAnonymousTraversal(t *testing.T, g *GraphTraversalSource) {
+	results, err := g.V().Fold().Project(testLabel, personLabel).By(T__.Unfold().HasLabel(testLabel).Count()).By(T__.Unfold().HasLabel(personLabel).Count()).ToList()
+	assert.Nil(t, err)
+	assert.Equal(t,1, len(results))
+	resultMap := results[0].GetInterface().(map[interface{}]interface{})
+	assert.Equal(t, int64(0), resultMap[testLabel])
+	assert.Equal(t, int64(len(getTestNames())), resultMap[personLabel])
+}
 
 func TestConnection(t *testing.T) {
 	testHost := getenvs.GetEnvString("GREMLIN_SERVER_HOSTNAME", "localhost")
@@ -231,10 +237,13 @@ func TestConnection(t *testing.T) {
 			readCount(t, g, testLabel, 0)
 			readCount(t, g, personLabel, len(getTestNames()))
 
-			t := g.V().Fold().Project("test", "person").By(T__.Unfold().HasLabel(testLabel).Count()).By(T__.Unfold().HasLabel(personLabel).Count())
-			v, err := t.ToList()
+			readUsingAnonymousTraversal(t, g)
 
-			fmt.Printf("%v", v)
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
 		}
 	})
 }
