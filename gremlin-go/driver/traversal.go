@@ -19,6 +19,10 @@ under the License.
 
 package gremlingo
 
+import (
+	"errors"
+)
+
 type Traverser struct {
 	bulk  int64
 	value interface{}
@@ -92,7 +96,7 @@ func (t *Traversal) Next() (*Result, error) {
 	if err != nil {
 		return nil, err
 	} else if (*results).IsEmpty() {
-		return nil, errors.New("There are no results left.")
+		return nil, errors.New("there are no results left")
 	}
 	return (*results).one(), nil
 }
