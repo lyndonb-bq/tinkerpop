@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -254,26 +253,6 @@ func TestGraphBinaryV1(t *testing.T) {
 			writeToBuffer(x, &buff)
 			assert.Equal(t, x, readToValue(&buff))
 		})
-	})
-
-	t.Run("temp test to printout serialized and deserialized data", func(t *testing.T) {
-		var x = []interface{}{"a", "b", "c"}
-		//var y int32 = 100
-		//var z int64 = 100
-		//var s = "serialize this!"
-		//var u, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
-		//var a int64 = 666
-		//var m = map[interface{}]interface{}{
-		//	"marko": a,
-		//	"none": "blah",
-		//}
-		buff := bytes.Buffer{}
-		writeToBuffer(x, &buff)
-		fmt.Println(buff.Bytes())
-		res := readToValue(&buff)
-		assert.Equal(t, x, res)
-		fmt.Println("expected: ", res)
-		fmt.Println("result: ", res)
 	})
 
 }
