@@ -96,3 +96,91 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 
 	return t, r, nil
 }
+
+type Barrier string
+
+const (
+	NormSack Barrier = "normSack"
+)
+
+type Cardinality string
+
+const (
+	Single Cardinality = "single"
+	List   Cardinality = "list_"
+	Set    Cardinality = "set_"
+)
+
+type Column string
+
+const (
+	Keys   Column = "keys"
+	Values Column = "values"
+)
+
+type Direction string
+
+const (
+	In   Direction = "IN"
+	Out  Direction = "OUT"
+	Both Direction = "BOTH"
+)
+
+type Order string
+
+const (
+	Shuffle Order = "shuffle"
+	Asc     Order = "asc"
+	Desc    Order = "desc"
+)
+
+type Pick string
+
+const (
+	Any  Pick = "any"
+	None Pick = "none"
+)
+
+type Pop string
+
+const (
+	First Pop = "first"
+	Last  Pop = "last"
+	All   Pop = "all_"
+	Mixed Pop = "mixed"
+)
+
+type Scope string
+
+const (
+	Global Scope = "global_"
+	Local  Scope = "local"
+)
+
+type T string
+
+const (
+	Id    T = "id"
+	Label T = "label"
+	Id_   T = "id_"
+	Key   T = "key"
+	Value T = "value"
+)
+
+type Operator string
+
+const (
+	Sum     Operator = "sum_"
+	Sum_    Operator = "sum"
+	Minus   Operator = "minus"
+	Mult    Operator = "mult"
+	Div     Operator = "div"
+	Min     Operator = "min"
+	Min_    Operator = "min_"
+	Max_    Operator = "max_"
+	Assign  Operator = "assign"
+	And_    Operator = "and_"
+	Or_     Operator = "or_"
+	AddAll  Operator = "addAll"
+	SumLong Operator = "sumLong"
+)

@@ -61,6 +61,16 @@ const (
 	TimestampType      DataType = 0x05
 	DurationType       DataType = 0x81
 	SetType            DataType = 0x0b
+	CardinalityType    DataType = 0x16
+	ColumnType         DataType = 0x17
+	DirectionType      DataType = 0x18
+	OperatorType       DataType = 0x19
+	OrderType          DataType = 0x1a
+	PickType           DataType = 0x1b
+	PopType            DataType = 0x1c
+	TType              DataType = 0x20
+	BarrierType        DataType = 0x13
+	ScopeType          DataType = 0x1f
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -637,6 +647,11 @@ const (
 	valueFlagNone byte = 0
 )
 
+func enumWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	_, err := typeSerializer.write(reflect.ValueOf(value).String(), buffer)
+	return buffer.Bytes(), err
+}
+
 // gets the type of the serializer based on the value
 func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{}) (*graphBinaryTypeSerializer, error) {
 	switch val.(type) {
@@ -717,6 +732,26 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: DateType, writer: timeWriter, logHandler: serializer.logHandler}, nil
 	case time.Duration:
 		return &graphBinaryTypeSerializer{dataType: DurationType, writer: durationWriter, logHandler: serializer.logHandler}, nil
+	case Cardinality:
+		return &graphBinaryTypeSerializer{dataType: CardinalityType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Column:
+		return &graphBinaryTypeSerializer{dataType: ColumnType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Direction:
+		return &graphBinaryTypeSerializer{dataType: DirectionType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Operator:
+		return &graphBinaryTypeSerializer{dataType: OperatorType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Order:
+		return &graphBinaryTypeSerializer{dataType: OrderType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Pick:
+		return &graphBinaryTypeSerializer{dataType: PickType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Pop:
+		return &graphBinaryTypeSerializer{dataType: PopType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case T:
+		return &graphBinaryTypeSerializer{dataType: TType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Barrier:
+		return &graphBinaryTypeSerializer{dataType: BarrierType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Scope:
+		return &graphBinaryTypeSerializer{dataType: ScopeType, writer: enumWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
