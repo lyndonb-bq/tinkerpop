@@ -582,10 +582,10 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 // Mostly similar to listWriter and listReader with small changes
 func setWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	slice, err := value.(SetTemplate).convertSetToSlice()
-	sliceFiltered := removeDuplicateValues(slice)
 	if err != nil {
 		return nil, err
 	}
+	sliceFiltered := removeDuplicateValues(slice)
 	b, err := listWriter(sliceFiltered, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
