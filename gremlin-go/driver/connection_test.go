@@ -20,6 +20,8 @@ under the License.
 package gremlingo
 
 import (
+	"fmt"
+	"reflect"
 	"sort"
 	"testing"
 
@@ -208,4 +210,64 @@ func TestConnection(t *testing.T) {
 			assert.Nil(t, err)
 		}
 	})
+
+	t.Run("run get vertex", func(t *testing.T) {
+		if runIntegration {
+			// Add data
+			remote, err := NewDriverRemoteConnection(testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := Traversal_().WithRemote(remote)
+			//dropGraph(t, g)
+			addTestData(t, g)
+
+			res, err := g.V().Group().By(nameKey).ToList()
+			valMap := make(map[string]*Vertex)
+
+			for _, r := range res {
+				fmt.Println("=== Result:", r.GetInterface())
+				fmt.Println("=== Result Type:", r.GetType())
+				v := reflect.ValueOf(r.GetInterface())
+				if v.Kind() != reflect.Map {
+					fmt.Println("not map")
+				}
+				keys := v.MapKeys()
+				for _, k := range keys {
+					convKey := k.Convert(v.Type().Key())
+					// serialize k
+					// serialize v.MapIndex(c_key)
+					val := v.MapIndex(convKey)
+					//fmt.Println(k.Interface())
+					//fmt.Println(reflect.TypeOf(k.Interface()))
+					//fmt.Println(val.Interface())
+					//fmt.Println(reflect.TypeOf(val.Interface()))
+					//valMap[k.Interface()]=val.Interface()
+					list := reflect.ValueOf(val.Interface())
+					for i := 0; i < list.Len(); i++ {
+						//fmt.Println(reflect.TypeOf(list.Index(i).Interface()))
+						valMap[k.Interface().(string)] = list.Index(i).Interface().(*Vertex)
+					}
+				}
+			}
+			fmt.Println(valMap)
+		}
+	})
+
+	//t.Run("run get vertex", func(t *testing.T) {
+	//	if runIntegration {
+	//		// Add data
+	//		remote, err := NewDriverRemoteConnection(testHost, testPort)
+	//		assert.Nil(t, err)
+	//		assert.NotNil(t, remote)
+	//		g := Traversal_().WithRemote(remote)
+	//		dropGraph(t, g)
+	//		addTestData(t, g)
+	//
+	//		res, err := g.V().Group().By(nameKey).By(AnonTrav__.Tail()).ToList()
+	//
+	//		for _, r := range res {
+	//			fmt.Println("=== Result:", r.GetInterface())
+	//		}
+	//	}
+	//})
 }
