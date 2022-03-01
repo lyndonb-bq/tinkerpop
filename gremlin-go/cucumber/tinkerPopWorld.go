@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/cucumber/godog"
 	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"reflect"
 )
 
 type TinkerPopWorld struct {
@@ -121,14 +122,31 @@ func (t *TinkerPopWorld) loadAllDataGraph() {
 
 // TODO implement after .Next() implementation
 func getVertices(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Vertex {
-	// need .Next() at the end
-	//__ := gremlingo.AnonTrav__{}
-	//g.V().Group().By("name").By(__.Tail())
 	vertexMap := make(map[string]*gremlingo.Vertex)
+	// Trying ToList(), may need to switch back to Next()
+	// TODO test after AnonTrav's revised implementation
+	// With __.tail() this returns a list of map[string]vertex, without it returns map[string][]vertex
+	res, err := g.V().Group().By("name").By((&gremlingo.AnonTrav__{}).Tail()).ToList()
+	if err != nil {
+		return nil
+	}
+	for _, r := range res {
+		v := reflect.ValueOf(r.GetInterface())
+		if v.Kind() != reflect.Map {
+			fmt.Println("not map")
+			return nil
+		}
+		keys := v.MapKeys()
+		for _, k := range keys {
+			convKey := k.Convert(v.Type().Key())
+			val := v.MapIndex(convKey)
+			vertexMap[k.Interface().(string)] = val.Interface().(*gremlingo.Vertex)
+		}
+	}
 	return vertexMap
 }
 
-// TODO implement after .Next() implementation
+// TODO implement after AnonTrav's revised implementation
 func getEdges(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Edge {
 	edgeMap := make(map[string]*gremlingo.Edge)
 	return edgeMap
