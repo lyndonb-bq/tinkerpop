@@ -52,6 +52,11 @@ func readToValue(buff *bytes.Buffer) interface{} {
 }
 
 func TestGraphBinaryV1(t *testing.T) {
+	var m = map[interface{}]interface{}{
+		"marko": int32(666),
+		"none":  "blah",
+	}
+
 	t.Run("test simple types", func(t *testing.T) {
 		buff := bytes.Buffer{}
 		t.Run("test int", func(t *testing.T) {
@@ -153,10 +158,6 @@ func TestGraphBinaryV1(t *testing.T) {
 		})
 
 		t.Run("test Graph Types", func(t *testing.T) {
-			var m = map[interface{}]interface{}{
-				"marko": int32(666),
-				"none":  "blah",
-			}
 			t.Run("test vertex", func(t *testing.T) {
 				x := new(Vertex)
 				x.id, _ = uuid.Parse("41d2e28a-20a4-4ab0-b379-d810dede3786")
@@ -240,11 +241,6 @@ func TestGraphBinaryV1(t *testing.T) {
 	t.Run("test nested types", func(t *testing.T) {
 		buff := bytes.Buffer{}
 		t.Run("test map", func(t *testing.T) {
-			var x int32 = 666
-			var m = map[interface{}]interface{}{
-				"marko": x,
-				"none":  "blah",
-			}
 			writeToBuffer(m, &buff)
 			assert.Equal(t, m, readToValue(&buff))
 		})
@@ -279,4 +275,5 @@ func TestGraphBinaryV1(t *testing.T) {
 		fmt.Println("expected: ", res)
 		fmt.Println("result: ", res)
 	})
+
 }
