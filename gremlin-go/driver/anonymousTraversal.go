@@ -37,15 +37,10 @@ type AnonymousTraversal struct {
 	graphTraversal func() *GraphTraversal
 }
 
-var anonymousTraversal *AnonymousTraversal = &AnonymousTraversal{
+var T__ = &AnonymousTraversal{
 	func() *GraphTraversal {
 		return NewGraphTraversal(nil, nil, newBytecode(nil), nil)
 	},
-}
-
-// T__ is the entry point to starting an anonymous traversal
-func T__() *AnonymousTraversal {
-	return anonymousTraversal
 }
 
 // T__ creates an empty GraphTraversal

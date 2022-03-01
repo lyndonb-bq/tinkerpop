@@ -130,6 +130,8 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 	assert.Equal(t, int32(expected), count)
 }
 
+//func readUsingAnonymousTraversal(t *testing.T, g *GraphTraversalSource, expected int)
+
 func TestConnection(t *testing.T) {
 	testHost := getenvs.GetEnvString("GREMLIN_SERVER_HOSTNAME", "localhost")
 	testPort, _ := getenvs.GetEnvInt("GREMLIN_SERVER_PORT", 8182)
@@ -228,7 +230,7 @@ func TestConnection(t *testing.T) {
 			readCount(t, g, testLabel, 0)
 			readCount(t, g, personLabel, len(getTestNames()))
 
-			
+			g.V().Project("test", "person").By(T__.HasLabel(testLabel).Count()).By(T__.HasLabel(personLabel).Count())
 		}
 	})
 }
