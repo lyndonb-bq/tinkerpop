@@ -20,6 +20,7 @@ under the License.
 package gremlingo
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 
@@ -230,7 +231,10 @@ func TestConnection(t *testing.T) {
 			readCount(t, g, testLabel, 0)
 			readCount(t, g, personLabel, len(getTestNames()))
 
-			g.V().Project("test", "person").By(T__.HasLabel(testLabel).Count()).By(T__.HasLabel(personLabel).Count())
+			t := g.V().Fold().Project("test", "person").By(T__.Unfold().HasLabel(testLabel).Count()).By(T__.Unfold().HasLabel(personLabel).Count())
+			v, err := t.ToList()
+
+			fmt.Printf("%v", v)
 		}
 	})
 }
