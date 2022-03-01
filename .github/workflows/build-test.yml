@@ -51,3 +51,14 @@ jobs:
           version: "2021.1.1"
           install-go: false
           cache-key: ${{ matrix.go }}
+
+      - name: Generate Cucumber Godog Test File
+        working-directory: ./gremlin-go
+        run: |
+          mvn install -pl :gremlin-core -DskipTests -DskipIntegrationTests=true
+          mvn install -pl :gremlin-server -DskipTests -DskipIntegrationTests=true
+          mvn compile -pl :gremlin-go
+
+      # - name: Execute Go Cucumber Godog tests
+      #   working-directory: ./gremlin-go
+      #   run: TODO: Execute tests in GitHub actions.
