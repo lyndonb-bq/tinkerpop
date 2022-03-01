@@ -40,6 +40,7 @@ import org.apache.tinkerpop.gremlin.util.function.Lambda;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -160,17 +161,17 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
 
         @Override
         protected String getSyntax(final SackFunctions.Barrier o) {
-            return "Barrier." + resolveSymbol(o.toString());
+            return "gremlingo." + resolveSymbol(o.toString());
         }
 
         @Override
         protected String getSyntax(final VertexProperty.Cardinality o) {
-            return "Cardinality." + resolveSymbol(o.toString());
+            return "gremlingo." + resolveSymbol(o.toString());
         }
 
         @Override
         protected String getSyntax(final TraversalOptionParent.Pick o) {
-            return "Pick." + resolveSymbol(o.toString());
+            return "gremlingo." + resolveSymbol(o.toString());
         }
 
         @Override
@@ -219,7 +220,7 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
 
         @Override
         protected Script produceScript(final Enum<?> o) {
-            return script.append(o.getDeclaringClass().getSimpleName() + "." + resolveSymbol(o.toString()));
+            return script.append("gremlingo" + "." + resolveSymbol(o.toString()));
         }
 
         @Override
@@ -255,7 +256,7 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
         @Override
         protected Script produceScript(final String traversalSource, final Bytecode o) {
             // TODO: AN-1042 Ensure translation matches Gremlin-Go implementation when done
-            final String source = traversalSource.equals("__") ? "(&gremlingo.AnonTrav__{})" : traversalSource;
+            final String source = traversalSource.equals("__") ? "gremlingo.T__" : traversalSource;
             script.append(source);
             for (final Bytecode.Instruction instruction : o.getInstructions()) {
                 final String methodName = instruction.getOperator();
@@ -288,16 +289,27 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
 
     static final class SymbolHelper {
 
+        private final static Map<String, String> TO_GO_MAP = new HashMap<>();
+        private final static Map<String, String> FROM_GO_MAP = new HashMap<>();
+
+        static {
+            TO_GO_MAP.put("OUT", "Out");
+            TO_GO_MAP.put("IN", "In");
+            TO_GO_MAP.put("BOTH", "Both");
+            //
+            TO_GO_MAP.forEach((k, v) -> FROM_GO_MAP.put(v, k));
+        }
+
         private SymbolHelper() {
             // static methods only, do not instantiate
         }
 
         public static String toGolang(final String symbol) {
-            return StringUtils.capitalize(symbol);
+            return TO_GO_MAP.getOrDefault(symbol, StringUtils.capitalize(symbol));
         }
 
         public static String toJava(final String symbol) {
-            return StringUtils.uncapitalize(symbol);
+            return FROM_GO_MAP.getOrDefault(symbol, StringUtils.uncapitalize(symbol));
         }
 
     }
