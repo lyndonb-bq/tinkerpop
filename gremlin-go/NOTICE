@@ -16,8 +16,8 @@ Indirectly Used Licenses:
 ISC (functionally equivalent to BSD-2):
     github.com/davecgh/go-spew v1.1.0 => https://github.com/davecgh/go-spew/blob/v1.1.0/LICENSE
 MIT:
-	github.com/stretchr/objx v0.1.0 => https://github.com/stretchr/objx/blob/v0.1.0/LICENSE
+    github.com/stretchr/objx v0.1.0 => https://github.com/stretchr/objx/blob/v0.1.0/LICENSE
 MIT and Apache 2.0 (dual license):
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c => https://github.com/go-yaml/yaml/blob/v3/LICENSE
+    gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c => https://github.com/go-yaml/yaml/blob/v3/LICENSE
 Custom:
     github.com/pmezard/go-difflib v1.0.0 => https://github.com/pmezard/go-difflib/blob/v1.0.0/LICENSE
