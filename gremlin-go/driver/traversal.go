@@ -170,8 +170,8 @@ const (
 type Operator string
 
 const (
-	Sum     Operator = "sum_"
-	Sum_    Operator = "sum"
+	Sum     Operator = "sum"
+	Sum_    Operator = "sum_"
 	Minus   Operator = "minus"
 	Mult    Operator = "mult"
 	Div     Operator = "div"
