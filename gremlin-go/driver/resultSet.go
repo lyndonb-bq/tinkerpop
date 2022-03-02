@@ -66,7 +66,7 @@ func (channelResultSet *channelResultSet) IsEmpty() bool {
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
 		channelResultSet.mux.Lock()
-		defer channelResultSet.mux.Unlock
+		defer channelResultSet.mux.Unlock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
 	}
