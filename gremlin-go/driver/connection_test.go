@@ -52,9 +52,9 @@ func addTestData(t *testing.T, g *GraphTraversalSource) {
 	var traversal *GraphTraversal
 	for _, name := range testNames {
 		if traversal == nil {
-			traversal = g.AddV(personLabel).Property(nameKey, name)
+			traversal = g.AddV(personLabel).Property(nameKey, name).Property("foo", 1)
 		} else {
-			traversal = traversal.AddV(personLabel).Property(nameKey, name)
+			traversal = traversal.AddV(personLabel).Property(nameKey, name).Property("foo", 1)
 		}
 	}
 
@@ -354,6 +354,37 @@ func TestConnection(t *testing.T) {
 			readCount(t, g, "", 0)
 			readCount(t, g, testLabel, 0)
 			readCount(t, g, personLabel, 0)
+		}
+	})
+
+	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
+		if runIntegration {
+			remote, err := NewDriverRemoteConnection(testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := Traversal_().WithRemote(remote)
+
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+
+			// Add data and check that the size of the graph is correct.
+			addTestData(t, g)
+
+			r, err := g.V().Has("name", "Lyndon").Values("foo").ToList()
+			assert.Nil(t, err)
+			assert.NotNil(t, r)
+			assert.Equal(t, 1, len(r))
+			val, err := r[0].GetInt32()
+			assert.Nil(t, err)
+			assert.Equal(t, int32(1), val)
+
+			r, err = g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
+			assert.Nil(t, err)
+			assert.NotNil(t, r)
+			assert.Equal(t, 1, len(r))
+			val, err = r[0].GetInt32()
+			assert.Nil(t, err)
+			assert.Equal(t, int32(2), val)
 		}
 	})
 }
