@@ -55,17 +55,6 @@ type channelResultSet struct {
 	waitSignalMux    sync.Mutex
 }
 
-func (channelResultSet *channelResultSet) waitForSignal() {
-	channelResultSet.waitSignalMux.Lock()
-	waitSignal := make(chan bool)
-	channelResultSet.waitSignal = waitSignal
-	channelResultSet.waitSignalMux.Unlock()
-	// Technically if we assigned channelResultSet.waitSignal then unlocked, it could be set to nil or
-	// overwritten to another channel before we check it, so to be safe, create additional variable and
-	// check that instead.
-	<-waitSignal
-}
-
 func (channelResultSet *channelResultSet) sendSignal() {
 	// Lock wait
 	channelResultSet.waitSignalMux.Lock()
@@ -83,21 +72,28 @@ func (channelResultSet *channelResultSet) GetError() error {
 func (channelResultSet *channelResultSet) IsEmpty() bool {
 	channelResultSet.channelMux.Lock()
 	// If our channel is empty and we have no data in it, wait for signal that the state has been updated.
-	if len(channelResultSet.channel) == 0 && !channelResultSet.closed {
-		// Unlock ChannelResultSet channel mutex so that it can be updated.
-		channelResultSet.channelMux.Unlock()
-		channelResultSet.waitForSignal()
-
-		// Call IsEmpty again to avoid messing with more locks.
-		return channelResultSet.IsEmpty()
-	} else if len(channelResultSet.channel) != 0 {
+	channelIsEmpty := len(channelResultSet.channel) == 0
+	if !channelIsEmpty || channelResultSet.closed {
 		// Channel is not empty.
 		channelResultSet.channelMux.Unlock()
-		return false
+		return channelIsEmpty && channelResultSet.closed
 	} else {
-		// Channel is empty && closed here.
+		// Channel is empty and not closed. Need to wait for signal that state has changed, otherwise
+		// we do not know if it is empty or not.
+		// We need ot grab the wait signal mutex before we release the channel mutex.
+		channelResultSet.waitSignalMux.Lock()
 		channelResultSet.channelMux.Unlock()
-		return true
+
+		// Create a wait signal and unlock the wait signal mutex.
+		waitSignal := make(chan bool)
+		channelResultSet.waitSignal = waitSignal
+		channelResultSet.waitSignalMux.Unlock()
+
+		// Technically if we assigned channelResultSet.waitSignal then unlocked, it could be set to nil or
+		// overwritten to another channel before we check it, so to be safe, create additional variable and
+		// check that instead.
+		<-waitSignal
+		return channelResultSet.IsEmpty()
 	}
 }
 
