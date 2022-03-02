@@ -130,12 +130,6 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 	assert.Equal(t, int32(expected), count)
 }
 
-func checkPath(t *testing.T, result *Result, expected string) {
-	p, err := result.GetPath()
-	assert.Nil(t, err)
-	assert.Equal(t, expected, p.String())
-}
-
 func TestConnection(t *testing.T) {
 	testHost := getenvs.GetEnvString("GREMLIN_SERVER_HOSTNAME", "localhost")
 	testPort, _ := getenvs.GetEnvInt("GREMLIN_SERVER_PORT", 8182)
@@ -242,9 +236,20 @@ func TestConnection(t *testing.T) {
 			assert.Nil(t, errs)
 			assert.NotNil(t, results)
 			assert.Equal(t, 3, len(results))
-			checkPath(t, results[0], "path[Bit-Quill, WORKS_ON, TinkerPop]")
-			checkPath(t, results[1], "path[Bit-Quill, LIKES, TinkerPop]")
-			checkPath(t, results[2], "path[GremlinServer, IS_IN, TinkerPop]")
+
+			possiblePaths := []string{"path[Bit-Quill, WORKS_ON, TinkerPop]", "path[Bit-Quill, LIKES, TinkerPop]", "path[GremlinServer, IS_IN, TinkerPop]"}
+			for _, result := range results {
+				found := false
+				for _, path := range possiblePaths {
+					p, err := result.GetPath()
+					assert.Nil(t, err)
+					if path == p.String() {
+						found = true
+						break
+					}
+				}
+				assert.True(t, found)
+			}
 
 			// Drop the graph.
 			dropGraph(t, g)

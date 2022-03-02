@@ -320,26 +320,26 @@ func newTextP(operator string, values []interface{}) TextPredicate {
 	return &textP{operator: operator, values: values}
 }
 
-func (tp *textP) Containing(args ...interface{}) TextPredicate {
+func (_ *textP) Containing(args ...interface{}) TextPredicate {
 	return newTextP("containing", args)
 }
 
-func (tp *textP) EndingWith(args ...interface{}) TextPredicate {
+func (_ *textP) EndingWith(args ...interface{}) TextPredicate {
 	return newTextP("endingWith", args)
 }
 
-func (tp *textP) NotContaining(args ...interface{}) TextPredicate {
+func (_ *textP) NotContaining(args ...interface{}) TextPredicate {
 	return newTextP("notContaining", args)
 }
 
-func (tp *textP) NotEndingWith(args ...interface{}) TextPredicate {
+func (_ *textP) NotEndingWith(args ...interface{}) TextPredicate {
 	return newTextP("notEndingWith", args)
 }
 
-func (tp *textP) NotStartingWith(args ...interface{}) TextPredicate {
+func (_ *textP) NotStartingWith(args ...interface{}) TextPredicate {
 	return newTextP("notStartingWith", args)
 }
 
-func (tp *textP) StartingWith(args ...interface{}) TextPredicate {
+func (_ *textP) StartingWith(args ...interface{}) TextPredicate {
 	return newTextP("startingWith", args)
 }

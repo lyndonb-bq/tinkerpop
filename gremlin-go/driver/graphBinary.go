@@ -655,7 +655,7 @@ func enumWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 }
 
 func pWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	v := value.(p)
+	v := value.(*p)
 	_, err := typeSerializer.writeValue(v.operator, buffer, false)
 	if err != nil {
 		return nil, err
@@ -676,7 +676,7 @@ func pWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinar
 }
 
 func textPWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	v := value.(textP)
+	v := value.(*textP)
 	_, err := typeSerializer.writeValue(v.operator, buffer, false)
 	if err != nil {
 		return nil, err
@@ -796,9 +796,9 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: BarrierType, writer: enumWriter, logHandler: serializer.logHandler}, nil
 	case Scope:
 		return &graphBinaryTypeSerializer{dataType: ScopeType, writer: enumWriter, logHandler: serializer.logHandler}, nil
-	case p:
+	case Predicate:
 		return &graphBinaryTypeSerializer{dataType: PType, writer: pWriter, logHandler: serializer.logHandler}, nil
-	case textP:
+	case TextPredicate:
 		return &graphBinaryTypeSerializer{dataType: TextPType, writer: textPWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
