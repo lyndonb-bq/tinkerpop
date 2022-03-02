@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -49,6 +50,20 @@ func (conn *mockWebsocketConn) ReadMessage() (int, []byte, error) {
 func (conn *mockWebsocketConn) Close() error {
 	args := conn.Called()
 	return args.Error(0)
+}
+
+func (conn *mockWebsocketConn) SetReadDeadline(time time.Time) error {
+	args := conn.Called(time)
+	return args.Error(0)
+}
+
+func (conn *mockWebsocketConn) SetWriteDeadline(time time.Time) error {
+	args := conn.Called(time)
+	return args.Error(0)
+}
+
+func (conn *mockWebsocketConn) SetPongHandler(h func(appData string) error) {
+	conn.Called(h)
 }
 
 func TestGorillaTransporter(t *testing.T) {

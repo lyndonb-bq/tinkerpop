@@ -163,6 +163,7 @@ func TestConnection(t *testing.T) {
 
 			// Add data and check that the size of the graph is correct.
 			addTestData(t, g)
+
 			readCount(t, g, "", len(getTestNames()))
 			readCount(t, g, testLabel, 0)
 			readCount(t, g, personLabel, len(getTestNames()))
@@ -308,10 +309,17 @@ func TestConnection(t *testing.T) {
 			assert.NotNil(t, remote)
 			g := Traversal_().WithRemote(remote)
 
-			// Read test data out of the graph and check that it is correct.
-			results, err := g.V().Has("name", P.Eq("Lyndon")).ValueMap("name").ToList()
-			assert.Nil(t, err)
-			assert.Equal(t, 1, len(results))
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
+
+			// Add data and check that the size of the graph is correct.
+			addTestData(t, g)
+			readCount(t, g, "", len(getTestNames()))
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, len(getTestNames()))
 
 			readUsingAnonymousTraversal(t, g)
 

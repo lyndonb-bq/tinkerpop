@@ -157,14 +157,14 @@ type Pop string
 const (
 	First Pop = "first"
 	Last  Pop = "last"
-	All   Pop = "all_"
+	All   Pop = "all"
 	Mixed Pop = "mixed"
 )
 
 type Scope string
 
 const (
-	Global Scope = "global_"
+	Global Scope = "global"
 	Local  Scope = "local"
 )
 
@@ -182,16 +182,14 @@ type Operator string
 
 const (
 	Sum     Operator = "sum"
-	Sum_    Operator = "sum_"
 	Minus   Operator = "minus"
 	Mult    Operator = "mult"
 	Div     Operator = "div"
 	Min     Operator = "min"
-	Min_    Operator = "min_"
-	Max_    Operator = "max_"
+	Max     Operator = "max"
 	Assign  Operator = "assign"
-	And_    Operator = "and_"
-	Or_     Operator = "or_"
+	And     Operator = "and"
+	Or      Operator = "or"
 	AddAll  Operator = "addAll"
 	SumLong Operator = "sumLong"
 )
