@@ -346,7 +346,9 @@ var TextP *textP = &textP{}
 
 func newTextP(operator string, args ...interface{}) TextPredicate {
 	values := make([]interface{}, 0)
-	copy(values, args)
+	for _, arg := range args {
+		values = append(values, arg)
+	}
 	return &textP{operator: operator, values: values}
 }
 
