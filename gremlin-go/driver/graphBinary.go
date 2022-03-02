@@ -568,7 +568,7 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 		return nil, err
 	}
 	for _, param := range newLabels.([]interface{}) {
-		p.labels = append(p.labels, param.(*Set))
+		p.labels = append(p.labels, param.(*SimpleSet))
 	}
 	newObjects, err := typeSerializer.read(buffer)
 	if err != nil {
@@ -581,12 +581,11 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 // Format: Same as List.
 // Mostly similar to listWriter and listReader with small changes
 func setWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	slice, err := value.(SetTemplate).convertSetToSlice()
+	slice, err := value.(Set).SetToSlice()
 	if err != nil {
 		return nil, err
 	}
-	sliceFiltered := removeDuplicateValues(slice)
-	b, err := listWriter(sliceFiltered, buffer, typeSerializer)
+	b, err := listWriter(slice, buffer, typeSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +597,7 @@ func setReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	if err != nil {
 		return nil, err
 	}
-	return new(Set).convertSliceToSet(slice.([]interface{}))
+	return new(SimpleSet).Add(slice.([]interface{})...), nil
 }
 
 func timeWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
@@ -731,7 +730,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, logHandler: serializer.logHandler}, nil
 	case *Path:
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
-	case SetTemplate:
+	case Set:
 		return &graphBinaryTypeSerializer{dataType: SetType, writer: setWriter, logHandler: serializer.logHandler}, nil
 	case time.Time:
 		return &graphBinaryTypeSerializer{dataType: DateType, writer: timeWriter, logHandler: serializer.logHandler}, nil
@@ -840,7 +839,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 	case PathType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: PathType, reader: pathReader, nullFlagReturn: Path{}, logHandler: serializer.logHandler}, nil
 	case SetType.getCodeByte():
-		return &graphBinaryTypeSerializer{dataType: SetType, reader: setReader, nullFlagReturn: Set{}, logHandler: serializer.logHandler}, nil
+		return &graphBinaryTypeSerializer{dataType: SetType, reader: setReader, nullFlagReturn: SimpleSet{}, logHandler: serializer.logHandler}, nil
 	case ListType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: ListType, reader: listReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	case DateType.getCodeByte(), TimestampType.getCodeByte():

@@ -211,9 +211,9 @@ func TestGraphBinaryV1(t *testing.T) {
 			})
 			t.Run("test path", func(t *testing.T) {
 				x := new(Path)
-				l1 := newSet([]interface{}{"str1", "str2", "str3"})
-				l2 := newSet([]interface{}{"str4"})
-				x.labels = []*Set{l1, l2}
+				l1 := NewSimpleSet("str1", "str2", "str3")
+				l2 := NewSimpleSet("str4")
+				x.labels = []Set{l1, l2}
 				x.objects = []interface{}{"String1", m}
 				writeToBuffer(x, &buff)
 				p := readToValue(&buff).(*Path)
@@ -248,8 +248,8 @@ func TestGraphBinaryV1(t *testing.T) {
 			writeToBuffer(x, &buff)
 			assert.Equal(t, x, readToValue(&buff))
 		})
-		t.Run("test Set", func(t *testing.T) {
-			x := newSet([]interface{}{"a", "b", "c", "a", int32(1), int32(2), int32(3), int32(2), int32(3), int32(3)})
+		t.Run("test SimpleSet", func(t *testing.T) {
+			x := NewSimpleSet("a", "b", "c", "a", int32(1), int32(2), int32(3), int32(2), int32(3), int32(3))
 			writeToBuffer(x, &buff)
 			assert.Equal(t, x, readToValue(&buff))
 		})

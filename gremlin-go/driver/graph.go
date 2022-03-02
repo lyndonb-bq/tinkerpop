@@ -69,7 +69,7 @@ type Property struct {
 // The list of labels are the labels of the steps traversed, and the objects are the objects that are traversed.
 // TODO: change labels to be []<set of string> after implementing set in AN-1022 and update the GetPathObject accordingly
 type Path struct {
-	labels  []*Set
+	labels  []Set
 	objects []interface{}
 }
 
@@ -101,8 +101,15 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	var objectList []interface{}
 	var object interface{}
 	for i := 0; i < len(p.labels); i++ {
-		for j := 0; j < len(p.labels[i].Objects); j++ {
-			if p.labels[i].Objects[j] == key {
+		s, err := p.labels[i].SetToSlice()
+		if err != nil {
+			return nil, err
+		}
+		for j := 0; j < len(s); j++ {
+			if reflect.TypeOf(s[j]).Kind() != reflect.String {
+				return nil, errors.New("path is invalid because labels contains a non string type")
+			}
+			if s[j] == key {
 				if object == nil {
 					object = p.objects[i]
 				} else if objectList != nil {
@@ -122,62 +129,53 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	}
 }
 
-// SetTemplate describes the necessary methods that need to be implemented to make a user-defined Set implementation.
-// Set is the default implementation that should be used but SetTemplate can be used for a custom implementation if needed.
-type SetTemplate interface {
-	convertSetToSlice() ([]interface{}, error)
-	convertSliceToSet([]interface{}) (SetTemplate, error)
+// Set describes the necessary methods that need to be implemented to make a user-defined SimpleSet implementation.
+// SimpleSet is the default implementation that should be used but Set can be used for a custom implementation if needed.
+type Set interface {
+	SetToSlice() ([]interface{}, error)
 }
 
-// Set is a default custom declaration since Go does not natively provide this feature.
-type Set struct {
-	Objects []interface{}
+// SimpleSet is a default custom declaration since Go does not natively provide this feature.
+type SimpleSet struct {
+	objects []interface{}
 }
 
-func (s *Set) convertSetToSlice() ([]interface{}, error) {
-	return s.Objects, nil
+func (s *SimpleSet) SetToSlice() ([]interface{}, error) {
+	return s.objects, nil
 }
 
-func (s *Set) convertSliceToSet(in []interface{}) (SetTemplate, error) {
-	slice, err := interfaceToSlice(in)
-	if err != nil {
-		return nil, err
+func (s *SimpleSet) Add(args ...interface{}) *SimpleSet {
+	for _, val := range args {
+		if !s.Contains(val) {
+			s.objects = append(s.objects, val)
+		}
 	}
-	s.Objects = slice
-	return s, nil
-}
-
-// Construct a new Set with filtered values
-func newSet(in interface{}) *Set {
-	slice, _ := interfaceToSlice(in)
-	filtered := removeDuplicateValues(slice)
-	s := new(Set)
-	s.Objects = filtered
 	return s
 }
 
-func interfaceToSlice(in interface{}) ([]interface{}, error) {
-	var interfaceSlice []interface{}
-	switch reflect.TypeOf(in).Kind() {
-	case reflect.Slice:
-		slice := reflect.ValueOf(in)
-		for i := 0; i < slice.Len(); i++ {
-			interfaceSlice = append(interfaceSlice, slice.Index(i).Interface())
+func (s *SimpleSet) Remove(val interface{}) *SimpleSet {
+	for idx, i := range s.objects {
+		if val == i {
+			// Deletion does not maintain ordering
+			s.objects[idx] = s.objects[len(s.objects)-1]
+			s.objects = s.objects[:len(s.objects)-1]
+			break
 		}
-	default:
-		return nil, errors.New("input is not a slice")
 	}
-	return interfaceSlice, nil
+	return s
 }
 
-func removeDuplicateValues(slice []interface{}) []interface{} {
-	keys := make(map[interface{}]bool)
-	var filtered []interface{}
+func (s *SimpleSet) Contains(val interface{}) bool {
+	slice, _ := s.SetToSlice()
 	for _, entry := range slice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = true
-			filtered = append(filtered, entry)
+		if val == entry {
+			return true
 		}
 	}
-	return filtered
+	return false
+}
+
+// NewSimpleSet constructs a new SimpleSet with filtered values
+func NewSimpleSet(args ...interface{}) *SimpleSet {
+	return new(SimpleSet).Add(args...)
 }

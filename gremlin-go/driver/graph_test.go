@@ -56,18 +56,18 @@ func TestGraphStructureFunctions(t *testing.T) {
 		assert.Equal(t, "p[property-key->[0 1]]", p.String())
 	})
 
-	s1 := newSet([]interface{}{"foo"})
-	s2 := newSet([]interface{}{"bar"})
-	s3 := newSet([]interface{}{"baz"})
+	s1 := NewSimpleSet("foo")
+	s2 := NewSimpleSet("bar")
+	s3 := NewSimpleSet("baz")
 	t.Run("Test Path.String()", func(t *testing.T) {
-		keys := []*Set{s1, s2, s3}
+		keys := []Set{s1, s2, s3}
 		data := []interface{}{1, 2, "hello"}
 		p := Path{keys, data}
 		assert.Equal(t, "path[1, 2, hello]", p.String())
 	})
 
 	t.Run("Test Path.GetPathObject() with valid Path", func(t *testing.T) {
-		keys := []*Set{s1, s2, s3}
+		keys := []Set{s1, s2, s3}
 		data := []interface{}{1, 2, "hello"}
 		p := Path{keys, data}
 		v, err := p.GetPathObject("foo")
@@ -82,7 +82,7 @@ func TestGraphStructureFunctions(t *testing.T) {
 	})
 
 	t.Run("Test Path.GetPathObject() with invalid Path", func(t *testing.T) {
-		keys := []*Set{s1, s2, s3}
+		keys := []Set{s1, s2, s3}
 		data := []interface{}{1, 2}
 		p := Path{keys, data}
 		val, err := p.GetPathObject("foo")
@@ -91,7 +91,7 @@ func TestGraphStructureFunctions(t *testing.T) {
 	})
 
 	t.Run("Test Path.GetPathObject() with invalid key", func(t *testing.T) {
-		keys := []*Set{s1, s2}
+		keys := []Set{s1, s2}
 		data := []interface{}{1, 2}
 		p := Path{keys, data}
 		val, err := p.GetPathObject("foobar")
@@ -101,10 +101,10 @@ func TestGraphStructureFunctions(t *testing.T) {
 }
 
 func TestCustomStructs(t *testing.T) {
-	t.Run("Test Set creation from slice", func(t *testing.T) {
-		slice := []interface{}{"a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3}
+	t.Run("Test SimpleSet creation from slice", func(t *testing.T) {
+		//slice := []interface{}{"a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3}
 		sliceAsSet := []interface{}{"a", "b", "c", 1, 2, 3}
-		set := newSet(slice)
-		assert.Equal(t, sliceAsSet, set.Objects)
+		set := NewSimpleSet("a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3)
+		assert.Equal(t, sliceAsSet, set.objects)
 	})
 }
