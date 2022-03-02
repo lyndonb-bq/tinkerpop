@@ -19,6 +19,10 @@ under the License.
 
 package gremlingo
 
+import (
+	"errors"
+)
+
 type Traverser struct {
 	bulk  int64
 	value interface{}
@@ -34,6 +38,11 @@ type Traversal struct {
 
 // ToList returns the result in a list.
 func (t *Traversal) ToList() ([]*Result, error) {
+	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
+	if t.remote == nil {
+		return nil, errors.New("cannot invoke this method from an anonymous traversal")
+	}
+
 	results, err := t.remote.SubmitBytecode(t.bytecode)
 	if err != nil {
 		return nil, err
@@ -57,6 +66,11 @@ func (t *Traversal) ToSet() (map[*Result]bool, error) {
 
 // Iterate all the Traverser instances in the traversal and returns the empty traversal
 func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
+	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
+	if t.remote == nil {
+		return nil, nil, errors.New("cannot invoke this method from an anonymous traversal")
+	}
+
 	err := t.bytecode.addStep("none")
 	if err != nil {
 		return nil, nil, err
@@ -154,14 +168,14 @@ type Pop string
 const (
 	First Pop = "first"
 	Last  Pop = "last"
-	All   Pop = "all_"
+	All   Pop = "all"
 	Mixed Pop = "mixed"
 )
 
 type Scope string
 
 const (
-	Global Scope = "global_"
+	Global Scope = "global"
 	Local  Scope = "local"
 )
 
@@ -178,17 +192,174 @@ const (
 type Operator string
 
 const (
-	Sum     Operator = "sum_"
-	Sum_    Operator = "sum"
+	Sum     Operator = "sum"
 	Minus   Operator = "minus"
 	Mult    Operator = "mult"
 	Div     Operator = "div"
 	Min     Operator = "min"
-	Min_    Operator = "min_"
-	Max_    Operator = "max_"
+	Max     Operator = "max"
 	Assign  Operator = "assign"
-	And_    Operator = "and_"
-	Or_     Operator = "or_"
+	And     Operator = "and"
+	Or      Operator = "or"
 	AddAll  Operator = "addAll"
 	SumLong Operator = "sumLong"
 )
+
+type p struct {
+	operator string
+	values   []interface{}
+}
+
+// Predicate interface
+type Predicate interface {
+	// Between Predicate to determine if value is within (inclusive) the range of two specified values.
+	Between(args ...interface{}) Predicate
+	// Eq Predicate to determine if equal to.
+	Eq(args ...interface{}) Predicate
+	// Gt Predicate to determine if greater than.
+	Gt(args ...interface{}) Predicate
+	// Gte Predicate to determine if greater than or equal to.
+	Gte(args ...interface{}) Predicate
+	// Inside Predicate to determine if value is within range of specified values (exclusive).
+	Inside(args ...interface{}) Predicate
+	// Lt Predicate to determine if less than.
+	Lt(args ...interface{}) Predicate
+	// Lte Predicate to determine if less than or equal to.
+	Lte(args ...interface{}) Predicate
+	// Neq Predicate to determine if not equal to.
+	Neq(args ...interface{}) Predicate
+	// Not Predicate gives the opposite of the specified Predicate.
+	Not(args ...interface{}) Predicate
+	// Outside Predicate to determine of value is not within range of specified values (exclusive).
+	Outside(args ...interface{}) Predicate
+	// Test Evalutes Predicate on given argument.
+	Test(args ...interface{}) Predicate
+	// Within Predicate determines if value is within given list of values.
+	Within(args ...interface{}) Predicate
+	// Without Predicate determines if value is not within the specified
+	Without(args ...interface{}) Predicate
+	// And Predicate returns a Predicate composed of two predicates (logical AND of them).
+	And(args ...interface{}) Predicate
+	// Or Predicate returns a Predicate composed of two predicates (logical OR of them).
+	Or(args ...interface{}) Predicate
+}
+
+var P *p = &p{}
+
+func newP(operator string, values []interface{}) Predicate {
+	return &p{operator: operator, values: values}
+}
+
+func newPWithP(operator string, pp p, values []interface{}) Predicate {
+	pSlice := make([]interface{}, len(values)+1)
+	copy(pSlice, values)
+	pSlice[len(pSlice)-1] = pp
+	return &p{operator: operator, values: pSlice}
+}
+
+func (_ *p) Between(args ...interface{}) Predicate {
+	return newP("between", args)
+}
+
+func (_ *p) Eq(args ...interface{}) Predicate {
+	return newP("eq", args)
+}
+
+func (_ *p) Gt(args ...interface{}) Predicate {
+	return newP("gt", args)
+}
+
+func (_ *p) Gte(args ...interface{}) Predicate {
+	return newP("gte", args)
+}
+
+func (_ *p) Inside(args ...interface{}) Predicate {
+	return newP("inside", args)
+}
+
+func (_ *p) Lt(args ...interface{}) Predicate {
+	return newP("lt", args)
+}
+
+func (_ *p) Lte(args ...interface{}) Predicate {
+	return newP("lte", args)
+}
+
+func (_ *p) Neq(args ...interface{}) Predicate {
+	return newP("neq", args)
+}
+
+func (_ *p) Not(args ...interface{}) Predicate {
+	return newP("not", args)
+}
+
+func (_ *p) Outside(args ...interface{}) Predicate {
+	return newP("outside", args)
+}
+
+func (_ *p) Test(args ...interface{}) Predicate {
+	return newP("test", args)
+}
+
+func (_ *p) Within(args ...interface{}) Predicate {
+	return newP("within", args)
+}
+
+func (_ *p) Without(args ...interface{}) Predicate {
+	return newP("without", args)
+}
+
+func (pp *p) And(args ...interface{}) Predicate {
+	return newPWithP("and", *pp, args)
+}
+
+func (pp *p) Or(args ...interface{}) Predicate {
+	return newPWithP("or", *pp, args)
+}
+
+type TextPredicate interface {
+	// Containing TextPredicate determines if a string contains a given value.
+	Containing(args ...interface{}) TextPredicate
+	// EndingWith TextPredicate determines if a string ends with a given value.
+	EndingWith(args ...interface{}) TextPredicate
+	// NotContaining TextPredicate determines if a string does not contain a given value.
+	NotContaining(args ...interface{}) TextPredicate
+	// NotEndingWith TextPredicate determines if a string does not end with a given value.
+	NotEndingWith(args ...interface{}) TextPredicate
+	// NotStartingWith TextPredicate determines if a string does not start with a given value.
+	NotStartingWith(args ...interface{}) TextPredicate
+	// StartingWith TextPredicate determines if a string starts with a given value.
+	StartingWith(args ...interface{}) TextPredicate
+}
+
+type textP p
+
+var TextP *textP = &textP{}
+
+func newTextP(operator string, values []interface{}) TextPredicate {
+	return &textP{operator: operator, values: values}
+}
+
+func (_ *textP) Containing(args ...interface{}) TextPredicate {
+	return newTextP("containing", args)
+}
+
+func (_ *textP) EndingWith(args ...interface{}) TextPredicate {
+	return newTextP("endingWith", args)
+}
+
+func (_ *textP) NotContaining(args ...interface{}) TextPredicate {
+	return newTextP("notContaining", args)
+}
+
+func (_ *textP) NotEndingWith(args ...interface{}) TextPredicate {
+	return newTextP("notEndingWith", args)
+}
+
+func (_ *textP) NotStartingWith(args ...interface{}) TextPredicate {
+	return newTextP("notStartingWith", args)
+}
+
+func (_ *textP) StartingWith(args ...interface{}) TextPredicate {
+	return newTextP("startingWith", args)
+}

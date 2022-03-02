@@ -87,44 +87,44 @@ func toNumeric(stringVal, graphName string) interface{} {
 
 // parse vertex
 func toVertex(name, graphName string) interface{} {
-	return tg.graphDataMap[graphName].vertices[name]
+	return tg.getDataGraphFromMap(graphName).vertices[name]
 }
 
 // parse vertex id
 func toVertexId(name, graphName string) interface{} {
-	if tg.graphDataMap[graphName].vertices[name] == nil {
+	if tg.getDataGraphFromMap(graphName).vertices[name] == nil {
 		return nil
 	}
-	return tg.graphDataMap[graphName].vertices[name].Id
+	return tg.getDataGraphFromMap(graphName).vertices[name].Id
 }
 
 // parse vertex id as string
 func toVertexIdString(name, graphName string) interface{} {
-	if tg.graphDataMap[graphName].vertices[name] == nil {
+	if tg.getDataGraphFromMap(graphName).vertices[name] == nil {
 		return nil
 	}
-	return fmt.Sprint(tg.graphDataMap[graphName].vertices[name].Id)
+	return fmt.Sprint(tg.getDataGraphFromMap(graphName).vertices[name].Id)
 }
 
 // parse edge
 func toEdge(name, graphName string) interface{} {
-	return tg.graphDataMap[graphName].edges[name]
+	return tg.getDataGraphFromMap(graphName).edges[name]
 }
 
 // parse edge id
 func toEdgeId(name, graphName string) interface{} {
-	if tg.graphDataMap[graphName].edges[name] == nil {
+	if tg.getDataGraphFromMap(graphName).edges[name] == nil {
 		return nil
 	}
-	return tg.graphDataMap[graphName].edges[name].Id
+	return tg.getDataGraphFromMap(graphName).edges[name].Id
 }
 
 // parse edge id as string
 func toEdgeIdString(name, graphName string) interface{} {
-	if tg.graphDataMap[graphName].edges[name] == nil {
+	if tg.getDataGraphFromMap(graphName).edges[name] == nil {
 		return nil
 	}
-	return fmt.Sprint(tg.graphDataMap[graphName].edges[name])
+	return fmt.Sprint(tg.getDataGraphFromMap(graphName).edges[name])
 }
 
 // TODO add with updated path implementation
@@ -219,10 +219,10 @@ func (tg *tinkerPopGraph) iteratedToList() error {
 		return err
 	}
 	tg.result = results
-	fmt.Println(len(results))
+	fmt.Println("RESULT LENGTH", len(results))
 	count, err := tg.traversal.Count().ToList()
 	for _, c := range count {
-		fmt.Println(c.GetInterface())
+		fmt.Println("COUNT() LENGTH", c.GetInterface())
 	}
 	return nil
 }
@@ -277,6 +277,7 @@ func (tg *tinkerPopGraph) theGraphShouldReturnForCountOf(expectedCount int, trav
 	return nil
 }
 func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog.Table) error {
+	fmt.Println("===GOT TO RESULT SHOULD BE===", characterizedAs)
 	ordered := characterizedAs == "ordered"
 	switch characterizedAs {
 	case "empty":
@@ -284,9 +285,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			return errors.New("actual result is not empty as expected")
 		}
 		return nil
-	case "ordered":
-	case "unordered":
-	case "of":
+	case "ordered", "unordered", "of":
 		var expectedResult []interface{}
 		for idx, row := range table.Rows {
 			if idx == 0 {
@@ -306,8 +305,11 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		for _, res := range tg.result {
 			actualResult = append(actualResult, res.GetInterface())
 		}
+		fmt.Println("EXPECTED RESULTS", expectedResult)
+		fmt.Println("ACTUAL RESULTS", actualResult)
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
-			return errors.New("actual result length does not equal to expected result length")
+			err := fmt.Sprintf("actual result length %d does not equal to expected result length %d.", len(actualResult), len(expectedResult))
+			return errors.New(err)
 		}
 		if ordered {
 			for idx, res := range actualResult {
@@ -386,12 +388,12 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
-		tg.recreateAllDataGraphConnection()
+		//tg.recreateAllDataGraphConnection()
 		return ctx, nil
 	})
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		tg.closeAllDataGraphConnection()
+		//tg.closeAllDataGraphConnection()
 		return ctx, nil
 	})
 

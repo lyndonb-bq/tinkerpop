@@ -37,40 +37,42 @@ type DataType uint8
 
 // DataType defined as constants
 const (
-	NullType           DataType = 0xFE
 	IntType            DataType = 0x01
 	LongType           DataType = 0x02
 	StringType         DataType = 0x03
+	DateType           DataType = 0x04
+	TimestampType      DataType = 0x05
 	DoubleType         DataType = 0x07
 	FloatType          DataType = 0x08
 	ListType           DataType = 0x09
 	MapType            DataType = 0x0a
-	UUIDType           DataType = 0x0c
-	BytecodeType       DataType = 0x15
-	TraverserType      DataType = 0x21
-	ByteType           DataType = 0x24
-	ShortType          DataType = 0x26
-	BooleanType        DataType = 0x27
-	BigIntegerType     DataType = 0x23
-	VertexType         DataType = 0x11
-	EdgeType           DataType = 0x0d
-	PropertyType       DataType = 0x0f
-	VertexPropertyType DataType = 0x12
-	PathType           DataType = 0x0e
-	DateType           DataType = 0x04
-	TimestampType      DataType = 0x05
-	DurationType       DataType = 0x81
 	SetType            DataType = 0x0b
+	UUIDType           DataType = 0x0c
+	EdgeType           DataType = 0x0d
+	PathType           DataType = 0x0e
+	PropertyType       DataType = 0x0f
+	VertexType         DataType = 0x11
+	VertexPropertyType DataType = 0x12
+	BarrierType        DataType = 0x13
 	CardinalityType    DataType = 0x16
+	BytecodeType       DataType = 0x15
 	ColumnType         DataType = 0x17
 	DirectionType      DataType = 0x18
 	OperatorType       DataType = 0x19
 	OrderType          DataType = 0x1a
 	PickType           DataType = 0x1b
 	PopType            DataType = 0x1c
-	TType              DataType = 0x20
-	BarrierType        DataType = 0x13
+	PType              DataType = 0x1e
 	ScopeType          DataType = 0x1f
+	TType              DataType = 0x20
+	TraverserType      DataType = 0x21
+	BigIntegerType     DataType = 0x23
+	ByteType           DataType = 0x24
+	ShortType          DataType = 0x26
+	BooleanType        DataType = 0x27
+	TextPType          DataType = 0x28
+	DurationType       DataType = 0x81
+	NullType           DataType = 0xFE
 )
 
 var nullBytes = []byte{NullType.getCodeByte(), 0x01}
@@ -709,6 +711,48 @@ func enumWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 	return buffer.Bytes(), err
 }
 
+func pWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*p)
+	_, err := typeSerializer.writeValue(v.operator, buffer, false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(len(v.values)))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pValue := range v.values {
+		_, err := typeSerializer.write(pValue, buffer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buffer.Bytes(), err
+}
+
+func textPWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	v := value.(*textP)
+	_, err := typeSerializer.writeValue(v.operator, buffer, false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buffer, binary.BigEndian, int32(len(v.values)))
+	if err != nil {
+		return nil, err
+	}
+
+	for pValue := range v.values {
+		_, err := typeSerializer.write(pValue, buffer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buffer.Bytes(), err
+}
+
 // gets the type of the serializer based on the value
 func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{}) (*graphBinaryTypeSerializer, error) {
 	switch val.(type) {
@@ -809,6 +853,10 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: BarrierType, writer: enumWriter, logHandler: serializer.logHandler}, nil
 	case Scope:
 		return &graphBinaryTypeSerializer{dataType: ScopeType, writer: enumWriter, logHandler: serializer.logHandler}, nil
+	case Predicate:
+		return &graphBinaryTypeSerializer{dataType: PType, writer: pWriter, logHandler: serializer.logHandler}, nil
+	case TextPredicate:
+		return &graphBinaryTypeSerializer{dataType: TextPType, writer: textPWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Map:
