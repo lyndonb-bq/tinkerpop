@@ -121,6 +121,18 @@ func sortAndCompareTwoStringSlices(s1 []string, s2 []string) bool {
 		return s2[i] < s2[j]
 	})
 	return reflect.DeepEqual(s1, s2)
+
+func readUsingAnonymousTraversal(t *testing.T, g *GraphTraversalSource) {
+	results, err := g.V().Fold().
+		Project(testLabel, personLabel).
+			By(T__.Unfold().HasLabel(testLabel).Count()).
+			By(T__.Unfold().HasLabel(personLabel).Count()).
+		ToList()
+	assert.Nil(t, err)
+	assert.Equal(t,1, len(results))
+	resultMap := results[0].GetInterface().(map[interface{}]interface{})
+	assert.Equal(t, int64(0), resultMap[testLabel])
+	assert.Equal(t, int64(len(getTestNames())), resultMap[personLabel])
 }
 
 func TestConnection(t *testing.T) {
@@ -205,11 +217,13 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection Next and HasNext", func(t *testing.T) {
 		if runIntegration {
 			// Add data
+
 			remote, err := NewDriverRemoteConnection(testHost, testPort)
 			assert.Nil(t, err)
 			assert.NotNil(t, remote)
 			g := Traversal_().WithRemote(remote)
-			dropGraph(t, g)
+      
+      dropGraph(t, g)
 			addTestData(t, g)
 
 			// Run traversal and test Next/HasNext calls
@@ -229,6 +243,34 @@ func TestConnection(t *testing.T) {
 			hasN, _ := traversal.HasNext()
 			assert.False(t, hasN)
 			assert.True(t, sortAndCompareTwoStringSlices(names, getTestNames()))
+  }
+    
+	t.Run("Test anonymousTraversal", func(t *testing.T) {
+		if runIntegration {
+      remote, err := NewDriverRemoteConnection(testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := Traversal_().WithRemote(remote)
+      
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
+
+			// Add data and check that the size of the graph is correct.
+			addTestData(t, g)
+			readCount(t, g, "", len(getTestNames()))
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, len(getTestNames()))
+
+			readUsingAnonymousTraversal(t, g)
+
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
 		}
 	})
 }

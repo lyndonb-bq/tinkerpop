@@ -21,6 +21,7 @@ package gremlingo
 
 import (
 	"errors"
+	"reflect"
 )
 
 type Traverser struct {
@@ -38,6 +39,11 @@ type Traversal struct {
 
 // ToList returns the result in a list.
 func (t *Traversal) ToList() ([]*Result, error) {
+	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
+	if t.remote == nil {
+		return nil, errors.New("cannot invoke this method from an anonymous traversal")
+	}
+
 	results, err := t.remote.SubmitBytecode(t.bytecode)
 	if err != nil {
 		return nil, err
@@ -61,6 +67,11 @@ func (t *Traversal) ToSet() (map[*Result]bool, error) {
 
 // Iterate all the Traverser instances in the traversal and returns the empty traversal
 func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
+	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
+	if t.remote == nil {
+		return nil, nil, errors.New("cannot invoke this method from an anonymous traversal")
+	}
+
 	err := t.bytecode.addStep("none")
 	if err != nil {
 		return nil, nil, err
