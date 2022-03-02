@@ -157,7 +157,7 @@ func getEnvOrDefaultBool(key string, defaultValue bool) bool {
 	value := getEnvOrDefaultString(key, "")
 	if len(value) != 0 {
 		boolValue, err := strconv.ParseBool(value)
-		if err != nil {
+		if err == nil {
 			return boolValue
 		}
 	}
