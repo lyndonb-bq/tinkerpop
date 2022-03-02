@@ -41,20 +41,20 @@ var parsers map[*regexp.Regexp]func(string, string) interface{}
 
 func init() {
 	parsers = map[*regexp.Regexp]func(string, string) interface{}{
-		regexp.MustCompile("d\\[(.*)]\\.[ilfdm]"): toNumeric,
-		regexp.MustCompile("v\\[(.+)]"):           toVertex,
-		regexp.MustCompile("v\\[(.+)]\\.id"):      toVertexId,
-		regexp.MustCompile("e\\[(.+)]"):           toEdge,
-		regexp.MustCompile("v\\[(.+)]\\.sid"):     toVertexIdString,
-		regexp.MustCompile("e\\[(.+)]\\.id"):      toEdgeId,
-		regexp.MustCompile("e\\[(.+)]\\.sid"):     toEdgeIdString,
-		regexp.MustCompile("p\\[(.+)]"):           toPath,
-		regexp.MustCompile("l\\[(.*)]"):           toList,
-		regexp.MustCompile("s\\[(.*)]"):           toSet,
-		regexp.MustCompile("m\\[(.+)]"):           toMap,
-		regexp.MustCompile("c\\[(.+)]"):           toLambda,
-		regexp.MustCompile("t\\[(.+)]"):           toT,
-		regexp.MustCompile("null"):                func(string, string) interface{} { return nil },
+		regexp.MustCompile(`^d\[(.*)]\.[ilfdm]$`): toNumeric,
+		regexp.MustCompile(`^v\[(.+)]$`):          toVertex,
+		regexp.MustCompile(`^v\[(.+)]\.id$`):      toVertexId,
+		regexp.MustCompile(`^e\[(.+)]`):           toEdge,
+		regexp.MustCompile(`^v\[(.+)]\.sid$`):     toVertexIdString,
+		regexp.MustCompile(`^e\[(.+)]\.id$`):      toEdgeId,
+		regexp.MustCompile(`^e\[(.+)]\.sid$`):     toEdgeIdString,
+		regexp.MustCompile(`^p\[(.+)]$`):          toPath,
+		regexp.MustCompile(`^l\[(.*)$]`):          toList,
+		regexp.MustCompile(`^s\[(.*)$]`):          toSet,
+		regexp.MustCompile(`^m\[(.+)]$`):          toMap,
+		regexp.MustCompile(`^c\[(.+)$]`):          toLambda,
+		regexp.MustCompile(`^t\[(.+)$]`):          toT,
+		regexp.MustCompile(`^null$`):              func(string, string) interface{} { return nil },
 	}
 }
 
@@ -78,7 +78,14 @@ func parseValue(value string, graphName string) interface{} {
 
 // parse numeric
 func toNumeric(stringVal, graphName string) interface{} {
-	val, err := strconv.ParseFloat(stringVal, 64)
+	if strings.Contains(stringVal, ".") {
+		val, err := strconv.ParseFloat(stringVal, 64)
+		if err != nil {
+			return nil
+		}
+		return val
+	}
+	val, err := strconv.ParseInt(stringVal, 10, 64)
 	if err != nil {
 		return nil
 	}
@@ -154,33 +161,35 @@ func toSet(name, graphName string) interface{} {
 
 // parse json as a map
 func toMap(name, graphName string) interface{} {
-	var jsonValue interface{}
-	err := json.Unmarshal([]byte(name), jsonValue)
+	var jsonMap interface{}
+	err := json.Unmarshal([]byte(name), &jsonMap)
 	if err != nil {
 		return nil
 	}
-	return parseMapValue(jsonValue, graphName)
+	return parseMapValue(jsonMap, graphName)
 }
 
-func parseMapValue(value interface{}, graphName string) interface{} {
-	if value == nil {
+func parseMapValue(mapVal interface{}, graphName string) interface{} {
+	if mapVal == nil {
 		return nil
 	}
-	switch reflect.TypeOf(value).Kind() {
+	switch reflect.TypeOf(mapVal).Kind() {
 	case reflect.String:
-		return parseValue(value.(string), graphName)
+		return parseValue(mapVal.(string), graphName)
 	case reflect.Float64:
-		return toNumeric(value.(string), graphName)
+		return toNumeric(mapVal.(string), graphName)
 	case reflect.Array, reflect.Slice:
-		return parseMapValue(value, graphName)
+		valArray := make([]interface{}, 0)
+		valArray = append(valArray, parseMapValue(mapVal, graphName))
+		return valArray
 	case reflect.Map:
 		valMap := make(map[interface{}]interface{})
-		v := reflect.ValueOf(value)
+		v := reflect.ValueOf(mapVal)
 		keys := v.MapKeys()
 		for _, k := range keys {
 			convKey := k.Convert(v.Type().Key())
 			val := v.MapIndex(convKey)
-			valMap[parseMapValue(convKey, graphName)] = parseMapValue(val, graphName)
+			valMap[parseMapValue(k.Interface(), graphName)] = parseMapValue(val.Interface(), graphName)
 		}
 		return valMap
 	default:
@@ -277,7 +286,6 @@ func (tg *tinkerPopGraph) theGraphShouldReturnForCountOf(expectedCount int, trav
 	return nil
 }
 func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog.Table) error {
-	fmt.Println("===GOT TO RESULT SHOULD BE===", characterizedAs)
 	ordered := characterizedAs == "ordered"
 	switch characterizedAs {
 	case "empty":
@@ -305,8 +313,6 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		for _, res := range tg.result {
 			actualResult = append(actualResult, res.GetInterface())
 		}
-		fmt.Println("EXPECTED RESULTS", expectedResult)
-		fmt.Println("ACTUAL RESULTS", actualResult)
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
 			err := fmt.Sprintf("actual result length %d does not equal to expected result length %d.", len(actualResult), len(expectedResult))
 			return errors.New(err)
