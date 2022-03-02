@@ -92,6 +92,7 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 
 	return t, r, nil
 }
+
 func (t *Traversal) HasNext() (bool, error) {
 	results, err := t.getResults()
 	if err != nil {
