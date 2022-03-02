@@ -19,6 +19,11 @@ under the License.
 
 package gremlingo
 
+import (
+	"reflect"
+	"sync"
+)
+
 const defaultCapacity = 1000
 
 // ResultSet interface to define the functions of a ResultSet.
@@ -32,8 +37,8 @@ type ResultSet interface {
 	Close()
 	Channel() chan *Result
 	addResult(result *Result)
-	one() (error, *Result)
-	All() (error, []*Result)
+	one() (*Result, error)
+	All() ([]*Result, error)
 	GetError() error
 	setError(error)
 }
@@ -46,6 +51,7 @@ type channelResultSet struct {
 	statusAttributes map[string]interface{}
 	closed           bool
 	err              error
+	mux              sync.Mutex
 }
 
 func (channelResultSet *channelResultSet) GetError() error {
@@ -57,11 +63,15 @@ func (channelResultSet *channelResultSet) setError(err error) {
 }
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
+	channelResultSet.mux.Lock()
+	defer channelResultSet.mux.Unlock()
 	return channelResultSet.closed && len(channelResultSet.channel) == 0
 }
 
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
+		channelResultSet.mux.Lock()
+		defer channelResultSet.mux.Unlock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
 	}
@@ -91,30 +101,40 @@ func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
-func (channelResultSet *channelResultSet) one() (error, *Result) {
+func (channelResultSet *channelResultSet) one() (*Result, error) {
 	if channelResultSet.err != nil {
-		return channelResultSet.err, nil
+		return nil, channelResultSet.err
 	}
-	return channelResultSet.err, <-channelResultSet.channel
+	return <-channelResultSet.channel, channelResultSet.err
 }
 
-func (channelResultSet *channelResultSet) All() (error, []*Result) {
+func (channelResultSet *channelResultSet) All() ([]*Result, error) {
 	var results []*Result
 	if channelResultSet.err != nil {
-		return channelResultSet.err, nil
+		return nil, channelResultSet.err
 	}
 	for result := range channelResultSet.channel {
 		results = append(results, result)
 	}
-	return channelResultSet.err, results
+	return results, channelResultSet.err
 }
 
-func (channelResultSet *channelResultSet) addResult(result *Result) {
-	channelResultSet.channel <- result
+func (channelResultSet *channelResultSet) addResult(r *Result) {
+	if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
+		for _, v := range r.result.([]interface{}) {
+			if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
+				channelResultSet.channel <- &Result{(v.(*Traverser)).value}
+			} else {
+				channelResultSet.channel <- &Result{v}
+			}
+		}
+	} else {
+		channelResultSet.channel <- &Result{r.result}
+	}
 }
 
 func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil}
+	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil, sync.Mutex{}}
 }
 
 func newChannelResultSet(requestID string) ResultSet {

@@ -53,13 +53,13 @@ func TestChannelResultSet(t *testing.T) {
 		AddResults(&channelResultSet, 10)
 		idx := 0
 		for i := 0; i < 10; i++ {
-			err, result := channelResultSet.one()
+			result, err := channelResultSet.one()
 			assert.Nil(t, err)
 			assert.Equal(t, result.GetString(), fmt.Sprintf("%v", idx))
 			idx++
 		}
 		go closeAfterTime(500, &channelResultSet)
-		err, res := channelResultSet.one()
+		res, err := channelResultSet.one()
 		assert.Nil(t, err)
 		assert.Nil(t, res)
 	})
@@ -69,13 +69,13 @@ func TestChannelResultSet(t *testing.T) {
 		go AddResultsPause(&channelResultSet, 10, 500)
 		idx := 0
 		for i := 0; i < 10; i++ {
-			err, result := channelResultSet.one()
+			result, err := channelResultSet.one()
 			assert.Nil(t, err)
 			assert.Equal(t, result.GetString(), fmt.Sprintf("%v", idx))
 			idx++
 		}
 		go closeAfterTime(500, &channelResultSet)
-		err, result := channelResultSet.one()
+		result, err := channelResultSet.one()
 		assert.Nil(t, err)
 		assert.Nil(t, result)
 	})
@@ -89,7 +89,7 @@ func TestChannelResultSet(t *testing.T) {
 		channelResultSet := newChannelResultSet(mockID)
 		AddResults(&channelResultSet, 10)
 		go closeAfterTime(500, &channelResultSet)
-		err, results := channelResultSet.All()
+		results, err := channelResultSet.All()
 		assert.Nil(t, err)
 		for idx, result := range results {
 			assert.Equal(t, (*result).GetString(), fmt.Sprintf("%v", idx))
@@ -100,7 +100,7 @@ func TestChannelResultSet(t *testing.T) {
 		channelResultSet := newChannelResultSet(mockID)
 		AddResults(&channelResultSet, 10)
 		channelResultSet.Close()
-		err, results := channelResultSet.All()
+		results, err := channelResultSet.All()
 		assert.Nil(t, err)
 		assert.Equal(t, len(results), 10)
 		for idx, result := range results {

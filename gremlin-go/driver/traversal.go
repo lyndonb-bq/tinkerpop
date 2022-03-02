@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"errors"
-	"reflect"
 )
 
 type Traverser struct {
@@ -34,6 +33,7 @@ type Traversal struct {
 	traversalStrategies *TraversalStrategies
 	bytecode            *bytecode
 	remote              *DriverRemoteConnection
+	results             ResultSet
 }
 
 // ToList returns the result in a list.
@@ -47,26 +47,7 @@ func (t *Traversal) ToList() ([]*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	resultSlice := make([]*Result, 0)
-	err, rs := results.All()
-	if err != nil {
-		return nil, err
-	}
-	for _, r := range rs {
-		if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
-			for _, v := range r.result.([]interface{}) {
-				if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
-					resultSlice = append(resultSlice, &Result{(v.(*Traverser)).value})
-				} else {
-					resultSlice = append(resultSlice, &Result{v})
-				}
-			}
-		} else {
-			resultSlice = append(resultSlice, &Result{r.result})
-		}
-	}
-
-	return resultSlice, nil
+	return results.All()
 }
 
 // ToSet returns the results in a set.
@@ -110,6 +91,33 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 	}()
 
 	return t, r, nil
+}
+func (t *Traversal) HasNext() (bool, error) {
+	results, err := t.getResults()
+	if err != nil {
+		return false, err
+	}
+	return !results.IsEmpty(), nil
+}
+
+func (t *Traversal) Next() (*Result, error) {
+	results, err := t.getResults()
+	if err != nil {
+		return nil, err
+	} else if results.IsEmpty() {
+		return nil, errors.New("there are no results left")
+	}
+	return results.one()
+}
+
+func (t *Traversal) getResults() (ResultSet, error) {
+	var err error = nil
+	if t.results == nil {
+		var results ResultSet
+		results, err = t.remote.SubmitBytecode(t.bytecode)
+		t.results = results
+	}
+	return t.results, err
 }
 
 type Barrier string
