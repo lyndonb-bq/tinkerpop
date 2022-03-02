@@ -84,6 +84,9 @@ func TestGorillaTransporter(t *testing.T) {
 
 		t.Run("Read", func(t *testing.T) {
 			mockConn.On("ReadMessage").Return(0, []byte(mockMessage), nil)
+			mockConn.On("SetPongHandler", mock.AnythingOfType("func(string) error")).Return(nil)
+			mockConn.On("SetReadDeadline", mock.Anything).Return(nil)
+			mockConn.On("SetWriteDeadline", mock.Anything).Return(nil)
 			message, err := transporter.Read()
 			assert.Nil(t, err)
 			assert.Equal(t, mockMessage, string(message[:]))
@@ -118,9 +121,13 @@ func TestGorillaTransporter(t *testing.T) {
 
 		t.Run("Read", func(t *testing.T) {
 			mockConn.On("ReadMessage").Return(0, []byte{}, errors.New(mockReadErrMessage))
+			mockConn.On("SetPongHandler", mock.AnythingOfType("func(string) error")).Return(nil)
+			mockConn.On("SetReadDeadline", mock.Anything).Return(nil)
+			mockConn.On("SetWriteDeadline", mock.Anything).Return(nil)
+			mockConn.On("WriteMessage", mock.Anything, mock.Anything).Return(nil)
 			_, err := transporter.Read()
 			assert.NotNil(t, err)
-			assert.Equal(t, mockReadErrMessage, err.Error())
+			assert.Equal(t, "failed to read from socket more than 3 times", err.Error())
 		})
 
 		t.Run("Close and IsClosed", func(t *testing.T) {
