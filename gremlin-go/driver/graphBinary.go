@@ -585,11 +585,7 @@ func setWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBin
 	if err != nil {
 		return nil, err
 	}
-	b, err := listWriter(slice, buffer, typeSerializer)
-	if err != nil {
-		return nil, err
-	}
-	return b, err
+	return listWriter(slice, buffer, typeSerializer)
 }
 
 func setReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
