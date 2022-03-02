@@ -39,10 +39,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Branch(gremlingo.T__.Label().Is("person").Count()).Option(p["xx1"], gremlingo.T__.Values("age")).Option(p["xx2"], gremlingo.T__.Values("lang")).Option(p["xx2"], gremlingo.T__.Values("name")).Option(gremlingo.Any, gremlingo.T__.Label())
 	}},
 	"g_V_branchXageX_optionXltX30X__youngX_optionXgtX30X__oldX_optionXnone__on_the_edgeX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_branchXidentityX_optionXhasLabelXsoftwareX__inXcreatedX_name_order_foldX_optionXhasXname_vadasX__ageX_optionXneqX123X__bothE_countX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_chooseXout_countX_optionX2L_nameX_optionX3L_ageX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Choose(gremlingo.T__.Out().Count()).Option(p["xx1"], gremlingo.T__.Values("name")).Option(p["xx2"], gremlingo.T__.Values("age"))
@@ -57,7 +57,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Choose(gremlingo.T__.Label()).Option("blah", gremlingo.T__.Out("knows")).Option("bleep", gremlingo.T__.Out("created")).Option(gremlingo.None, gremlingo.T__.Identity()).Values("name")
 	}},
 	"g_V_chooseXoutXknowsX_count_isXgtX0XX__outXknowsXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasLabelXpersonX_asXp1X_chooseXoutEXknowsX__outXknowsXX_asXp2X_selectXp1_p2X_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().HasLabel("person").As("p1").Choose(gremlingo.T__.OutE("knows"), gremlingo.T__.Out("knows")).As("p2").Select("p1", "p2").By("name")
@@ -124,40 +124,40 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V()
 	}},
 	"g_V_repeatXoutX_timesX2X_emit_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(2).Emit().Path()
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(2)).Emit().Path()
 	}},
 	"g_V_repeatXoutX_timesX2X_repeatXinX_timesX2X_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(2).Repeat(gremlingo.T__.In()).Times(2).Values("name")
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(2)).Repeat(gremlingo.T__.In()).Times(int32(2)).Values("name")
 	}},
 	"g_V_repeatXoutE_inVX_timesX2X_path_by_name_by_label": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.OutE().InV()).Times(2).Path().By("name").By(gremlingo.Label)
+		return g.V().Repeat(gremlingo.T__.OutE().InV()).Times(int32(2)).Path().By("name").By(gremlingo.Label)
 	}},
 	"g_V_repeatXoutX_timesX2X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(2)
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(2))
 	}},
 	"g_V_repeatXoutX_timesX2X_emit": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(2).Emit()
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(2)).Emit()
 	}},
 	"g_VX1X_timesX2X_repeatXoutX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V(p["vid1"]).Times(2).Repeat(gremlingo.T__.Out()).Values("name")
+		return g.V(p["vid1"]).Times(int32(2)).Repeat(gremlingo.T__.Out()).Values("name")
 	}},
 	"g_V_emit_timesX2X_repeatXoutX_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Emit().Times(2).Repeat(gremlingo.T__.Out()).Path()
+		return g.V().Emit().Times(int32(2)).Repeat(gremlingo.T__.Out()).Path()
 	}},
 	"g_V_emit_repeatXoutX_timesX2X_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Emit().Repeat(gremlingo.T__.Out()).Times(2).Path()
+		return g.V().Emit().Repeat(gremlingo.T__.Out()).Times(int32(2)).Path()
 	}},
 	"g_VX1X_emitXhasXlabel_personXX_repeatXoutX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Emit(gremlingo.T__.Has(gremlingo.Label, "person")).Repeat(gremlingo.T__.Out()).Values("name")
 	}},
 	"g_V_repeatXgroupCountXmX_byXnameX_outX_timesX2X_capXmX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.GroupCount("m").By("name").Out()).Times(2).Cap("m")
+		return g.V().Repeat(gremlingo.T__.GroupCount("m").By("name").Out()).Times(int32(2)).Cap("m")
 	}},
 	"g_VX1X_repeatXgroupCountXmX_byXloopsX_outX_timesX3X_capXmX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V(p["vid1"]).Repeat(gremlingo.T__.GroupCount("m").By(gremlingo.T__.Loops()).Out()).Times(3).Cap("m")
+		return g.V(p["vid1"]).Repeat(gremlingo.T__.GroupCount("m").By(gremlingo.T__.Loops()).Out()).Times(int32(3)).Cap("m")
 	}},
 	"g_V_repeatXbothX_timesX10X_asXaX_out_asXbX_selectXa_bX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both()).Times(10).As("a").Out().As("b").Select("a", "b").Count()
+		return g.V().Repeat(gremlingo.T__.Both()).Times(int32(10)).As("a").Out().As("b").Select("a", "b").Count()
 	}},
 	"g_VX1X_repeatXoutX_untilXoutE_count_isX0XX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Repeat(gremlingo.T__.Out()).Until(gremlingo.T__.OutE().Count().Is(0)).Values("name")
@@ -169,10 +169,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Has("name", "marko").Repeat(gremlingo.T__.OutE().InV().SimplePath()).Until(gremlingo.T__.Has("name", "ripple")).Path().By("name").By(gremlingo.Label)
 	}},
 	"g_V_hasXloop_name_loopX_repeatXinX_timesX5X_path_by_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Has("loops", "name", "loop").Repeat(gremlingo.T__.In()).Times(5).Path().By("name")
+		return g.V().Has("loops", "name", "loop").Repeat(gremlingo.T__.In()).Times(int32(5)).Path().By("name")
 	}},
 	"g_V_repeatXout_repeatXoutX_timesX1XX_timesX1X_limitX1X_path_by_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out().Repeat(gremlingo.T__.Out()).Times(1)).Times(1).Limit(1).Path().By("name")
+		return g.V().Repeat(gremlingo.T__.Out().Repeat(gremlingo.T__.Out()).Times(int32(1))).Times(int32(1)).Limit(1).Path().By("name")
 	}},
 	"g_V_repeatXoutXknowsXX_untilXrepeatXoutXcreatedXX_emitXhasXname_lopXXX_path_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Repeat(gremlingo.T__.Out("knows")).Until(gremlingo.T__.Repeat(gremlingo.T__.Out("created")).Emit(gremlingo.T__.Has("name", "lop"))).Path().By("name")
@@ -190,7 +190,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid3"]).Repeat(gremlingo.T__.Both("created")).Until(gremlingo.T__.Loops().Is(40)).Emit(gremlingo.T__.Repeat(gremlingo.T__.In("knows")).Emit(gremlingo.T__.Loops().Is(1))).Dedup().Values("name")
 	}},
 	"g_VX1X_repeatXrepeatXunionXout_uses_out_traversesXX_whereXloops_isX0X_timesX1X_timeX2X_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V(p["vid1"]).Repeat(gremlingo.T__.Repeat(gremlingo.T__.Union(gremlingo.T__.Out("uses"), gremlingo.T__.Out("traverses")).Where(gremlingo.T__.Loops().Is(0))).Times(1)).Times(2).Values("name")
+		return g.V(p["vid1"]).Repeat(gremlingo.T__.Repeat(gremlingo.T__.Union(gremlingo.T__.Out("uses"), gremlingo.T__.Out("traverses")).Where(gremlingo.T__.Loops().Is(0))).Times(int32(1))).Times(int32(2)).Values("name")
 	}},
 	"g_V_repeatXa_outXknows_repeatXb_outXcreatedX_filterXloops_isX0XX_emit_lang": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Repeat("a", gremlingo.T__.Out("knows").Repeat("b", gremlingo.T__.Out("created").Filter(gremlingo.T__.Loops("a").Is(0))).Emit()).Emit().Values("lang")
@@ -202,7 +202,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Union(gremlingo.T__.Out(), gremlingo.T__.In()).Values("name")
 	}},
 	"g_VX1X_unionXrepeatXoutX_timesX2X__outX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V(p["vid1"]).Union(gremlingo.T__.Repeat(gremlingo.T__.Out()).Times(2), gremlingo.T__.Out()).Values("name")
+		return g.V(p["vid1"]).Union(gremlingo.T__.Repeat(gremlingo.T__.Out()).Times(int32(2)), gremlingo.T__.Out()).Values("name")
 	}},
 	"g_V_chooseXlabel_is_person__unionX__out_lang__out_nameX__in_labelX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Choose(gremlingo.T__.Label().Is("person"), gremlingo.T__.Union(gremlingo.T__.Out().Values("lang"), gremlingo.T__.Out().Values("name")), gremlingo.T__.In().Label())
@@ -211,7 +211,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Choose(gremlingo.T__.Label().Is("person"), gremlingo.T__.Union(gremlingo.T__.Out().Values("lang"), gremlingo.T__.Out().Values("name")), gremlingo.T__.In().Label()).GroupCount()
 	}},
 	"g_V_unionXrepeatXunionXoutXcreatedX__inXcreatedXX_timesX2X__repeatXunionXinXcreatedX__outXcreatedXX_timesX2XX_label_groupCount": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Union(gremlingo.T__.Repeat(gremlingo.T__.Union(gremlingo.T__.Out("created"), gremlingo.T__.In("created"))).Times(2), gremlingo.T__.Repeat(gremlingo.T__.Union(gremlingo.T__.In("created"), gremlingo.T__.Out("created"))).Times(2)).Label().GroupCount()
+		return g.V().Union(gremlingo.T__.Repeat(gremlingo.T__.Union(gremlingo.T__.Out("created"), gremlingo.T__.In("created"))).Times(int32(2)), gremlingo.T__.Repeat(gremlingo.T__.Union(gremlingo.T__.In("created"), gremlingo.T__.Out("created"))).Times(int32(2))).Label().GroupCount()
 	}},
 	"g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"], p["vid2"]).Union(gremlingo.T__.OutE().Count(), gremlingo.T__.InE().Count(), gremlingo.T__.OutE().Values("weight").Sum())
@@ -223,10 +223,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"], p["vid2"]).Local(gremlingo.T__.Union(gremlingo.T__.Count()))
 	}},
 	"g_V_andXhasXage_gt_27X__outE_count_gte_2X_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_andXoutE__hasXlabel_personX_and_hasXage_gte_32XX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_asXaX_outXknowsX_and_outXcreatedX_inXcreatedX_asXaX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").Out("knows").And().Out("created").In("created").As("a").Values("name")
@@ -298,10 +298,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().GroupCount().Select(gremlingo.Values).Unfold().Dedup()
 	}},
 	"g_V_asXaX_repeatXbothX_timesX3X_emit_name_asXbX_group_byXselectXaXX_byXselectXbX_dedup_order_foldX_selectXvaluesX_unfold_dedup": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().As("a").Repeat(gremlingo.T__.Both()).Times(3).Emit().Values("name").As("b").Group().By(gremlingo.T__.Select("a")).By(gremlingo.T__.Select("b").Dedup().Order().Fold()).Select(gremlingo.Values).Unfold().Dedup()
+		return g.V().As("a").Repeat(gremlingo.T__.Both()).Times(int32(3)).Emit().Values("name").As("b").Group().By(gremlingo.T__.Select("a")).By(gremlingo.T__.Select("b").Dedup().Order().Fold()).Select(gremlingo.Values).Unfold().Dedup()
 	}},
 	"g_V_repeatXdedupX_timesX2X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Dedup()).Times(2).Count()
+		return g.V().Repeat(gremlingo.T__.Dedup()).Times(int32(2)).Count()
 	}},
 	"g_V_both_group_by_byXout_dedup_foldX_unfold_selectXvaluesX_unfold_out_order_byXnameX_limitX1X_valuesXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Both().Group().By().By(gremlingo.T__.Out().Dedup().Fold()).Unfold().Select(gremlingo.Values).Unfold().Out().Order().By("name").Limit(1).Values("name")
@@ -389,7 +389,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.E().Filter(p["pred1"])
 	}},
 	"g_V_outXcreatedX_hasXname__mapXlengthX_isXgtX3XXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_hasXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Has("name")
@@ -410,25 +410,25 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Has("name", "blah")
 	}},
 	"g_V_hasXage_gt_30X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_isXgt_30XX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXlabel_isXsoftwareXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Has(gremlingo.Label, gremlingo.T__.Is("software"))
 	}},
 	"g_VX1X_hasXage_gt_30X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX4X_hasXage_gt_30X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VXv1X_hasXage_gt_30X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VXv4X_hasXage_gt_30X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_out_hasXid_lt_3X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Out().Has(gremlingo.Id, p["xx1"])
@@ -437,7 +437,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).Out().HasId(p["vid2"])
 	}},
 	"g_VX1X_out_hasXid_2X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_out_hasIdX2X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Out().HasId(p["vid2"])
@@ -467,7 +467,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Has("person", "name", "marko").Values("age")
 	}},
 	"g_VX1X_outE_hasXweight_inside_0_06X_inV": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_EX11X_outV_outE_hasXid_10X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.E(p["eid11"]).OutV().OutE().Has(gremlingo.Id, p["eid10"])
@@ -479,43 +479,43 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Has("location")
 	}},
 	"g_V_hasLabelXpersonX_hasXage_notXlteX10X_andXnotXbetweenX11_20XXXX_andXltX29X_orXeqX35XXXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_in_hasIdXneqX1XX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().In().HasId(p["xx1"])
 	}},
 	"g_V_hasXage_withinX27X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_withinX27_nullX_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_withinX27_29X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_withoutX27X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_withoutX27_29X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXperson_age_withinX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXperson_age_withoutX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_both_dedup_properties_hasKeyXageX_value": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Both().Properties().Dedup().HasKey("age").Value()
 	}},
 	"g_V_both_properties_dedup_hasKeyXageX_hasValueXgtX30XX_value": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_bothE_properties_dedup_hasKeyXweightX_value": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().BothE().Properties().Dedup().HasKey("weight").Value()
 	}},
 	"g_V_bothE_properties_dedup_hasKeyXweightX_hasValueXltX0d3XX_value": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasNotXageX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().HasNot("age").Values("name")
@@ -539,42 +539,42 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Not(gremlingo.T__.HasId(p["xx1"])).Count()
 	}},
 	"g_V_hasXname_containingXarkXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_startingWithXmarXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_endingWithXasXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXperson_name_containingXoX_andXltXmXXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_gtXmX_andXcontainingXoXXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_not_containingXarkXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_not_startingWithXmarXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_not_endingWithXasXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXp_neqXvXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_gtX18X_andXltX30XXorXgtx35XXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXage_gtX18X_andXltX30XXorXltx35XXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXk_withinXcXX_valuesXkX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.AddV().Property("k", "\u8F49\u6CE8").AddV().Property("k", "\u2726").AddV().Property("k", "\u2660").AddV().Property("k", "A")
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXnullX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Has(nil)
@@ -634,22 +634,22 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Values("age").Is(32)
 	}},
 	"g_V_valuesXageX_isXlte_30X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_valuesXageX_isXgte_29X_isXlt_34X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_whereXinXcreatedX_count_isX1XX_valuesXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Where(gremlingo.T__.In("created").Count().Is(1)).Values("name")
 	}},
 	"g_V_whereXinXcreatedX_count_isXgte_2XX_valuesXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_orXhasXage_gt_27X__outE_count_gte_2X_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_orXoutEXknowsX__hasXlabel_softwareX_or_hasXage_gte_35XX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_asXaX_orXselectXaX_selectXaXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").Or(gremlingo.T__.Select("a"), gremlingo.T__.Select("a"))
@@ -673,7 +673,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).Out("created").InE("created").Range(1, 3).OutV()
 	}},
 	"g_V_repeatXbothX_timesX3X_rangeX5_11X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both()).Times(3).Range(5, 11)
+		return g.V().Repeat(gremlingo.T__.Both()).Times(int32(3)).Range(5, 11)
 	}},
 	"g_V_asXaX_in_asXbX_in_asXcX_selectXa_b_cX_byXnameX_limitXlocal_2X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").In().As("b").In().As("c").Select("a", "b", "c").By("name").Limit(gremlingo.Local, 2)
@@ -730,7 +730,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).Out("created").In("created").SimplePath()
 	}},
 	"g_V_repeatXboth_simplePathX_timesX3X_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both().SimplePath()).Times(3).Path()
+		return g.V().Repeat(gremlingo.T__.Both().SimplePath()).Times(int32(3)).Path()
 	}},
 	"g_V_asXaX_out_asXbX_out_asXcX_simplePath_byXlabelX_fromXbX_toXcX_path_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").Out().As("b").Out().As("c").SimplePath().By(gremlingo.Label).From("b").To("c").Path().By("name")
@@ -751,10 +751,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Values("name").Order().Tail(7)
 	}},
 	"g_V_repeatXbothX_timesX3X_tailX7X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both()).Times(3).Tail(7)
+		return g.V().Repeat(gremlingo.T__.Both()).Times(int32(3)).Tail(7)
 	}},
 	"g_V_repeatXin_outX_timesX3X_tailX7X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.In().Out()).Times(3).Tail(7).Count()
+		return g.V().Repeat(gremlingo.T__.In().Out()).Times(int32(3)).Tail(7).Count()
 	}},
 	"g_V_asXaX_out_asXaX_out_asXaX_selectXaX_byXunfold_valuesXnameX_foldX_tailXlocal_1X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").Out().As("a").Out().As("a").Select("a").By(gremlingo.T__.Unfold().Values("name").Fold()).Tail(gremlingo.Local, 1)
@@ -781,10 +781,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().As("a").Out().As("a").Out().As("a").Select(gremlingo.Mixed, "a").By(gremlingo.T__.Unfold().Values("name").Fold()).Tail(gremlingo.Local, 2)
 	}},
 	"g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_eqXbXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXa_neqXbXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXageX_asXaX_out_in_hasXageX_asXbX_selectXa_bX_whereXb_hasXname_markoXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Has("age").As("a").Out().In().Has("age").As("b").Select("a", "b").Where(gremlingo.T__.As("b").Has("name", "marko"))
@@ -796,34 +796,34 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().As("a").Out("created").Where(gremlingo.T__.As("a").Values("name").Is("josh")).In("created").Values("name")
 	}},
 	"g_withSideEffectXa_josh_peterX_VX1X_outXcreatedX_inXcreatedX_name_whereXwithinXaXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_asXaX_outXcreatedX_inXcreatedX_asXbX_whereXa_neqXbXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_asXaX_outXcreatedX_inXcreatedX_asXbX_whereXasXbX_outXcreatedX_hasXname_rippleXX_valuesXage_nameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).As("a").Out("created").In("created").As("b").Where(gremlingo.T__.As("b").Out("created").Has("name", "ripple")).Values("age", "name")
 	}},
 	"g_VX1X_asXaX_outXcreatedX_inXcreatedX_whereXeqXaXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_asXaX_outXcreatedX_inXcreatedX_whereXneqXaXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_out_aggregateXxX_out_whereXnotXwithinXaXXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_withSideEffectXa_g_VX2XX_VX1X_out_whereXneqXaXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_repeatXbothEXcreatedX_whereXwithoutXeXX_aggregateXeX_otherVX_emit_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_whereXnotXoutXcreatedXXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Where(gremlingo.T__.Not(gremlingo.T__.Out("created"))).Values("name")
 	}},
 	"g_V_asXaX_out_asXbX_whereXandXasXaX_outXknowsX_asXbX__orXasXbX_outXcreatedX_hasXname_rippleX__asXbX_inXknowsX_count_isXnotXeqX0XXXXX_selectXa_bX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_whereXoutXcreatedX_and_outXknowsX_or_inXknowsXX_valuesXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Where(gremlingo.T__.Out("created").And().Out("knows").Or().In("knows")).Values("name")
@@ -832,25 +832,25 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().As("a").Out("created").As("b").Where(gremlingo.T__.And(gremlingo.T__.As("b").In(), gremlingo.T__.Not(gremlingo.T__.As("a").Out("created").Has("name", "ripple")))).Select("a", "b")
 	}},
 	"g_V_asXaX_outXcreatedX_asXbX_inXcreatedX_asXcX_bothXknowsX_bothXknowsX_asXdX_whereXc__notXeqXaX_orXeqXdXXXX_selectXa_b_c_dX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_asXaX_out_asXbX_whereXin_count_isXeqX3XX_or_whereXoutXcreatedX_and_hasXlabel_personXXX_selectXa_bX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_asXaX_outXcreatedX_inXcreatedX_asXbX_whereXa_gtXbXX_byXageX_selectXa_bX_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_asXaX_outEXcreatedX_asXbX_inV_asXcX_whereXa_gtXbX_orXeqXbXXX_byXageX_byXweightX_byXweightX_selectXa_cX_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_asXaX_outEXcreatedX_asXbX_inV_asXcX_inXcreatedX_asXdX_whereXa_ltXbX_orXgtXcXX_andXneqXdXXX_byXageX_byXweightX_byXinXcreatedX_valuesXageX_minX_selectXa_c_dX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_asXaX_out_hasXageX_whereXgtXaXX_byXageX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX3X_asXaX_in_out_asXbX_whereXa_eqXbXX_byXageX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_asXaX_outXcreatedX_addEXcreatedByX_toXaX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.AddV("person").Property(gremlingo.Id, 1).Property("name", "marko").Property("age", 29).As("marko").AddV("person").Property(gremlingo.Id, 2).Property("name", "vadas").Property("age", 27).As("vadas").AddV("software").Property(gremlingo.Id, 3).Property("name", "lop").Property("lang", "java").As("lop").AddV("person").Property(gremlingo.Id, 4).Property("name", "josh").Property("age", 32).As("josh").AddV("software").Property(gremlingo.Id, 5).Property("name", "ripple").Property("lang", "java").As("ripple").AddV("person").Property(gremlingo.Id, 6).Property("name", "peter").Property("age", 35).As("peter").AddE("knows").From("marko").To("vadas").Property(gremlingo.Id, 7).Property("weight", 0.5).AddE("knows").From("marko").To("josh").Property(gremlingo.Id, 8).Property("weight", 1.0).AddE("created").From("marko").To("lop").Property(gremlingo.Id, 9).Property("weight", 0.4).AddE("created").From("josh").To("ripple").Property(gremlingo.Id, 10).Property("weight", 1.0).AddE("created").From("josh").To("lop").Property(gremlingo.Id, 11).Property("weight", 0.4).AddE("created").From("peter").To("lop").Property(gremlingo.Id, 12).Property("weight", 0.2)
@@ -937,7 +937,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 	"g_V_asXaX_outXcreatedX_inXcreatedX_whereXneqXaXX_asXbX_addEXcodeveloperX_fromXaX_toXbX_propertyXyear_2009X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.AddV("person").Property(gremlingo.Id, 1).Property("name", "marko").Property("age", 29).As("marko").AddV("person").Property(gremlingo.Id, 2).Property("name", "vadas").Property("age", 27).As("vadas").AddV("software").Property(gremlingo.Id, 3).Property("name", "lop").Property("lang", "java").As("lop").AddV("person").Property(gremlingo.Id, 4).Property("name", "josh").Property("age", 32).As("josh").AddV("software").Property(gremlingo.Id, 5).Property("name", "ripple").Property("lang", "java").As("ripple").AddV("person").Property(gremlingo.Id, 6).Property("name", "peter").Property("age", 35).As("peter").AddE("knows").From("marko").To("vadas").Property(gremlingo.Id, 7).Property("weight", 0.5).AddE("knows").From("marko").To("josh").Property(gremlingo.Id, 8).Property("weight", 1.0).AddE("created").From("marko").To("lop").Property(gremlingo.Id, 9).Property("weight", 0.4).AddE("created").From("josh").To("ripple").Property(gremlingo.Id, 10).Property("weight", 1.0).AddE("created").From("josh").To("lop").Property(gremlingo.Id, 11).Property("weight", 0.4).AddE("created").From("peter").To("lop").Property(gremlingo.Id, 12).Property("weight", 0.2)
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.E()
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
@@ -1040,7 +1040,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["v6"]).BothE("knows").Has("weight", 0.5)
 	}},
 	"g_addV_asXfirstX_repeatXaddEXnextX_toXaddVX_inVX_timesX5X_addEXnextX_toXselectXfirstXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.AddV().As("first").Repeat(gremlingo.T__.AddE("next").To(gremlingo.T__.AddV()).InV()).Times(5).AddE("next").To(gremlingo.T__.Select("first"))
+		return g.AddV().As("first").Repeat(gremlingo.T__.AddE("next").To(gremlingo.T__.AddV()).InV()).Times(int32(5)).AddE("next").To(gremlingo.T__.Select("first"))
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V()
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
@@ -1260,16 +1260,16 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Out("created").Order().By("name").Coalesce(gremlingo.T__.Values("name"), gremlingo.T__.Constant("x"))
 	}},
 	"g_V_connectedComponent_hasXcomponentX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_dedup_connectedComponent_hasXcomponentX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasLabelXsoftwareX_connectedComponent_project_byXnameX_byXcomponentX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_connectedComponent_withXEDGES_bothEXknowsXX_withXPROPERTY_NAME_clusterX_project_byXnameX_byXclusterX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_constantX123X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Constant(123)
@@ -1299,13 +1299,13 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Where(gremlingo.T__.In("knows").Out("created").Count().Is(0)).Values("name")
 	}},
 	"g_V_repeatXoutX_timesX8X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(8).Count()
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(8)).Count()
 	}},
 	"g_V_repeatXoutX_timesX5X_asXaX_outXwrittenByX_asXbX_selectXa_bX_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(5).As("a").Out("writtenBy").As("b").Select("a", "b").Count()
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(5)).As("a").Out("writtenBy").As("b").Select("a", "b").Count()
 	}},
 	"g_V_repeatXoutX_timesX3X_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(3).Count()
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(3)).Count()
 	}},
 	"g_V_elementMap": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().ElementMap()
@@ -1344,7 +1344,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Out("knows").V().Values("name")
 	}},
 	"g_V_hasXname_GarciaX_inXsungByX_asXsongX_V_hasXname_Willie_DixonX_inXwrittenByX_whereXeqXsongXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasLabelXpersonX_asXpX_VXsoftwareX_addInEXuses_pX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.AddV("person").Property(gremlingo.Id, 1).Property("name", "marko").Property("age", 29).As("marko").AddV("person").Property(gremlingo.Id, 2).Property("name", "vadas").Property("age", 27).As("vadas").AddV("software").Property(gremlingo.Id, 3).Property("name", "lop").Property("lang", "java").As("lop").AddV("person").Property(gremlingo.Id, 4).Property("name", "josh").Property("age", 32).As("josh").AddV("software").Property(gremlingo.Id, 5).Property("name", "ripple").Property("lang", "java").As("ripple").AddV("person").Property(gremlingo.Id, 6).Property("name", "peter").Property("age", 35).As("peter").AddE("knows").From("marko").To("vadas").Property(gremlingo.Id, 7).Property("weight", 0.5).AddE("knows").From("marko").To("josh").Property(gremlingo.Id, 8).Property("weight", 1.0).AddE("created").From("marko").To("lop").Property(gremlingo.Id, 9).Property("weight", 0.4).AddE("created").From("josh").To("ripple").Property(gremlingo.Id, 10).Property("weight", 1.0).AddE("created").From("josh").To("lop").Property(gremlingo.Id, 11).Property("weight", 0.4).AddE("created").From("peter").To("lop").Property(gremlingo.Id, 12).Property("weight", 0.2)
@@ -1399,7 +1399,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).Out().Map(p["l1"]).Map(p["l2"])
 	}},
 	"g_VX1X_out_mapXlambdaXnameXX_mapXlambdaXlengthXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_withPath_V_asXaX_out_mapXa_nameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.WithPath().V().As("a").Out().Map(p["l1"])
@@ -1429,13 +1429,13 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Match(gremlingo.T__.As("b").Out("created").As("c"), gremlingo.T__.As("a").Out("knows").As("b"))
 	}},
 	"g_V_matchXa_created_b__b_0created_cX_whereXa_neq_cX_selectXa_cX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXd_0knows_a__d_hasXname_vadasX__a_knows_b__b_created_cX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("d").In("knows").As("a"), gremlingo.T__.As("d").Has("name", "vadas"), gremlingo.T__.As("a").Out("knows").As("b"), gremlingo.T__.As("b").Out("created").As("c"))
 	}},
 	"g_V_matchXa_created_lop_b__b_0created_29_c__c_whereXrepeatXoutX_timesX2XXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Match(gremlingo.T__.As("a").Out("created").Has("name", "lop").As("b"), gremlingo.T__.As("b").In("created").Has("age", 29).As("c"), gremlingo.T__.As("c").Where(gremlingo.T__.Repeat(gremlingo.T__.Out()).Times(2)))
+		return g.V().Match(gremlingo.T__.As("a").Out("created").Has("name", "lop").As("b"), gremlingo.T__.As("b").In("created").Has("age", 29).As("c"), gremlingo.T__.As("c").Where(gremlingo.T__.Repeat(gremlingo.T__.Out()).Times(int32(2))))
 	}},
 	"g_V_asXaX_out_asXbX_matchXa_out_count_c__b_in_count_cX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").Out().As("b").Match(gremlingo.T__.As("a").Out().Count().As("c"), gremlingo.T__.As("b").In().Count().As("c"))
@@ -1444,7 +1444,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Match(gremlingo.T__.As("a").Out().As("b"), gremlingo.T__.Not(gremlingo.T__.As("a").Out("created").As("b")))
 	}},
 	"g_V_matchXa_created_lop_b__b_0created_29_cX_whereXc_repeatXoutX_timesX2XX_selectXa_b_cX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Match(gremlingo.T__.As("a").Out("created").Has("name", "lop").As("b"), gremlingo.T__.As("b").In("created").Has("age", 29).As("c")).Where(gremlingo.T__.As("c").Repeat(gremlingo.T__.Out()).Times(2)).Select("a", "b", "c")
+		return g.V().Match(gremlingo.T__.As("a").Out("created").Has("name", "lop").As("b"), gremlingo.T__.As("b").In("created").Has("age", 29).As("c")).Where(gremlingo.T__.As("c").Repeat(gremlingo.T__.Out()).Times(int32(2))).Select("a", "b", "c")
 	}},
 	"g_V_out_out_matchXa_0created_b__b_0knows_cX_selectXcX_outXcreatedX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Out().Out().Match(gremlingo.T__.As("a").In("created").As("b"), gremlingo.T__.As("b").In("knows").As("c")).Select("c").Out("created").Values("name")
@@ -1453,16 +1453,16 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Match(gremlingo.T__.As("a").Out("knows").As("b"), gremlingo.T__.As("b").Out("created").As("c"), gremlingo.T__.As("a").Out("created").As("c")).Dedup("a", "b", "c").Select("a").By("name")
 	}},
 	"g_V_matchXa_created_b__a_repeatXoutX_timesX2XX_selectXa_bX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Match(gremlingo.T__.As("a").Out("created").As("b"), gremlingo.T__.As("a").Repeat(gremlingo.T__.Out()).Times(2).As("b")).Select("a", "b")
+		return g.V().Match(gremlingo.T__.As("a").Out("created").As("b"), gremlingo.T__.As("a").Repeat(gremlingo.T__.Out()).Times(int32(2)).As("b")).Select("a", "b")
 	}},
 	"g_V_notXmatchXa_age_b__a_name_cX_whereXb_eqXcXX_selectXaXX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa_knows_b__andXa_created_c__b_created_c__andXb_created_count_d__a_knows_count_dXXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").Out("knows").As("b"), gremlingo.T__.And(gremlingo.T__.As("a").Out("created").As("c"), gremlingo.T__.As("b").Out("created").As("c"), gremlingo.T__.And(gremlingo.T__.As("b").Out("created").Count().As("d"), gremlingo.T__.As("a").Out("knows").Count().As("d"))))
 	}},
 	"g_V_matchXa_whereXa_neqXcXX__a_created_b__orXa_knows_vadas__a_0knows_and_a_hasXlabel_personXX__b_0created_c__b_0created_count_isXgtX1XXX_selectXa_b_cX_byXidX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa__a_both_b__b_both_cX_dedupXa_bX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").Both().As("b"), gremlingo.T__.As("b").Both().As("c")).Dedup("a", "b")
@@ -1474,7 +1474,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Match(gremlingo.T__.As("a").Out("knows").As("b"), gremlingo.T__.As("a").Out("created").As("c"))
 	}},
 	"g_V_matchXwhereXandXa_created_b__b_0created_count_isXeqX3XXXX__a_both_b__whereXb_inXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa_outEXcreatedX_order_byXweight_descX_limitX1X_inV_b__b_hasXlang_javaXX_selectXa_bX_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").OutE("created").Order().By("weight", gremlingo.Desc).Limit(1).InV().As("b"), gremlingo.T__.As("b").Has("lang", "java")).Select("a", "b").By("name")
@@ -1486,7 +1486,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Match(gremlingo.T__.As("a").Out("created").As("b"), gremlingo.T__.As("b").In("created").As("a"))
 	}},
 	"g_V_asXaX_out_asXbX_matchXa_out_count_c__orXa_knows_b__b_in_count_c__and__c_isXgtX2XXXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa_knows_count_bX_selectXbX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").Out("knows").Count().As("b")).Select("b")
@@ -1495,7 +1495,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Match(gremlingo.T__.As("a").In("sungBy").As("b"), gremlingo.T__.As("a").In("writtenBy").As("c"), gremlingo.T__.As("b").Out("writtenBy").As("d"), gremlingo.T__.As("c").Out("sungBy").As("d"), gremlingo.T__.As("d").Has("name", "Garcia"))
 	}},
 	"g_V_matchXa_hasXsong_name_sunshineX__a_mapX0followedBy_weight_meanX_b__a_0followedBy_c__c_filterXweight_whereXgteXbXXX_outV_dX_selectXdX_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa_0sungBy_b__a_0sungBy_c__b_writtenBy_d__c_writtenBy_e__d_hasXname_George_HarisonX__e_hasXname_Bob_MarleyXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").In("sungBy").As("b"), gremlingo.T__.As("a").In("sungBy").As("c"), gremlingo.T__.As("b").Out("writtenBy").As("d"), gremlingo.T__.As("c").Out("writtenBy").As("e"), gremlingo.T__.As("d").Has("name", "George_Harrison"), gremlingo.T__.As("e").Has("name", "Bob_Marley"))
@@ -1507,13 +1507,13 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().HasLabel("song").Match(gremlingo.T__.As("a").Values("name").As("b"), gremlingo.T__.As("a").Values("performances").As("c")).Select("b", "c").Count()
 	}},
 	"g_V_matchXa_followedBy_count_isXgtX10XX_b__a_0followedBy_count_isXgtX10XX_bX_count": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa_0sungBy_b__a_0writtenBy_c__b_writtenBy_dX_whereXc_sungBy_dX_whereXd_hasXname_GarciaXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").In("sungBy").As("b"), gremlingo.T__.As("a").In("writtenBy").As("c"), gremlingo.T__.As("b").Out("writtenBy").As("d")).Where(gremlingo.T__.As("c").Out("sungBy").As("d")).Where(gremlingo.T__.As("d").Has("name", "Garcia"))
 	}},
 	"g_V_matchXa_hasXname_GarciaX__a_0writtenBy_b__b_followedBy_c__c_writtenBy_d__whereXd_neqXaXXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_matchXa_outXknowsX_name_bX_identity": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Match(gremlingo.T__.As("a").Out("knows").Values("name").As("b")).Identity()
@@ -1534,7 +1534,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().As("a").Out("created").As("b").Math("b + a").By(gremlingo.T__.In("created").Count()).By("age")
 	}},
 	"g_withSackX1X_injectX1X_repeatXsackXsumX_byXconstantX1XXX_timesX5X_emit_mathXsin__X_byXsackX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.WithSack(1).Inject(1).Repeat(gremlingo.T__.Sack(gremlingo.Sum).By(gremlingo.T__.Constant(1))).Times(5).Emit().Math("sin _").By(gremlingo.T__.Sack())
+		return g.WithSack(1).Inject(1).Repeat(gremlingo.T__.Sack(gremlingo.Sum).By(gremlingo.T__.Constant(1))).Times(int32(5)).Emit().Math("sin _").By(gremlingo.T__.Sack())
 	}},
 	"g_V_projectXa_b_cX_byXbothE_weight_sumX_byXbothE_countX_byXnameX_order_byXmathXa_div_bX_descX_selectXcX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Project("a", "b", "c").By(gremlingo.T__.BothE().Values("weight").Sum()).By(gremlingo.T__.BothE().Count()).By("name").Order().By(gremlingo.T__.Math("a / b"), gremlingo.Desc).Select("c")
@@ -1570,7 +1570,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Values("name").Fold().Max(gremlingo.Local)
 	}},
 	"g_V_repeatXbothX_timesX5X_age_max": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both()).Times(5).Values("age").Max()
+		return g.V().Repeat(gremlingo.T__.Both()).Times(int32(5)).Values("age").Max()
 	}},
 	"g_V_hasLabelXsoftwareX_group_byXnameX_byXbothE_weight_maxX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().HasLabel("software").Group().By("name").By(gremlingo.T__.BothE().Values("weight").Max())
@@ -1639,7 +1639,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Values("name").Fold().Min(gremlingo.Local)
 	}},
 	"g_V_repeatXbothX_timesX5X_age_min": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both()).Times(5).Values("age").Min()
+		return g.V().Repeat(gremlingo.T__.Both()).Times(int32(5)).Values("age").Min()
 	}},
 	"g_V_hasLabelXsoftwareX_group_byXnameX_byXbothE_weight_minX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().HasLabel("software").Group().By("name").By(gremlingo.T__.BothE().Values("weight").Min())
@@ -1714,33 +1714,33 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).ElementMap().Order(gremlingo.Local).By(gremlingo.Keys, gremlingo.Desc).Unfold()
 	}},
 	"g_V_pageRank_hasXpageRankX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_outXcreatedX_pageRank_withXedges_bothEX_withXpropertyName_projectRankX_withXtimes_0X_valueMapXname_projectRankX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_pageRank_order_byXpageRank_descX_byXnameX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_pageRank_order_byXpageRank_descX_name_limitX2X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_pageRank_withXedges_outEXknowsXX_withXpropertyName_friendRankX_project_byXnameX_byXvaluesXfriendRankX_mathX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasLabelXpersonX_pageRank_withXpropertyName_kpageRankX_project_byXnameX_byXvaluesXpageRankX_mathX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_pageRank_withXpropertyName_pageRankX_asXaX_outXknowsX_pageRank_asXbX_selectXa_bX_by_byXmathX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasLabelXsoftwareX_hasXname_rippleX_pageRankX1X_withXedges_inEXcreatedX_withXtimes_1X_withXpropertyName_priorsX_inXcreatedX_unionXboth__identityX_valueMapXname_priorsX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_outXcreatedX_groupXmX_byXlabelX_pageRankX1X_withXpropertyName_pageRankX_withXedges_inEX_withXtimes_1X_inXcreatedX_groupXmX_byXpageRankX_capXmX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX1X_name_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Values("name").Path()
@@ -1749,7 +1749,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).Out().Path().By("age").By("name")
 	}},
 	"g_V_repeatXoutX_timesX2X_path_byXitX_byXnameX_byXlangX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out()).Times(2).Path().By().By("name").By("lang")
+		return g.V().Repeat(gremlingo.T__.Out()).Times(int32(2)).Path().By().By("name").By("lang")
 	}},
 	"g_V_out_out_path_byXnameX_byXageX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Out().Out().Path().By("name").By("age")
@@ -1773,15 +1773,15 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.Inject(1, nil, nil).Path().Dedup()
 	}},
 	"g_V_peerPressure_hasXclusterX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_peerPressure_withXpropertyName_clusterX_withXedges_outEXknowsXX_pageRankX1X_byXrankX_withXedges_outEXknowsX_withXtimes_2X_group_byXclusterX_byXrank_sumX_limitX100X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_rippleX_inXcreatedX_peerPressure_withXedges_outEX_withyXpropertyName_clusterX_repeatXunionXidentity__bothX_timesX2X_dedup_valueMapXname_clusterX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasLabelXpersonX_projectXa_bX_byXoutE_countX_byXageX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().HasLabel("person").Project("a", "b").By(gremlingo.T__.OutE().Count()).By("age")
@@ -1898,13 +1898,13 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().As("a").Where(gremlingo.T__.Out("knows")).Select("a")
 	}},
 	"g_VX1X_asXaX_repeatXout_asXaXX_timesX2X_selectXfirst_aX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V(p["vid1"]).As("a").Repeat(gremlingo.T__.Out().As("a")).Times(2).Select(gremlingo.First, "a")
+		return g.V(p["vid1"]).As("a").Repeat(gremlingo.T__.Out().As("a")).Times(int32(2)).Select(gremlingo.First, "a")
 	}},
 	"g_V_asXaX_outXknowsX_asXbX_localXselectXa_bX_byXnameXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().As("a").Out("knows").As("b").Local(gremlingo.T__.Select("a", "b").By("name"))
 	}},
 	"g_VX1X_asXaX_repeatXout_asXaXX_timesX2X_selectXlast_aX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V(p["vid1"]).As("a").Repeat(gremlingo.T__.Out().As("a")).Times(2).Select(gremlingo.Last, "a")
+		return g.V(p["vid1"]).As("a").Repeat(gremlingo.T__.Out().As("a")).Times(int32(2)).Select(gremlingo.Last, "a")
 	}},
 	"g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).OutE("knows").As("here").Has("weight", 1.0).InV().Has("name", "josh").Select("here")
@@ -2005,49 +2005,49 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.WithSideEffect("k", nil).Inject("x").Select("k")
 	}},
 	"g_V_shortestPath": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_both_dedup_shortestPath": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_shortestPath_edgesIncluded": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_shortestPath_directionXINX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_shortestPath_edgesXoutEX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_shortestPath_edgesIncluded_edgesXoutEX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_markoX_shortestPath": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_shortestPath_targetXhasXname_markoXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_shortestPath_targetXvaluesXnameX_isXmarkoXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_markoX_shortestPath_targetXhasLabelXsoftwareXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_markoX_shortestPath_targetXhasXname_joshXX_distanceXweightX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_danielX_shortestPath_targetXhasXname_stephenXX_edgesXbothEXusesXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXsong_name_MIGHT_AS_WELLX_shortestPath_targetXhasXsong_name_MAYBE_YOU_KNOW_HOW_I_FEELXX_edgesXoutEXfollowedByXX_distanceXweightX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_markoX_shortestPath_maxDistanceX1X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_hasXname_vadasX_shortestPath_distanceXweightX_maxDistanceX1_3X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_age_sum": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Values("age").Sum()
@@ -2203,7 +2203,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid4"]).BothE().OtherV()
 	}},
 	"g_VX4X_bothE_hasXweight_lt_1X_otherV": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_VX2X_inE": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid2"]).BothE()
@@ -2278,7 +2278,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Aggregate(gremlingo.Local, "a").By(gremlingo.T__.OutE("created").Count()).Out().Out().Aggregate(gremlingo.Local, "a").By(gremlingo.T__.InE("created").Values("weight").Sum()).Cap("a")
 	}},
 	"g_V_aggregateXxX_byXvaluesXageX_isXgtX29XXX_capXxX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_aggregateXxX_byXout_order_byXnameXX_capXxX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Aggregate("x").By(gremlingo.T__.Out().Order().By("name")).Cap("x")
@@ -2302,7 +2302,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Has("lang").Group().By("lang").By(gremlingo.T__.Count())
 	}},
 	"g_V_repeatXout_groupXaX_byXnameX_byXcountX_timesX2X_capXaX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out().Group("a").By("name").By(gremlingo.T__.Count())).Times(2).Cap("a")
+		return g.V().Repeat(gremlingo.T__.Out().Group("a").By("name").By(gremlingo.T__.Count())).Times(int32(2)).Cap("a")
 	}},
 	"g_V_group_byXoutE_countX_byXnameX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Group().By(gremlingo.T__.OutE().Count()).By("name")
@@ -2311,10 +2311,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Group("a").By(gremlingo.Label).By(gremlingo.T__.OutE().Values("weight").Sum()).Cap("a")
 	}},
 	"g_V_repeatXbothXfollowedByXX_timesX2X_group_byXsongTypeX_byXcountX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both("followedBy")).Times(2).Group().By("songType").By(gremlingo.T__.Count())
+		return g.V().Repeat(gremlingo.T__.Both("followedBy")).Times(int32(2)).Group().By("songType").By(gremlingo.T__.Count())
 	}},
 	"g_V_repeatXbothXfollowedByXX_timesX2X_groupXaX_byXsongTypeX_byXcountX_capXaX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Both("followedBy")).Times(2).Group("a").By("songType").By(gremlingo.T__.Count()).Cap("a")
+		return g.V().Repeat(gremlingo.T__.Both("followedBy")).Times(int32(2)).Group("a").By("songType").By(gremlingo.T__.Count()).Cap("a")
 	}},
 	"g_V_group_byXname_substring_1X_byXconstantX1XX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Group().By(p["l1"]).By(gremlingo.T__.Constant(1))
@@ -2368,10 +2368,10 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Out("created").Values("name").GroupCount("a").Cap("a")
 	}},
 	"g_V_repeatXout_groupCountXaX_byXnameXX_timesX2X_capXaX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Repeat(gremlingo.T__.Out().GroupCount("a").By("name")).Times(2).Cap("a")
+		return g.V().Repeat(gremlingo.T__.Out().GroupCount("a").By("name")).Times(int32(2)).Cap("a")
 	}},
 	"g_V_both_groupCountXaX_byXlabelX_asXbX_barrier_whereXselectXaX_selectXsoftwareX_isXgtX2XXX_selectXbX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.Inject(nil, nil)
+		return nil
 	}},
 	"g_V_unionXoutXknowsX__outXcreatedX_inXcreatedXX_groupCount_selectXvaluesX_unfold_sum": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Union(gremlingo.T__.Out("knows"), gremlingo.T__.Out("created").In("created")).GroupCount().Select(gremlingo.Values).Unfold().Sum()
@@ -2383,7 +2383,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Has("no").GroupCount("a").Cap("a")
 	}},
 	"g_V_unionXrepeatXoutX_timesX2X_groupCountXmX_byXlangXX__repeatXinX_timesX2X_groupCountXmX_byXnameXX_capXmX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.V().Union(gremlingo.T__.Repeat(gremlingo.T__.Out()).Times(2).GroupCount("m").By("lang"), gremlingo.T__.Repeat(gremlingo.T__.In()).Times(2).GroupCount("m").By("name")).Cap("m")
+		return g.V().Union(gremlingo.T__.Repeat(gremlingo.T__.Out()).Times(int32(2)).GroupCount("m").By("lang"), gremlingo.T__.Repeat(gremlingo.T__.In()).Times(int32(2)).GroupCount("m").By("name")).Cap("m")
 	}},
 	"g_V_outXcreatedX_groupCountXxX_capXxX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Out("created").GroupCount("x").Cap("x")
@@ -2485,7 +2485,7 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.WithSack(0.0).V().OutE().Sack(gremlingo.Sum).By("weight").InV().Sack().Sum()
 	}},
 	"g_withSackX0X_V_repeatXoutE_sackXsumX_byXweightX_inVX_timesX2X_sack": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return g.WithSack(0.0).V().Repeat(gremlingo.T__.OutE().Sack(gremlingo.Sum).By("weight").InV()).Times(2).Sack()
+		return g.WithSack(0.0).V().Repeat(gremlingo.T__.OutE().Sack(gremlingo.Sum).By("weight").InV()).Times(int32(2)).Sack()
 	}},
 	"g_withBulkXfalseX_withSackX1_sumX_VX1X_localXoutEXknowsX_barrierXnormSackX_inVX_inXknowsX_barrier_sack": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.WithBulk(false).WithSack(1.0, gremlingo.Sum).V(p["vid1"]).Local(gremlingo.T__.OutE("knows").Barrier(gremlingo.NormSack).InV()).In("knows").Barrier().Sack()
