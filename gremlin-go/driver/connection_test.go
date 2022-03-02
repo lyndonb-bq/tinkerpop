@@ -168,7 +168,7 @@ func getEnvOrDefaultInt(key string, defaultValue int) int {
 	value := getEnvOrDefaultString(key, "")
 	if len(value) != 0 {
 		intValue, err := strconv.Atoi(value)
-		if err != nil {
+		if err == nil {
 			return intValue
 		}
 	}
