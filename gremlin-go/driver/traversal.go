@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"errors"
-	"reflect"
 )
 
 type Traverser struct {
@@ -34,7 +33,7 @@ type Traversal struct {
 	traversalStrategies *TraversalStrategies
 	bytecode            *bytecode
 	remote              *DriverRemoteConnection
-	results             *ResultSet
+	results             ResultSet
 }
 
 // ToList returns the result in a list.
@@ -99,25 +98,25 @@ func (t *Traversal) HasNext() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !(*results).IsEmpty(), nil
+	return !results.IsEmpty(), nil
 }
 
 func (t *Traversal) Next() (*Result, error) {
 	results, err := t.getResults()
 	if err != nil {
 		return nil, err
-	} else if (*results).IsEmpty() {
+	} else if results.IsEmpty() {
 		return nil, errors.New("there are no results left")
 	}
-	return (*results).one(), nil
+	return results.one(), nil
 }
 
-func (t *Traversal) getResults() (*ResultSet, error) {
+func (t *Traversal) getResults() (ResultSet, error) {
 	var err error = nil
 	if t.results == nil {
 		var results ResultSet
 		results, err = t.remote.SubmitBytecode(t.bytecode)
-		t.results = &results
+		t.results = results
 	}
 	return t.results, err
 }
