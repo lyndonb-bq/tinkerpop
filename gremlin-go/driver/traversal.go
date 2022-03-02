@@ -247,75 +247,81 @@ type Predicate interface {
 
 var P *p = &p{}
 
-func newP(operator string, values []interface{}) Predicate {
+func newP(operator string, args ...interface{}) Predicate {
+	values := make([]interface{}, 0)
+	for _, arg := range args {
+		values = append(values, arg)
+	}
 	return &p{operator: operator, values: values}
 }
 
-func newPWithP(operator string, pp p, values []interface{}) Predicate {
-	pSlice := make([]interface{}, len(values)+1)
-	copy(pSlice, values)
-	pSlice[len(pSlice)-1] = pp
-	return &p{operator: operator, values: pSlice}
+func newPWithP(operator string, pp p, args ...interface{}) Predicate {
+	values := make([]interface{}, len(args)+1)
+	for _, arg := range args {
+		values = append(values, arg)
+	}
+	values[len(values)-1] = pp
+	return &p{operator: operator, values: values}
 }
 
 func (_ *p) Between(args ...interface{}) Predicate {
-	return newP("between", args)
+	return newP("between", args...)
 }
 
 func (_ *p) Eq(args ...interface{}) Predicate {
-	return newP("eq", args)
+	return newP("eq", args...)
 }
 
 func (_ *p) Gt(args ...interface{}) Predicate {
-	return newP("gt", args)
+	return newP("gt", args...)
 }
 
 func (_ *p) Gte(args ...interface{}) Predicate {
-	return newP("gte", args)
+	return newP("gte", args...)
 }
 
 func (_ *p) Inside(args ...interface{}) Predicate {
-	return newP("inside", args)
+	return newP("inside", args...)
 }
 
 func (_ *p) Lt(args ...interface{}) Predicate {
-	return newP("lt", args)
+	return newP("lt", args...)
 }
 
 func (_ *p) Lte(args ...interface{}) Predicate {
-	return newP("lte", args)
+	return newP("lte", args...)
 }
 
 func (_ *p) Neq(args ...interface{}) Predicate {
-	return newP("neq", args)
+	return newP("neq", args...)
 }
 
 func (_ *p) Not(args ...interface{}) Predicate {
-	return newP("not", args)
+	return newP("not", args...)
 }
 
 func (_ *p) Outside(args ...interface{}) Predicate {
-	return newP("outside", args)
+	return newP("outside", args...)
 }
 
 func (_ *p) Test(args ...interface{}) Predicate {
-	return newP("test", args)
+	return newP("test", args...)
 }
 
 func (_ *p) Within(args ...interface{}) Predicate {
-	return newP("within", args)
+	return newP("within", args...)
 }
 
 func (_ *p) Without(args ...interface{}) Predicate {
-	return newP("without", args)
+	return newP("without", args...)
 }
 
 func (pp *p) And(args ...interface{}) Predicate {
-	return newPWithP("and", *pp, args)
+	return newPWithP("and", *pp, args...)
 }
 
 func (pp *p) Or(args ...interface{}) Predicate {
-	return newPWithP("or", *pp, args)
+	return newPWithP("or", *pp, args...)
 }
 
 type TextPredicate interface {
@@ -337,30 +343,32 @@ type textP p
 
 var TextP *textP = &textP{}
 
-func newTextP(operator string, values []interface{}) TextPredicate {
+func newTextP(operator string, args ...interface{}) TextPredicate {
+	values := make([]interface{}, 0)
+	copy(values, args)
 	return &textP{operator: operator, values: values}
 }
 
 func (_ *textP) Containing(args ...interface{}) TextPredicate {
-	return newTextP("containing", args)
+	return newTextP("containing", args...)
 }
 
 func (_ *textP) EndingWith(args ...interface{}) TextPredicate {
-	return newTextP("endingWith", args)
+	return newTextP("endingWith", args...)
 }
 
 func (_ *textP) NotContaining(args ...interface{}) TextPredicate {
-	return newTextP("notContaining", args)
+	return newTextP("notContaining", args...)
 }
 
 func (_ *textP) NotEndingWith(args ...interface{}) TextPredicate {
-	return newTextP("notEndingWith", args)
+	return newTextP("notEndingWith", args...)
 }
 
 func (_ *textP) NotStartingWith(args ...interface{}) TextPredicate {
-	return newTextP("notStartingWith", args)
+	return newTextP("notStartingWith", args...)
 }
 
 func (_ *textP) StartingWith(args ...interface{}) TextPredicate {
-	return newTextP("startingWith", args)
+	return newTextP("startingWith", args...)
 }
