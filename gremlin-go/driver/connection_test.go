@@ -130,6 +130,12 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 	assert.Equal(t, int32(expected), count)
 }
 
+func checkPath(t *testing.T, result *Result, expected string) {
+	p, err := result.GetPath()
+	assert.Nil(t, err)
+	assert.Equal(t, expected, p.String())
+}
+
 func TestConnection(t *testing.T) {
 	testHost := getenvs.GetEnvString("GREMLIN_SERVER_HOSTNAME", "localhost")
 	testPort, _ := getenvs.GetEnvInt("GREMLIN_SERVER_PORT", 8182)
@@ -206,6 +212,74 @@ func TestConnection(t *testing.T) {
 			assert.Equal(t, "[0]", result.GetString())
 			err = client.Close()
 			assert.Nil(t, err)
+		}
+	})
+
+	t.Run("Test DriverRemoteConnection GraphTraversal With Label", func(t *testing.T) {
+		if runIntegration {
+			remote, err := NewDriverRemoteConnection(testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := Traversal_().WithRemote(remote)
+
+			// Drop the graph.
+			dropGraph(t, g)
+
+			// Add vertices and edges to graph.
+			_, i, err := g.AddV("company").
+				Property("name", "Bit-Quill").As("bq").
+				AddV("software").
+				Property("name", "GremlinServer").As("gs").
+				AddV("software").
+				Property("name", "TinkerPop").As("tp").
+				AddE("WORKS_ON").From("bq").To("tp").
+				AddE("IS_IN").From("gs").To("tp").
+				AddE("LIKES").From("bq").To("tp").Iterate()
+			assert.Nil(t, err)
+			<-i
+
+			results, errs := g.V().OutE().InV().Path().By("name").By(Label).ToList()
+			assert.Nil(t, errs)
+			assert.NotNil(t, results)
+			assert.Equal(t, 3, len(results))
+			checkPath(t, results[0], "path[Bit-Quill, WORKS_ON, TinkerPop]")
+			checkPath(t, results[1], "path[Bit-Quill, LIKES, TinkerPop]")
+			checkPath(t, results[2], "path[GremlinServer, IS_IN, TinkerPop]")
+
+			// Drop the graph.
+			dropGraph(t, g)
+		}
+	})
+
+	t.Run("Test DriverRemoteConnection GraphTraversal P", func(t *testing.T) {
+		if runIntegration {
+			remote, err := NewDriverRemoteConnection(testHost, testPort)
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := Traversal_().WithRemote(remote)
+
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
+
+			// Add data and check that the size of the graph is correct.
+			addTestData(t, g)
+			readCount(t, g, "", len(getTestNames()))
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, len(getTestNames()))
+
+			// Read test data out of the graph and check that it is correct.
+			results, err := g.V().Has("name", P.Eq("Lyndon")).ValueMap("name").ToList()
+			assert.Nil(t, err)
+			assert.Equal(t, 1, len(results))
+
+			// Drop the graph and check that it is empty.
+			dropGraph(t, g)
+			readCount(t, g, "", 0)
+			readCount(t, g, testLabel, 0)
+			readCount(t, g, personLabel, 0)
 		}
 	})
 }
