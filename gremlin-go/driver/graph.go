@@ -106,6 +106,7 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 			return nil, err
 		}
 		for j := 0; j < len(s); j++ {
+			// Sets in labels can only contain string types
 			if reflect.TypeOf(s[j]).Kind() != reflect.String {
 				return nil, errors.New("path is invalid because labels contains a non string type")
 			}
