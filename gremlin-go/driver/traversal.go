@@ -48,7 +48,11 @@ func (t *Traversal) ToList() ([]*Result, error) {
 		return nil, err
 	}
 	resultSlice := make([]*Result, 0)
-	for _, r := range results.All() {
+	err, rs := results.All()
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range rs {
 		if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
 			for _, v := range r.result.([]interface{}) {
 				if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
@@ -101,7 +105,7 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 		defer close(r)
 
 		// Force waiting until complete.
-		_ = res.All()
+		_, _ = res.All()
 		r <- true
 	}()
 

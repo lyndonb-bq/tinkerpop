@@ -32,9 +32,10 @@ type ResultSet interface {
 	Close()
 	Channel() chan *Result
 	addResult(result *Result)
-	one() *Result
-	All() []*Result
+	one() (error, *Result)
+	All() (error, []*Result)
 	GetError() error
+	setError(error)
 }
 
 // channelResultSet Channel based implementation of ResultSet.
@@ -49,6 +50,10 @@ type channelResultSet struct {
 
 func (channelResultSet *channelResultSet) GetError() error {
 	return channelResultSet.err
+}
+
+func (channelResultSet *channelResultSet) setError(err error) {
+	channelResultSet.err = err
 }
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
@@ -86,16 +91,22 @@ func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
-func (channelResultSet *channelResultSet) one() *Result {
-	return <-channelResultSet.channel
+func (channelResultSet *channelResultSet) one() (error, *Result) {
+	if channelResultSet.err != nil {
+		return channelResultSet.err, nil
+	}
+	return channelResultSet.err, <-channelResultSet.channel
 }
 
-func (channelResultSet *channelResultSet) All() []*Result {
+func (channelResultSet *channelResultSet) All() (error, []*Result) {
 	var results []*Result
+	if channelResultSet.err != nil {
+		return channelResultSet.err, nil
+	}
 	for result := range channelResultSet.channel {
 		results = append(results, result)
 	}
-	return results
+	return channelResultSet.err, results
 }
 
 func (channelResultSet *channelResultSet) addResult(result *Result) {
