@@ -83,6 +83,10 @@ func (dataType DataType) getCodeBytes() []byte {
 	return []byte{dataType.getCodeByte()}
 }
 
+type MapKey struct {
+	KeyValue map[interface{}]interface{}
+}
+
 // graphBinaryTypeSerializer struct for the different types of serializers
 type graphBinaryTypeSerializer struct {
 	dataType       DataType
@@ -218,7 +222,13 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		if err != nil {
 			return nil, err
 		}
-		valMap[key] = val
+		//fmt.Println(reflect.TypeOf(key))
+		if reflect.TypeOf(key).Kind() == reflect.Map {
+			keyMap := MapKey{KeyValue: key.(map[interface{}]interface{})}
+			valMap[&keyMap] = val
+		} else {
+			valMap[key] = val
+		}
 	}
 	return valMap, nil
 }
@@ -426,11 +436,25 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 		return nil, err
 	}
 
-	_, err = vertexWriter(&e.InV, buffer, typeSerializer)
+	// Write in-vertex
+	_, err = typeSerializer.write(e.InV.Id, buffer)
 	if err != nil {
 		return nil, err
 	}
-	_, err = vertexWriter(&e.OutV, buffer, typeSerializer)
+
+	// Not fully qualified.
+	_, err = typeSerializer.writeValue(e.InV.Label, buffer, false)
+	if err != nil {
+		return nil, err
+	}
+	// Write out-vertex
+	_, err = typeSerializer.write(e.OutV.Id, buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Not fully qualified.
+	_, err = typeSerializer.writeValue(e.OutV.Label, buffer, false)
 	if err != nil {
 		return nil, err
 	}
@@ -444,29 +468,53 @@ func edgeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
 	e := new(Edge)
 	var err error
+
+	// edge ID
 	e.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
 
-	// Not fully qualified
+	// edge label - Not fully qualified
 	newLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
 	}
 	e.Label = newLabel.(string)
 
-	newInV, err := vertexReader(buffer, typeSerializer)
+	// create new in-vertex
+	inV := new(Vertex)
+	// in-vertex ID - Fully qualified.
+	inV.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
-	e.InV = *newInV.(*Vertex)
 
-	newOutV, err := vertexReader(buffer, typeSerializer)
+	// in-vertex label - Not fully qualified.
+	inVLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
 	}
-	e.OutV = *newOutV.(*Vertex)
+	inV.Label = inVLabel.(string)
+
+	e.InV = *inV
+
+	// create new out-vertex
+	outV := new(Vertex)
+	// in-vertex ID - Fully qualified.
+	outV.Id, err = typeSerializer.read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	// in-vertex label - Not fully qualified.
+	outVLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
+	if err != nil {
+		return nil, err
+	}
+	outV.Label = outVLabel.(string)
+
+	e.OutV = *outV
 
 	// read null bytes
 	_, _ = typeSerializer.read(buffer)

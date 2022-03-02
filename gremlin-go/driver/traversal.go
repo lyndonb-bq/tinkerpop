@@ -19,11 +19,6 @@ under the License.
 
 package gremlingo
 
-import (
-	"errors"
-	"reflect"
-)
-
 type Traverser struct {
 	bulk  int64
 	value interface{}
@@ -34,35 +29,16 @@ type Traversal struct {
 	traversalStrategies *TraversalStrategies
 	bytecode            *bytecode
 	remote              *DriverRemoteConnection
+	results             *ResultSet
 }
 
 // ToList returns the result in a list.
 func (t *Traversal) ToList() ([]*Result, error) {
-	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
-	if t.remote == nil {
-		return nil, errors.New("cannot invoke this method from an anonymous traversal")
-	}
-
 	results, err := t.remote.SubmitBytecode(t.bytecode)
 	if err != nil {
 		return nil, err
 	}
-	resultSlice := make([]*Result, 0)
-	for _, r := range results.All() {
-		if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
-			for _, v := range r.result.([]interface{}) {
-				if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
-					resultSlice = append(resultSlice, &Result{(v.(*Traverser)).value})
-				} else {
-					resultSlice = append(resultSlice, &Result{v})
-				}
-			}
-		} else {
-			resultSlice = append(resultSlice, &Result{r.result})
-		}
-	}
-
-	return resultSlice, nil
+	return results.All(), nil
 }
 
 // ToSet returns the results in a set.
@@ -81,11 +57,6 @@ func (t *Traversal) ToSet() (map[*Result]bool, error) {
 
 // Iterate all the Traverser instances in the traversal and returns the empty traversal
 func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
-	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
-	if t.remote == nil {
-		return nil, nil, errors.New("cannot invoke this method from an anonymous traversal")
-	}
-
 	err := t.bytecode.addStep("none")
 	if err != nil {
 		return nil, nil, err
@@ -106,6 +77,32 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 	}()
 
 	return t, r, nil
+}
+
+func (t *Traversal) HasNext() (bool, error) {
+	results, err := t.getResults()
+	if err != nil {
+		return false, err
+	}
+	return !(*results).IsEmpty(), nil
+}
+
+func (t *Traversal) Next() (*Result, error) {
+	results, err := t.getResults()
+	if err != nil || (*results).IsEmpty() {
+		return nil, err
+	}
+	return (*results).one(), nil
+}
+
+func (t *Traversal) getResults() (*ResultSet, error) {
+	var err error = nil
+	if t.results == nil {
+		var results ResultSet
+		results, err = t.remote.SubmitBytecode(t.bytecode)
+		t.results = &results
+	}
+	return t.results, err
 }
 
 type Barrier string

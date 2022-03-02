@@ -265,9 +265,15 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
                 script.append(".").append(resolveSymbol(methodName)).append("(");
 
                 for (int i = 0; i < arguments.length; i++) {
-                    convertToScript(arguments[i]);
-                    if (i != arguments.length - 1) {
-                        script.append(", ");
+                    if (methodName.equals("times")) {
+                        script.append("int32(");
+                        convertToScript(arguments[i]);
+                        script.append(")");
+                    } else {
+                        convertToScript(arguments[i]);
+                        if (i != arguments.length - 1) {
+                            script.append(", ");
+                        }
                     }
                 }
 

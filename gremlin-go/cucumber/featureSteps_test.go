@@ -87,32 +87,44 @@ func toNumeric(stringVal, graphName string) interface{} {
 
 // parse vertex
 func toVertex(name, graphName string) interface{} {
-	return tg.getDataGraph(graphName).vertices[name]
+	return tg.graphDataMap[graphName].vertices[name]
 }
 
 // parse vertex id
 func toVertexId(name, graphName string) interface{} {
-	return tg.getDataGraph(graphName).edges[name].Id
+	if tg.graphDataMap[graphName].vertices[name] == nil {
+		return nil
+	}
+	return tg.graphDataMap[graphName].vertices[name].Id
 }
 
 // parse vertex id as string
 func toVertexIdString(name, graphName string) interface{} {
-	return fmt.Sprint(tg.getDataGraph(graphName).edges[name].Id)
+	if tg.graphDataMap[graphName].vertices[name] == nil {
+		return nil
+	}
+	return fmt.Sprint(tg.graphDataMap[graphName].vertices[name].Id)
 }
 
 // parse edge
 func toEdge(name, graphName string) interface{} {
-	return tg.getDataGraph(graphName).edges[name]
+	return tg.graphDataMap[graphName].edges[name]
 }
 
 // parse edge id
 func toEdgeId(name, graphName string) interface{} {
-	return tg.getDataGraph(graphName).edges[name].Id
+	if tg.graphDataMap[graphName].edges[name] == nil {
+		return nil
+	}
+	return tg.graphDataMap[graphName].edges[name].Id
 }
 
 // parse edge id as string
 func toEdgeIdString(name, graphName string) interface{} {
-	return fmt.Sprint(tg.getDataGraph(graphName).edges[name])
+	if tg.graphDataMap[graphName].edges[name] == nil {
+		return nil
+	}
+	return fmt.Sprint(tg.graphDataMap[graphName].edges[name])
 }
 
 // TODO add with updated path implementation
@@ -199,11 +211,19 @@ func (tg *tinkerPopGraph) iteratedNext() error {
 }
 
 func (tg *tinkerPopGraph) iteratedToList() error {
+	if tg.traversal == nil {
+		return errors.New("nil traversal, feature need to be implemented in go")
+	}
 	results, err := tg.traversal.ToList()
 	if err != nil {
 		return err
 	}
 	tg.result = results
+	fmt.Println(len(results))
+	count, err := tg.traversal.Count().ToList()
+	for _, c := range count {
+		fmt.Println(c.GetInterface())
+	}
 	return nil
 }
 
@@ -211,17 +231,17 @@ func (tg *tinkerPopGraph) nothingShouldHappenBecause(arg1 *godog.DocString) erro
 	return nil
 }
 
-// choose the graph - regex might not work yet
+// choose the graph
 func (tg *tinkerPopGraph) chooseGraph(graphName string) error {
 	tg.graphName = graphName
+	data := tg.graphDataMap[graphName]
+	tg.g = gremlingo.Traversal_().WithRemote(data.connection)
 	if graphName == "empty" {
 		err := tg.cleanEmptyDataGraph()
 		if err != nil {
 			return err
 		}
 	}
-	data := tg.getDataGraph(graphName)
-	tg.g = gremlingo.Traversal_().WithRemote(data.connection)
 	return nil
 }
 
@@ -230,13 +250,11 @@ func (tg *tinkerPopGraph) theGraphInitializerOf(arg1 *godog.DocString) error {
 	if err != nil {
 		return err
 	}
-	list, err := traversal.ToList()
+	_, future, err := traversal.Iterate()
 	if err != nil {
 		return err
 	}
-	if len(list) <= 0 {
-		return errors.New("expected none 0 result")
-	}
+	<-future
 	// We may have modified the so-called `empty` graph
 	if tg.graphName == "empty" {
 		tg.reloadEmptyData()
@@ -293,7 +311,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		}
 		if ordered {
 			for idx, res := range actualResult {
-				if expectedResult[idx] != res {
+				if !reflect.DeepEqual(expectedResult[idx], res) {
 					return errors.New("actual result is not ordered")
 				}
 			}
@@ -313,7 +331,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 
 func contains(list []interface{}, item interface{}) bool {
 	for _, v := range list {
-		if v == item {
+		if reflect.DeepEqual(v, item) {
 			return true
 		}
 	}
@@ -321,8 +339,10 @@ func contains(list []interface{}, item interface{}) bool {
 }
 
 func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
+	actualCount := len(tg.result)
 	if len(tg.result) != expectedCount {
-		return errors.New("graph did not return the correct count")
+		err := fmt.Sprintf("result should return %d for count, but returned %d.", expectedCount, actualCount)
+		return errors.New(err)
 	}
 	return nil
 }
@@ -356,17 +376,22 @@ var tg = &tinkerPopGraph{
 
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 	ctx.BeforeSuite(func() {
-		fmt.Println(tg)
 		tg.loadAllDataGraph()
 	})
 	ctx.AfterSuite(func() {
-		tg.closeAllDataGraph()
+		tg.closeAllDataGraphConnection()
 	})
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
+		tg.recreateAllDataGraphConnection()
+		return ctx, nil
+	})
+
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		tg.closeAllDataGraphConnection()
 		return ctx, nil
 	})
 

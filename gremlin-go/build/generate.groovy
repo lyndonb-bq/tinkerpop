@@ -141,7 +141,7 @@ radishGremlinFile.withWriter('UTF-8') { Writer writer ->
                 } catch (ignored) {
                     // Putting these in place of not implemented functions
                     // TODO make sure all is supported
-                    writer.write("g.Inject(nil, nil)")
+                    writer.write("nil")
                 }
                 writer.write("}")
                 if (gremlinItty.hasNext())

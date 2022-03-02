@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/cucumber/godog"
 	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"reflect"
 )
 
 type TinkerPopWorld struct {
@@ -31,7 +32,7 @@ type TinkerPopWorld struct {
 	graphName    string
 	traversal    *gremlingo.GraphTraversal
 	result       []*gremlingo.Result
-	graphDataMap map[string]DataGraph
+	graphDataMap map[string]*DataGraph
 	parameters   map[string]interface{}
 }
 
@@ -45,6 +46,8 @@ type DataGraph struct {
 const scenarioHost string = "localhost"
 const scenarioPort int = 8182
 
+//var cache = make(map[string]DataGraph)
+
 func NewTinkerPopWorld() *TinkerPopWorld {
 	return &TinkerPopWorld{
 		scenario:     nil,
@@ -52,7 +55,7 @@ func NewTinkerPopWorld() *TinkerPopWorld {
 		graphName:    "",
 		traversal:    nil,
 		result:       nil,
-		graphDataMap: make(map[string]DataGraph),
+		graphDataMap: make(map[string]*DataGraph),
 		parameters:   make(map[string]interface{}),
 	}
 }
@@ -61,11 +64,31 @@ func getGraphNames() []string {
 	return []string{"modern", "classic", "crew", "grateful", "sink", "empty"}
 }
 
-func (t *TinkerPopWorld) getDataGraph(name string) *DataGraph {
+func (t *TinkerPopWorld) getDataGraphFromMap(name string) *DataGraph {
 	if val, ok := t.graphDataMap[name]; ok {
-		return &val
+		return val
 	} else {
 		return nil
+	}
+}
+
+func (t *TinkerPopWorld) loadAllDataGraph() {
+	for _, name := range getGraphNames() {
+		//fmt.Println(t.graphDataMap)
+		if name == "empty" {
+			t.loadEmptyDataGraph()
+		} else {
+			connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+				settings.TraversalSource = "g" + name
+			})
+			g := gremlingo.Traversal_().WithRemote(connection)
+			t.graphDataMap[name] = &DataGraph{
+				name:       name,
+				connection: connection,
+				vertices:   getVertices(g),
+				edges:      getEdges(g),
+			}
+		}
 	}
 }
 
@@ -74,11 +97,11 @@ func (t *TinkerPopWorld) loadEmptyDataGraph() {
 	connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
 		settings.TraversalSource = "ggraph"
 	})
-	t.graphDataMap["empty"] = DataGraph{connection: connection}
+	t.graphDataMap["empty"] = &DataGraph{connection: connection}
 }
 
 func (t *TinkerPopWorld) reloadEmptyData() {
-	graphData := t.getDataGraph("empty")
+	graphData := t.getDataGraphFromMap("empty")
 	g := gremlingo.Traversal_().WithRemote(graphData.connection)
 	graphData.vertices = getVertices(g)
 	graphData.edges = getEdges(g)
@@ -95,65 +118,73 @@ func (t *TinkerPopWorld) cleanEmptyDataGraph() error {
 	return nil
 }
 
-func (t *TinkerPopWorld) loadAllDataGraph() {
-	for _, name := range getGraphNames() {
-		fmt.Println(t.graphDataMap)
-		if name == "empty" {
-			connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
-				settings.TraversalSource = "ggraph"
-			})
-			t.graphDataMap["empty"] = DataGraph{connection: connection}
-		} else {
-			connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
-				settings.TraversalSource = "g" + name
-			})
-			g := gremlingo.Traversal_().WithRemote(connection)
-			t.graphDataMap["hi"] = DataGraph{}
-			t.graphDataMap[name] = DataGraph{
-				name:       name,
-				connection: connection,
-				vertices:   getVertices(g),
-				edges:      getEdges(g),
-			}
-		}
-	}
-}
-
-// TODO implement after .Next() implementation
 func getVertices(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Vertex {
 	vertexMap := make(map[string]*gremlingo.Vertex)
-	// Trying ToList(), may need to switch back to Next()
-	// TODO test after AnonTrav's revised implementation
-	// With __.tail() this returns a list of map[string]vertex, without it returns map[string][]vertex
-	//res, err := g.V().Group().By("name").By((&gremlingo.AnonTrav__{}).Tail()).ToList()
-	//if err != nil {
-	//	return nil
-	//}
-	//for _, r := range res {
-	//	v := reflect.ValueOf(r.GetInterface())
-	//	if v.Kind() != reflect.Map {
-	//		fmt.Println("not map")
-	//		return nil
-	//	}
-	//	keys := v.MapKeys()
-	//	for _, k := range keys {
-	//		convKey := k.Convert(v.Type().Key())
-	//		val := v.MapIndex(convKey)
-	//		vertexMap[k.Interface().(string)] = val.Interface().(*gremlingo.Vertex)
-	//	}
-	//}
+	res, err := g.V().Group().By("name").By(gremlingo.T__.Tail()).Next()
+	if res == nil {
+		return nil
+	}
+	if err != nil {
+		return nil
+	}
+	v := reflect.ValueOf(res.GetInterface())
+	if v.Kind() != reflect.Map {
+		fmt.Println("not map")
+	}
+	keys := v.MapKeys()
+	for _, k := range keys {
+		convKey := k.Convert(v.Type().Key())
+		val := v.MapIndex(convKey)
+		vertexMap[k.Interface().(string)] = val.Interface().(*gremlingo.Vertex)
+	}
 	return vertexMap
 }
 
-// TODO implement after AnonTrav's revised implementation
 func getEdges(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Edge {
 	edgeMap := make(map[string]*gremlingo.Edge)
+	resE, err := g.E().Group().By(gremlingo.T__.Project("o", "l", "i").
+		By(gremlingo.T__.OutV().Values("name")).By(gremlingo.T__.Label()).By(gremlingo.T__.InV().Values("name"))).
+		By(gremlingo.T__.Tail()).Next()
+	if err != nil {
+		return nil
+	}
+	valMap := reflect.ValueOf(resE.GetInterface())
+	if valMap.Kind() != reflect.Map {
+		fmt.Println("not map")
+	}
+	keys := valMap.MapKeys()
+	for _, k := range keys {
+		convKey := k.Convert(valMap.Type().Key())
+		val := valMap.MapIndex(convKey)
+		keyMap := reflect.ValueOf(k.Interface()).Elem().Interface().(gremlingo.MapKey).KeyValue
+		edgeMap[getEdgeKey(keyMap)] = val.Interface().(*gremlingo.Edge)
+	}
 	return edgeMap
 }
 
-func (t *TinkerPopWorld) closeAllDataGraph() error {
+func getEdgeKey(edgeKeyMap map[interface{}]interface{}) string {
+	return fmt.Sprint(edgeKeyMap["o"], "-", edgeKeyMap["l"], "->", edgeKeyMap["i"])
+}
+
+func (t *TinkerPopWorld) recreateAllDataGraphConnection() error {
+	var err error
 	for _, name := range getGraphNames() {
-		err := t.getDataGraph(name).connection.Close()
+		if name == "empty" {
+			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+				settings.TraversalSource = "ggraph"
+			})
+		} else {
+			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+				settings.TraversalSource = "g" + name
+			})
+		}
+	}
+	return err
+}
+
+func (t *TinkerPopWorld) closeAllDataGraphConnection() error {
+	for _, name := range getGraphNames() {
+		err := t.getDataGraphFromMap(name).connection.Close()
 		if err != nil {
 			return err
 		}
