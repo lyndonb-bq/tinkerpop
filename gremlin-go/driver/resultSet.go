@@ -100,9 +100,9 @@ func (channelResultSet *channelResultSet) IsEmpty() bool {
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
 		channelResultSet.channelMux.Lock()
-		defer channelResultSet.channelMux.Unlock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
+		channelResultSet.channelMux.Unlock()
 		channelResultSet.sendSignal()
 	}
 }
