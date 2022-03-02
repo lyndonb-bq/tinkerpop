@@ -37,6 +37,10 @@ type tinkerPopGraph struct {
 	*TinkerPopWorld
 }
 
+type SliceKey struct {
+	KeyValue []interface{}
+}
+
 var parsers map[*regexp.Regexp]func(string, string) interface{}
 
 func init() {
@@ -175,13 +179,18 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 	}
 	switch reflect.TypeOf(mapVal).Kind() {
 	case reflect.String:
+		fmt.Println(mapVal)
 		return parseValue(mapVal.(string), graphName)
 	case reflect.Float64:
-		return toNumeric(mapVal.(string), graphName)
+		return mapVal
 	case reflect.Array, reflect.Slice:
-		valArray := make([]interface{}, 0)
-		valArray = append(valArray, parseMapValue(mapVal, graphName))
-		return valArray
+		var valSlice []interface{}
+		oriSlice := reflect.ValueOf(mapVal)
+		for i := 0; i < oriSlice.Len(); i++ {
+			valSlice = append(valSlice, parseMapValue(oriSlice.Index(i).Interface(), graphName))
+		}
+		// use SliceKey struct or convert to array if this will be used as key
+		return valSlice
 	case reflect.Map:
 		valMap := make(map[interface{}]interface{})
 		v := reflect.ValueOf(mapVal)
@@ -394,12 +403,13 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
+		tg.loadAllDataGraph()
 		//tg.recreateAllDataGraphConnection()
 		return ctx, nil
 	})
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		//tg.closeAllDataGraphConnection()
+		tg.closeAllDataGraphConnection()
 		return ctx, nil
 	})
 

@@ -89,6 +89,10 @@ type MapKey struct {
 	KeyValue map[interface{}]interface{}
 }
 
+type SliceKey struct {
+	KeyValue []interface{}
+}
+
 // graphBinaryTypeSerializer struct for the different types of serializers
 type graphBinaryTypeSerializer struct {
 	dataType       DataType
@@ -224,11 +228,14 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		if err != nil {
 			return nil, err
 		}
-		//fmt.Println(reflect.TypeOf(key))
-		if reflect.TypeOf(key).Kind() == reflect.Map {
+		switch reflect.TypeOf(key).Kind() {
+		case reflect.Map:
 			keyMap := MapKey{KeyValue: key.(map[interface{}]interface{})}
 			valMap[&keyMap] = val
-		} else {
+		case reflect.Array, reflect.Slice:
+			sliceMap := SliceKey{KeyValue: key.([]interface{})}
+			valMap[&sliceMap] = val
+		default:
 			valMap[key] = val
 		}
 	}
