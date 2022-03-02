@@ -131,7 +131,11 @@ func readCount(t *testing.T, g *GraphTraversalSource, label string, expected int
 }
 
 func readUsingAnonymousTraversal(t *testing.T, g *GraphTraversalSource) {
-	results, err := g.V().Fold().Project(testLabel, personLabel).By(T__.Unfold().HasLabel(testLabel).Count()).By(T__.Unfold().HasLabel(personLabel).Count()).ToList()
+	results, err := g.V().Fold().
+		Project(testLabel, personLabel).
+			By(T__.Unfold().HasLabel(testLabel).Count()).
+			By(T__.Unfold().HasLabel(personLabel).Count()).
+		ToList()
 	assert.Nil(t, err)
 	assert.Equal(t,1, len(results))
 	resultMap := results[0].GetInterface().(map[interface{}]interface{})
