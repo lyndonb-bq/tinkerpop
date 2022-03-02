@@ -100,17 +100,14 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	}
 	var objectList []interface{}
 	var object interface{}
-	for i := 0; i < len(p.labels); i++ {
-		s, err := p.labels[i].SetToSlice()
-		if err != nil {
-			return nil, err
-		}
-		for j := 0; j < len(s); j++ {
+	for i, label := range p.labels {
+		s := label.(Set).ToSlice()
+		for j, str := range s {
 			// Sets in labels can only contain string types
 			if reflect.TypeOf(s[j]).Kind() != reflect.String {
 				return nil, errors.New("path is invalid because labels contains a non string type")
 			}
-			if s[j] == key {
+			if str == key {
 				if object == nil {
 					object = p.objects[i]
 				} else if objectList != nil {
@@ -130,45 +127,45 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	}
 }
 
-// Set describes the necessary methods that need to be implemented to make a user-defined SimpleSet implementation.
-// SimpleSet is the default implementation that should be used but Set can be used for a custom implementation if needed.
+// Set describes the necessary methods that need to be implemented for Gremlin-Go to recognize for use as a Gremlin Set.
 type Set interface {
-	SetToSlice() ([]interface{}, error)
+	// ToSlice is the only method that needs to be implemented in order for a custom Set to operate properly.
+	// ToSlice must return a slice that contains all the elements of the underlying Set with no duplicates.
+	ToSlice() []interface{}
 }
 
-// SimpleSet is a default custom declaration since Go does not natively provide this feature.
+// SimpleSet is a basic implementation of a Set for use with Gremlin-Go.
 type SimpleSet struct {
 	objects []interface{}
 }
 
-func (s *SimpleSet) SetToSlice() ([]interface{}, error) {
-	return s.objects, nil
+func (s *SimpleSet) ToSlice() []interface{} {
+	return s.objects
 }
 
-func (s *SimpleSet) Add(args ...interface{}) *SimpleSet {
-	for _, val := range args {
-		if !s.Contains(val) {
-			s.objects = append(s.objects, val)
-		}
+// Add adds an item to the SimpleSet only if it is not already a part of it
+func (s *SimpleSet) Add(val interface{}) {
+	if !s.Contains(val) {
+		s.objects = append(s.objects, val)
 	}
-	return s
 }
 
-func (s *SimpleSet) Remove(val interface{}) *SimpleSet {
-	for idx, i := range s.objects {
-		if val == i {
+// Remove is Shallow comparison operation that removes a value from the SimpleSet
+func (s *SimpleSet) Remove(val interface{}) {
+	for i, obj := range s.objects {
+		if val == obj {
 			// Deletion does not maintain ordering
-			s.objects[idx] = s.objects[len(s.objects)-1]
+			s.objects[i] = s.objects[len(s.objects)-1]
 			s.objects = s.objects[:len(s.objects)-1]
 			break
 		}
 	}
-	return s
 }
 
+// Contains checks if a value is contained in the SimpleSet or not.
+// Items are considered already contained in the set according to Golang equality operator rules.
 func (s *SimpleSet) Contains(val interface{}) bool {
-	slice, _ := s.SetToSlice()
-	for _, entry := range slice {
+	for _, entry := range s.ToSlice() {
 		if val == entry {
 			return true
 		}
@@ -176,7 +173,12 @@ func (s *SimpleSet) Contains(val interface{}) bool {
 	return false
 }
 
-// NewSimpleSet constructs a new SimpleSet with filtered values
+// NewSimpleSet constructs a new SimpleSet
 func NewSimpleSet(args ...interface{}) *SimpleSet {
-	return new(SimpleSet).Add(args...)
+	s := new(SimpleSet)
+	s.objects = []interface{}{}
+	for _, arg := range args {
+		s.Add(arg)
+	}
+	return s
 }

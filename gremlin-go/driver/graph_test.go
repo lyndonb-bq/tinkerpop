@@ -98,13 +98,84 @@ func TestGraphStructureFunctions(t *testing.T) {
 		assert.Nil(t, val)
 		assert.NotNil(t, err)
 	})
+
+	t.Run("Test Path.GetPathObject() with Non-string value in labels", func(t *testing.T) {
+		keys := []Set{s1, s2, NewSimpleSet(1)}
+		data := []interface{}{1, 2, 3}
+		p := Path{keys, data}
+		val, err := p.GetPathObject("bar")
+		assert.Nil(t, val)
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Test Path.GetPathObject() with multiple object return", func(t *testing.T) {
+		keys := []Set{s1, s2, NewSimpleSet("foo", "bar"), NewSimpleSet("bar")}
+		data := []interface{}{1, 2, 3, 4}
+		p := Path{keys, data}
+		val, err := p.GetPathObject("foo")
+		assert.Nil(t, err)
+		assert.NotNil(t, val)
+		assert.Equal(t, val, []interface{}{1, 3})
+		val, err = p.GetPathObject("bar")
+		assert.Nil(t, err)
+		assert.NotNil(t, val)
+		assert.Equal(t, val, []interface{}{2, 3, 4})
+	})
 }
 
 func TestCustomStructs(t *testing.T) {
-	t.Run("Test SimpleSet creation from slice", func(t *testing.T) {
-		//slice := []interface{}{"a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3}
-		sliceAsSet := []interface{}{"a", "b", "c", 1, 2, 3}
-		set := NewSimpleSet("a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3)
-		assert.Equal(t, sliceAsSet, set.objects)
+
+	t.Run("Test Set", func(t *testing.T) {
+		t.Run("Test NewSimpleSet", func(t *testing.T) {
+			set := NewSimpleSet("a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3)
+			sliceAsSet := []interface{}{"a", "b", "c", 1, 2, 3}
+			assert.Equal(t, sliceAsSet, set.objects)
+		})
+
+		t.Run("Test SimpleSet.Contains", func(t *testing.T) {
+			set := NewSimpleSet("a", "b", "c", "a", 1, 1, 2, 2, 2, 3, 3, 3, 3)
+			// True
+			assert.True(t, set.Contains("a"))
+			assert.True(t, set.Contains("b"))
+			assert.True(t, set.Contains("c"))
+			assert.True(t, set.Contains(1))
+			assert.True(t, set.Contains(2))
+			assert.True(t, set.Contains(3))
+			// False
+			assert.False(t, set.Contains("d"))
+			assert.False(t, set.Contains(4))
+		})
+
+		t.Run("Test SimpleSet.Remove", func(t *testing.T) {
+			set := NewSimpleSet("a", "b", "a", 1, 1, 2, 2, 2)
+			assert.True(t, set.Contains("a"))
+			assert.True(t, set.Contains("b"))
+			assert.True(t, set.Contains(1))
+			assert.True(t, set.Contains(2))
+			set.Remove("a")
+			set.Remove(2)
+			assert.False(t, set.Contains("a"))
+			assert.False(t, set.Contains(2))
+			assert.True(t, set.Contains("b"))
+			assert.True(t, set.Contains(1))
+		})
+
+		t.Run("Test SimpleSet.Add", func(t *testing.T) {
+			set := NewSimpleSet()
+			assert.False(t, set.Contains("a"))
+			set.Add("a")
+			assert.True(t, set.Contains("a"))
+			set.Add("a")
+			slice := set.ToSlice()
+			assert.Equal(t, 1, len(slice))
+			assert.Equal(t, slice[0], "a")
+		})
+
+		t.Run("Test SimpleSet.ToSlice", func(t *testing.T) {
+			set := NewSimpleSet()
+			assert.Equal(t, []interface{}{}, set.ToSlice())
+			set = NewSimpleSet("a", 1)
+			assert.Equal(t, []interface{}{"a", 1}, set.ToSlice())
+		})
 	})
 }

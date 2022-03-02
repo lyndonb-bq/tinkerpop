@@ -581,10 +581,7 @@ func pathReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 // Format: Same as List.
 // Mostly similar to listWriter and listReader with small changes
 func setWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	slice, err := value.(Set).SetToSlice()
-	if err != nil {
-		return nil, err
-	}
+	slice := value.(Set).ToSlice()
 	return listWriter(slice, buffer, typeSerializer)
 }
 
@@ -593,7 +590,7 @@ func setReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 	if err != nil {
 		return nil, err
 	}
-	return new(SimpleSet).Add(slice.([]interface{})...), nil
+	return NewSimpleSet(slice.([]interface{})...), nil
 }
 
 func timeWriter(value interface{}, buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) ([]byte, error) {
