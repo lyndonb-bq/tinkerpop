@@ -48,7 +48,7 @@ func init() {
 		regexp.MustCompile(`^d\[(.*)]\.[ilfdm]$`): toNumeric,
 		regexp.MustCompile(`^v\[(.+)]$`):          toVertex,
 		regexp.MustCompile(`^v\[(.+)]\.id$`):      toVertexId,
-		regexp.MustCompile(`^e\[(.+)]`):           toEdge,
+		regexp.MustCompile(`^e\[(.+)]$`):          toEdge,
 		regexp.MustCompile(`^v\[(.+)]\.sid$`):     toVertexIdString,
 		regexp.MustCompile(`^e\[(.+)]\.id$`):      toEdgeId,
 		regexp.MustCompile(`^e\[(.+)]\.sid$`):     toEdgeIdString,
@@ -56,8 +56,8 @@ func init() {
 		regexp.MustCompile(`^l\[(.*)$]`):          toList,
 		regexp.MustCompile(`^s\[(.*)$]`):          toSet,
 		regexp.MustCompile(`^m\[(.+)]$`):          toMap,
-		regexp.MustCompile(`^c\[(.+)$]`):          toLambda,
-		regexp.MustCompile(`^t\[(.+)$]`):          toT,
+		regexp.MustCompile(`^c\[(.+)]$`):          toLambda,
+		regexp.MustCompile(`^t\[(.+)]$`):          toT,
 		regexp.MustCompile(`^null$`):              func(string, string) interface{} { return nil },
 	}
 }
@@ -179,9 +179,8 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 	}
 	switch reflect.TypeOf(mapVal).Kind() {
 	case reflect.String:
-		fmt.Println(mapVal)
 		return parseValue(mapVal.(string), graphName)
-	case reflect.Float64:
+	case reflect.Float64, reflect.Int64:
 		return mapVal
 	case reflect.Array, reflect.Slice:
 		var valSlice []interface{}
@@ -213,19 +212,25 @@ func toLambda(name, graphName string) interface{} {
 	return nil
 }
 
-// TODO add with T(label) implementation
-// parse instance of T enum
 func toT(name, graphName string) interface{} {
-	return nil
+	// return as is, since T values are just strings
+	return name
 }
 
 func (tg *tinkerPopGraph) anUnsupportedTest() error {
 	return nil
 }
 
-// TODO add with .Next() implementation
 func (tg *tinkerPopGraph) iteratedNext() error {
-	return godog.ErrPending
+	if tg.traversal == nil {
+		return errors.New("nil traversal, feature need to be implemented in go")
+	}
+	result, err := tg.traversal.Next()
+	if err != nil {
+		return err
+	}
+	tg.result = append(tg.result, result)
+	return nil
 }
 
 func (tg *tinkerPopGraph) iteratedToList() error {
@@ -294,6 +299,7 @@ func (tg *tinkerPopGraph) theGraphShouldReturnForCountOf(expectedCount int, trav
 	}
 	return nil
 }
+
 func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog.Table) error {
 	ordered := characterizedAs == "ordered"
 	switch characterizedAs {
@@ -322,6 +328,8 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		for _, res := range tg.result {
 			actualResult = append(actualResult, res.GetInterface())
 		}
+		fmt.Println("EXPECTED", expectedResult)
+		fmt.Println("ACTUAL", actualResult)
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
 			err := fmt.Sprintf("actual result length %d does not equal to expected result length %d.", len(actualResult), len(expectedResult))
 			return errors.New(err)
@@ -378,11 +386,11 @@ func (tg *tinkerPopGraph) usingTheParameterDefined(name string, params string) e
 		tg.reloadEmptyData()
 	}
 	tg.parameters[name] = parseValue(strings.Replace(params, "\\\"", "\"", -1), tg.graphName)
-	return godog.ErrPending
+	return nil
 }
 
 func (tg *tinkerPopGraph) usingTheParameterOfP(paramName, pVal, stringVal string) error {
-	// TODO after implementing P class
+	// TODO after fully implementing P class
 	return godog.ErrPending
 }
 
@@ -403,8 +411,8 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
-		tg.loadAllDataGraph()
-		//tg.recreateAllDataGraphConnection()
+		//tg.loadAllDataGraph()
+		tg.recreateAllDataGraphConnection()
 		return ctx, nil
 	})
 

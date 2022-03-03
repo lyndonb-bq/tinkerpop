@@ -33,7 +33,7 @@ type Traversal struct {
 	traversalStrategies *TraversalStrategies
 	bytecode            *bytecode
 	remote              *DriverRemoteConnection
-	results             *ResultSet
+	results             ResultSet
 }
 
 // ToList returns the result in a list.
@@ -47,7 +47,7 @@ func (t *Traversal) ToList() ([]*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	return results.All(), nil
+	return results.All()
 }
 
 // ToSet returns the results in a set.
@@ -86,7 +86,7 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 		defer close(r)
 
 		// Force waiting until complete.
-		_ = res.All()
+		_, _ = res.All()
 		r <- true
 	}()
 
@@ -98,23 +98,25 @@ func (t *Traversal) HasNext() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !(*results).IsEmpty(), nil
+	return !results.IsEmpty(), nil
 }
 
 func (t *Traversal) Next() (*Result, error) {
 	results, err := t.getResults()
-	if err != nil || (*results).IsEmpty() {
+	if err != nil {
 		return nil, err
+	} else if results.IsEmpty() {
+		return nil, errors.New("there are no results left")
 	}
-	return (*results).one(), nil
+	return results.one()
 }
 
-func (t *Traversal) getResults() (*ResultSet, error) {
+func (t *Traversal) getResults() (ResultSet, error) {
 	var err error = nil
 	if t.results == nil {
 		var results ResultSet
 		results, err = t.remote.SubmitBytecode(t.bytecode)
-		t.results = &results
+		t.results = results
 	}
 	return t.results, err
 }
@@ -244,77 +246,83 @@ type Predicate interface {
 	Or(args ...interface{}) Predicate
 }
 
-var P *p = &p{}
+var P Predicate = &p{}
 
-func newP(operator string, values []interface{}) Predicate {
+func newP(operator string, args ...interface{}) Predicate {
+	values := make([]interface{}, 0)
+	for _, arg := range args {
+		values = append(values, arg)
+	}
 	return &p{operator: operator, values: values}
 }
 
-func newPWithP(operator string, pp p, values []interface{}) Predicate {
-	pSlice := make([]interface{}, len(values)+1)
-	copy(pSlice, values)
-	pSlice[len(pSlice)-1] = pp
-	return &p{operator: operator, values: pSlice}
+func newPWithP(operator string, pp p, args ...interface{}) Predicate {
+	values := make([]interface{}, len(args)+1)
+	for _, arg := range args {
+		values = append(values, arg)
+	}
+	values[len(values)-1] = pp
+	return &p{operator: operator, values: values}
 }
 
 func (_ *p) Between(args ...interface{}) Predicate {
-	return newP("between", args)
+	return newP("between", args...)
 }
 
 func (_ *p) Eq(args ...interface{}) Predicate {
-	return newP("eq", args)
+	return newP("eq", args...)
 }
 
 func (_ *p) Gt(args ...interface{}) Predicate {
-	return newP("gt", args)
+	return newP("gt", args...)
 }
 
 func (_ *p) Gte(args ...interface{}) Predicate {
-	return newP("gte", args)
+	return newP("gte", args...)
 }
 
 func (_ *p) Inside(args ...interface{}) Predicate {
-	return newP("inside", args)
+	return newP("inside", args...)
 }
 
 func (_ *p) Lt(args ...interface{}) Predicate {
-	return newP("lt", args)
+	return newP("lt", args...)
 }
 
 func (_ *p) Lte(args ...interface{}) Predicate {
-	return newP("lte", args)
+	return newP("lte", args...)
 }
 
 func (_ *p) Neq(args ...interface{}) Predicate {
-	return newP("neq", args)
+	return newP("neq", args...)
 }
 
 func (_ *p) Not(args ...interface{}) Predicate {
-	return newP("not", args)
+	return newP("not", args...)
 }
 
 func (_ *p) Outside(args ...interface{}) Predicate {
-	return newP("outside", args)
+	return newP("outside", args...)
 }
 
 func (_ *p) Test(args ...interface{}) Predicate {
-	return newP("test", args)
+	return newP("test", args...)
 }
 
 func (_ *p) Within(args ...interface{}) Predicate {
-	return newP("within", args)
+	return newP("within", args...)
 }
 
 func (_ *p) Without(args ...interface{}) Predicate {
-	return newP("without", args)
+	return newP("without", args...)
 }
 
 func (pp *p) And(args ...interface{}) Predicate {
-	return newPWithP("and", *pp, args)
+	return newPWithP("and", *pp, args...)
 }
 
 func (pp *p) Or(args ...interface{}) Predicate {
-	return newPWithP("or", *pp, args)
+	return newPWithP("or", *pp, args...)
 }
 
 type TextPredicate interface {
@@ -336,30 +344,32 @@ type textP p
 
 var TextP *textP = &textP{}
 
-func newTextP(operator string, values []interface{}) TextPredicate {
+func newTextP(operator string, args ...interface{}) TextPredicate {
+	values := make([]interface{}, 0)
+	copy(values, args)
 	return &textP{operator: operator, values: values}
 }
 
 func (_ *textP) Containing(args ...interface{}) TextPredicate {
-	return newTextP("containing", args)
+	return newTextP("containing", args...)
 }
 
 func (_ *textP) EndingWith(args ...interface{}) TextPredicate {
-	return newTextP("endingWith", args)
+	return newTextP("endingWith", args...)
 }
 
 func (_ *textP) NotContaining(args ...interface{}) TextPredicate {
-	return newTextP("notContaining", args)
+	return newTextP("notContaining", args...)
 }
 
 func (_ *textP) NotEndingWith(args ...interface{}) TextPredicate {
-	return newTextP("notEndingWith", args)
+	return newTextP("notEndingWith", args...)
 }
 
 func (_ *textP) NotStartingWith(args ...interface{}) TextPredicate {
-	return newTextP("notStartingWith", args)
+	return newTextP("notStartingWith", args...)
 }
 
 func (_ *textP) StartingWith(args ...interface{}) TextPredicate {
-	return newTextP("startingWith", args)
+	return newTextP("startingWith", args...)
 }

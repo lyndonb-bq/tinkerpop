@@ -37,9 +37,10 @@ type ResultSet interface {
 	Close()
 	Channel() chan *Result
 	addResult(result *Result)
-	one() *Result
-	All() []*Result
+	one() (*Result, error)
+	All() ([]*Result, error)
 	GetError() error
+	setError(error)
 }
 
 // channelResultSet Channel based implementation of ResultSet.
@@ -57,6 +58,10 @@ func (channelResultSet *channelResultSet) GetError() error {
 	return channelResultSet.err
 }
 
+func (channelResultSet *channelResultSet) setError(err error) {
+	channelResultSet.err = err
+}
+
 func (channelResultSet *channelResultSet) IsEmpty() bool {
 	channelResultSet.mux.Lock()
 	defer channelResultSet.mux.Unlock()
@@ -66,9 +71,9 @@ func (channelResultSet *channelResultSet) IsEmpty() bool {
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
 		channelResultSet.mux.Lock()
+		defer channelResultSet.mux.Unlock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
-		channelResultSet.mux.Unlock()
 	}
 }
 
@@ -96,16 +101,22 @@ func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
-func (channelResultSet *channelResultSet) one() *Result {
-	return <-channelResultSet.channel
+func (channelResultSet *channelResultSet) one() (*Result, error) {
+	if channelResultSet.err != nil {
+		return nil, channelResultSet.err
+	}
+	return <-channelResultSet.channel, channelResultSet.err
 }
 
-func (channelResultSet *channelResultSet) All() []*Result {
+func (channelResultSet *channelResultSet) All() ([]*Result, error) {
 	var results []*Result
+	if channelResultSet.err != nil {
+		return nil, channelResultSet.err
+	}
 	for result := range channelResultSet.channel {
 		results = append(results, result)
 	}
-	return results
+	return results, channelResultSet.err
 }
 
 func (channelResultSet *channelResultSet) addResult(r *Result) {

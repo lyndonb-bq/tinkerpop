@@ -228,6 +228,10 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		if err != nil {
 			return nil, err
 		}
+		// TODO this may need to be double checked
+		if key == nil {
+			return nil, errors.New("nil key")
+		}
 		switch reflect.TypeOf(key).Kind() {
 		case reflect.Map:
 			keyMap := MapKey{KeyValue: key.(map[interface{}]interface{})}
