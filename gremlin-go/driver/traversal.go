@@ -131,8 +131,8 @@ type Cardinality string
 
 const (
 	Single Cardinality = "single"
-	List   Cardinality = "list_"
-	Set    Cardinality = "set_"
+	List   Cardinality = "list"
+	Set_    Cardinality = "set"
 )
 
 type Column string
