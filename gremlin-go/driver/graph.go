@@ -142,7 +142,7 @@ func (s *SimpleSet) ToSlice() []interface{} {
 	return s.objects
 }
 
-// Add adds an item to the SimpleSet only if it is not already a part of it
+// Add adds an item to the SimpleSet only if it is not already a part of it.
 func (s *SimpleSet) Add(val interface{}) {
 	if !s.Contains(val) {
 		s.objects = append(s.objects, val)
