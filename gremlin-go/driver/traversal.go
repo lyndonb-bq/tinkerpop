@@ -246,7 +246,7 @@ type Predicate interface {
 	Or(args ...interface{}) Predicate
 }
 
-var P *p = &p{}
+var P Predicate = &p{}
 
 func newP(operator string, args ...interface{}) Predicate {
 	values := make([]interface{}, 0)
@@ -342,7 +342,7 @@ type TextPredicate interface {
 
 type textP p
 
-var TextP *textP = &textP{}
+var TextP TextPredicate = &textP{}
 
 func newTextP(operator string, args ...interface{}) TextPredicate {
 	values := make([]interface{}, 0)
