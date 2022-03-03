@@ -101,12 +101,12 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	var objectList []interface{}
 	var object interface{}
 	for i, labelSet := range p.labels {
-		for _, str := range labelSet.ToSlice() {
+		for _, label := range labelSet.ToSlice() {
 			// Sets in labels can only contain string types
-			if reflect.TypeOf(str).Kind() != reflect.String {
+			if reflect.TypeOf(label).Kind() != reflect.String {
 				return nil, errors.New("path is invalid because labels contains a non string type")
 			}
-			if str == key {
+			if label == key {
 				if object == nil {
 					object = p.objects[i]
 				} else if objectList != nil {
