@@ -100,11 +100,10 @@ func (p *Path) GetPathObject(key string) (interface{}, error) {
 	}
 	var objectList []interface{}
 	var object interface{}
-	for i, label := range p.labels {
-		s := label.(Set).ToSlice()
-		for j, str := range s {
+	for i, labelSet := range p.labels {
+		for _, str := range labelSet.ToSlice() {
 			// Sets in labels can only contain string types
-			if reflect.TypeOf(s[j]).Kind() != reflect.String {
+			if reflect.TypeOf(str).Kind() != reflect.String {
 				return nil, errors.New("path is invalid because labels contains a non string type")
 			}
 			if str == key {
@@ -150,7 +149,7 @@ func (s *SimpleSet) Add(val interface{}) {
 	}
 }
 
-// Remove is Shallow comparison operation that removes a value from the SimpleSet
+// Remove removes a value from the SimpleSet if it is in the set according to Golang equality operator rules.
 func (s *SimpleSet) Remove(val interface{}) {
 	for i, obj := range s.objects {
 		if val == obj {
@@ -173,10 +172,9 @@ func (s *SimpleSet) Contains(val interface{}) bool {
 	return false
 }
 
-// NewSimpleSet constructs a new SimpleSet
+// NewSimpleSet creates a new SimpleSet containing all passed in args with duplicates excluded according to Golang equality operator rules.
 func NewSimpleSet(args ...interface{}) *SimpleSet {
-	s := new(SimpleSet)
-	s.objects = []interface{}{}
+	s := &SimpleSet{}
 	for _, arg := range args {
 		s.Add(arg)
 	}
