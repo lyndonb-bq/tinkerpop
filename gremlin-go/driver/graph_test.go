@@ -173,7 +173,7 @@ func TestCustomStructs(t *testing.T) {
 
 		t.Run("Test SimpleSet.ToSlice", func(t *testing.T) {
 			set := NewSimpleSet()
-			assert.Equal(t, []interface{}{}, set.ToSlice())
+			assert.Equal(t, []interface{}(nil), set.ToSlice())
 			set = NewSimpleSet("a", 1)
 			assert.Equal(t, []interface{}{"a", 1}, set.ToSlice())
 		})

@@ -175,7 +175,6 @@ func (s *SimpleSet) Contains(val interface{}) bool {
 // NewSimpleSet creates a new SimpleSet containing all passed in args with duplicates excluded according to Golang equality operator rules.
 func NewSimpleSet(args ...interface{}) *SimpleSet {
 	s := &SimpleSet{}
-	s.objects = []interface{}{}
 	for _, arg := range args {
 		s.Add(arg)
 	}
