@@ -52,6 +52,7 @@ Navigate to file path in a terminal window and run:
 Gofmt will recursively check for and format `.go` files.
 
 Note: If your IDE of choice is [GoLand][goland], code can be automatically formatted with Gofmt on file save. Instructions on how to enable this feature can be found [here][fmtsave].
+
 #### Using the Linter and staticcheck
 Run [go vet][gvet] and [staticcheck][scheck] and correct any errors.
 
