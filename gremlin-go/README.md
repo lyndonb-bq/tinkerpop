@@ -53,8 +53,7 @@ Gofmt will recursively check for and format `.go` files.
 
 Note: If your IDE of choice is [GoLand][goland], code can be automatically formatted with Gofmt on file save. Instructions on how to enable this feature can be found [here][fmtsave].
 #### Using the Linter and staticcheck
-
-Before generating a pull request, you should manually run [go vet][gvet] and [staticcheck][scheck] and correct any errors.
+Run [go vet][gvet] and [staticcheck][scheck] and correct any errors.
 
 [go vet][gvet] is installed when you install go, and can be run with:
 
