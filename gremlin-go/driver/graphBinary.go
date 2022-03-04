@@ -121,17 +121,10 @@ func (serializer graphBinaryTypeSerializer) readTypeValue(buffer *bytes.Buffer, 
 // Format: {length}{item_0}...{item_n}
 func listWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := reflect.ValueOf(value)
-	if (v.Kind() != reflect.Array) && (v.Kind() != reflect.Slice) {
-		typeSerializer.logHandler.log(Error, notSlice)
-		return buffer.Bytes(), errors.New("did not get the expected array or slice type as input")
-	}
 	valLen := v.Len()
 	err := binary.Write(buffer, binary.BigEndian, int32(valLen))
 	if err != nil {
 		return nil, err
-	}
-	if valLen < 1 {
-		return buffer.Bytes(), nil
 	}
 	for i := 0; i < valLen; i++ {
 		_, err := typeSerializer.write(v.Index(i).Interface(), buffer)
@@ -163,11 +156,6 @@ func listReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 // Format: {length}{item_0}...{item_n}
 func mapWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := reflect.ValueOf(value)
-	if v.Kind() != reflect.Map {
-		typeSerializer.logHandler.log(Error, notMap)
-		return buffer.Bytes(), errors.New("did not get the expected map type as input")
-	}
-
 	keys := v.MapKeys()
 	err := binary.Write(buffer, binary.BigEndian, int32(len(keys)))
 	if err != nil {
@@ -703,7 +691,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			return buffer.Bytes(), err
 		}, logHandler: serializer.logHandler}, nil
 	case bool:
-		return &graphBinaryTypeSerializer{dataType: ByteType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+		return &graphBinaryTypeSerializer{dataType: BooleanType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 			err := binary.Write(buffer, binary.BigEndian, value.(bool))
 			return buffer.Bytes(), err
 		}, logHandler: serializer.logHandler}, nil
@@ -850,6 +838,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: DurationType, reader: durationReader, nullFlagReturn: time.Duration(0), logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
+	// TODO: Add a read test for an unknown Tinkerpop type to check for this case
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
 		return nil, errors.New("unknown data type to deserialize")

@@ -69,7 +69,7 @@ func TestGraphBinaryV1(t *testing.T) {
 			var boolArr = [2]bool{true, false}
 			for _, x := range boolArr {
 				writeToBuffer(x, &buff)
-				assert.Equal(t, x, readToValue(&buff).(uint8) != 0)
+				assert.Equal(t, x, readToValue(&buff))
 			}
 		})
 		t.Run("test byte(uint8)", func(t *testing.T) {
@@ -240,8 +240,10 @@ func TestGraphBinaryV1(t *testing.T) {
 	t.Run("test nested types", func(t *testing.T) {
 		buff := bytes.Buffer{}
 		t.Run("test map", func(t *testing.T) {
-			writeToBuffer(m, &buff)
-			assert.Equal(t, m, readToValue(&buff))
+			t.Run("test map read/write", func(t *testing.T) {
+				writeToBuffer(m, &buff)
+				assert.Equal(t, m, readToValue(&buff))
+			})
 		})
 		t.Run("test slice", func(t *testing.T) {
 			var x = []interface{}{"a", "b", "c"}
@@ -255,4 +257,19 @@ func TestGraphBinaryV1(t *testing.T) {
 		})
 	})
 
+	t.Run("test misc cases", func(t *testing.T) {
+		buff := bytes.Buffer{}
+		t.Run("test unknown datatype to serialize case", func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("The code did not panic with an unknown datatype")
+				}
+			}()
+			var x Unknown
+			writeToBuffer(x, &buff)
+		})
+		// TODO: Add test for nil object case. pure nil != zero-valued nil objects.
+	})
 }
+
+type Unknown struct{}

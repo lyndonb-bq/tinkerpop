@@ -50,20 +50,6 @@ func (t *Traversal) ToList() ([]*Result, error) {
 	return results.All(), nil
 }
 
-// ToSet returns the results in a set.
-func (t *Traversal) ToSet() (map[*Result]bool, error) {
-	list, err := t.ToList()
-	if err != nil {
-		return nil, err
-	}
-
-	set := map[*Result]bool{}
-	for _, r := range list {
-		set[r] = true
-	}
-	return set, nil
-}
-
 // Iterate all the Traverser instances in the traversal and returns the empty traversal
 func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 	// TODO: AN-979 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
@@ -105,7 +91,8 @@ func (t *Traversal) Next() (*Result, error) {
 	results, err := t.getResults()
 	if err != nil {
 		return nil, err
-	} else if results.IsEmpty() {
+	}
+	if results.IsEmpty() {
 		return nil, errors.New("there are no results left")
 	}
 	return results.one(), nil
