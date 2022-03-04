@@ -138,10 +138,17 @@ func toEdgeIdString(name, graphName string) interface{} {
 	return fmt.Sprint(tg.getDataGraphFromMap(graphName).edges[name])
 }
 
-// TODO add with updated path implementation
 //parse path
-func toPath(name, graphName string) interface{} {
-	return nil
+func toPath(stringObjects, graphName string) interface{} {
+	objects := make([]interface{}, 0)
+	for _, str := range strings.Split(stringObjects, ",") {
+		objects = append(objects, parseValue(str, graphName))
+	}
+	// return object or pointer?
+	return &gremlingo.Path{
+		Labels:  []gremlingo.Set{},
+		Objects: objects,
+	}
 }
 
 // parse list
@@ -157,10 +164,16 @@ func toList(stringList, graphName string) interface{} {
 	return listVal
 }
 
-// TODO add with custom set implementation
-// parse set
-func toSet(name, graphName string) interface{} {
-	return nil
+// parse set to simple set
+func toSet(stringSet, graphName string) interface{} {
+	setVal := gremlingo.NewSimpleSet()
+	if len(stringSet) == 0 {
+		return setVal
+	}
+	for _, str := range strings.Split(stringSet, ",") {
+		setVal.Add(parseValue(str, graphName))
+	}
+	return setVal
 }
 
 // parse json as a map
@@ -209,6 +222,7 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 // TODO add with lambda implementation
 // parse lambda
 func toLambda(name, graphName string) interface{} {
+	// NOTE: This may cause null pointer exceptions on server in tests that need this parameter
 	return nil
 }
 
@@ -316,10 +330,10 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 				continue
 			}
 			val := parseValue(row.Cells[0].Value, tg.graphName)
-			v, ok := val.(gremlingo.Path)
+			v, ok := val.(*gremlingo.Path)
 			if ok {
 				// clear the labels since we don't define them in .feature files
-				v.Labels = [][]string{}
+				v.Labels = []gremlingo.Set{}
 				val = v
 			}
 			expectedResult = append(expectedResult, val)
