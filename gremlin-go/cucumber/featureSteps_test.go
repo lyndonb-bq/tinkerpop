@@ -391,6 +391,8 @@ func (tg *tinkerPopGraph) usingTheParameterDefined(name string, params string) e
 
 func (tg *tinkerPopGraph) usingTheParameterOfP(paramName, pVal, stringVal string) error {
 	// TODO after fully implementing P class
+	// P class need to be able to take in interface{} for it's value arguments
+	//var p = reflect.ValueOf(gremlingo.P).MethodByName(pVal).Call(parseValue(stringVal, tg.graphName))
 	return godog.ErrPending
 }
 
