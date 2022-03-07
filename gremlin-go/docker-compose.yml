@@ -53,3 +53,26 @@ services:
       && go test -v -json ./... -race -covermode=atomic -coverprofile=\"coverage.out\" | gotestfmt"
     depends_on:
       - gremlin-server
+  gremlin-server-secure-simple:
+    container_name: gremlin-server-secure-simple
+    image: tinkerpop/gremlin-server
+    command: >
+      bash -c "docker run tinkerpop/gremlin-server:3.5.2 conf/gremlin-server-secure.yaml"
+    ports:
+      - "8183:8183"
+  gremlin-go-auth-tests:
+    container_name: gremlin-go-auth-tests
+    image: golang:1.17
+    volumes:
+      - .:/go_app
+    environment:
+      - GREMLIN_SERVER_HOSTNAME=gremlin-server-secure
+      - GREMLIN_SERVER_PORT=8183
+      - RUN_INTEGRATION_TESTS=true
+    working_dir: /go_app
+    command: >
+      bash -c "go install github.com/haveyoudebuggedit/gotestfmt/v2/cmd/gotestfmt@latest
+      && go test -v -json ./... -race -covermode=atomic -coverprofile=\"coverage.out\" | gotestfmt"
+    depends_on:
+      - gremlin-server-secure-simple
+
