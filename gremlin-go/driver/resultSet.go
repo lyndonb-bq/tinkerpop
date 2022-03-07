@@ -51,18 +51,18 @@ type channelResultSet struct {
 	closed           bool
 	err              error
 	waitSignal       chan bool
-	channelMux       sync.Mutex
-	waitSignalMux    sync.Mutex
+	channelMutex     sync.Mutex
+	waitSignalMutex  sync.Mutex
 }
 
 func (channelResultSet *channelResultSet) sendSignal() {
 	// Lock wait
-	channelResultSet.waitSignalMux.Lock()
+	channelResultSet.waitSignalMutex.Lock()
+	defer channelResultSet.waitSignalMutex.Unlock()
 	if channelResultSet.waitSignal != nil {
 		channelResultSet.waitSignal <- true
 		channelResultSet.waitSignal = nil
 	}
-	channelResultSet.waitSignalMux.Unlock()
 }
 
 func (channelResultSet *channelResultSet) GetError() error {
@@ -70,24 +70,27 @@ func (channelResultSet *channelResultSet) GetError() error {
 }
 
 func (channelResultSet *channelResultSet) IsEmpty() bool {
-	channelResultSet.channelMux.Lock()
+	channelResultSet.channelMutex.Lock()
 	// If our channel is empty and we have no data in it, wait for signal that the state has been updated.
 	channelIsEmpty := len(channelResultSet.channel) == 0
-	if !channelIsEmpty || channelResultSet.closed {
+	if !channelIsEmpty {
 		// Channel is not empty.
-		channelResultSet.channelMux.Unlock()
-		return channelIsEmpty && channelResultSet.closed
+		channelResultSet.channelMutex.Unlock()
+		return false
+	} else if channelResultSet.closed {
+		// Channel is empty and closed.
+		return true
 	} else {
 		// Channel is empty and not closed. Need to wait for signal that state has changed, otherwise
 		// we do not know if it is empty or not.
-		// We need ot grab the wait signal mutex before we release the channel mutex.
-		channelResultSet.waitSignalMux.Lock()
-		channelResultSet.channelMux.Unlock()
+		// We need to grab the wait signal mutex before we release the channel mutex.
+		channelResultSet.waitSignalMutex.Lock()
+		channelResultSet.channelMutex.Unlock()
 
 		// Create a wait signal and unlock the wait signal mutex.
 		waitSignal := make(chan bool)
 		channelResultSet.waitSignal = waitSignal
-		channelResultSet.waitSignalMux.Unlock()
+		channelResultSet.waitSignalMutex.Unlock()
 
 		// Technically if we assigned channelResultSet.waitSignal then unlocked, it could be set to nil or
 		// overwritten to another channel before we check it, so to be safe, create additional variable and
@@ -99,10 +102,10 @@ func (channelResultSet *channelResultSet) IsEmpty() bool {
 
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
-		channelResultSet.channelMux.Lock()
+		channelResultSet.channelMutex.Lock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
-		channelResultSet.channelMux.Unlock()
+		channelResultSet.channelMutex.Unlock()
 		channelResultSet.sendSignal()
 	}
 }
@@ -144,7 +147,7 @@ func (channelResultSet *channelResultSet) All() []*Result {
 }
 
 func (channelResultSet *channelResultSet) addResult(r *Result) {
-	channelResultSet.channelMux.Lock()
+	channelResultSet.channelMutex.Lock()
 	if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
 		for _, v := range r.result.([]interface{}) {
 			if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
@@ -156,7 +159,7 @@ func (channelResultSet *channelResultSet) addResult(r *Result) {
 	} else {
 		channelResultSet.channel <- &Result{r.result}
 	}
-	channelResultSet.channelMux.Unlock()
+	channelResultSet.channelMutex.Unlock()
 	channelResultSet.sendSignal()
 }
 
