@@ -22,7 +22,7 @@ package gremlingo
 import (
 	"fmt"
 	"github.com/cucumber/godog"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	gremlingo "github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
 	"os"
 	"reflect"
 	"strconv"
@@ -137,9 +137,7 @@ func (t *TinkerPopWorld) reloadEmptyData() {
 	graphData.edges = getEdges(g)
 }
 
-func (t *TinkerPopWorld) cleanEmptyDataGraph() error {
-	connection := t.graphDataMap["empty"].connection
-	g := gremlingo.Traversal_().WithRemote(connection)
+func (t *TinkerPopWorld) cleanEmptyDataGraph(g *gremlingo.GraphTraversalSource) error {
 	_, future, err := g.V().Drop().Iterate()
 	if err != nil {
 		return err
@@ -160,6 +158,7 @@ func getVertices(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Vertex
 	v := reflect.ValueOf(res.GetInterface())
 	if v.Kind() != reflect.Map {
 		fmt.Println("not map")
+		return nil
 	}
 	keys := v.MapKeys()
 	for _, k := range keys {
@@ -181,6 +180,7 @@ func getEdges(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Edge {
 	valMap := reflect.ValueOf(resE.GetInterface())
 	if valMap.Kind() != reflect.Map {
 		fmt.Println("not map")
+		return nil
 	}
 	keys := valMap.MapKeys()
 	for _, k := range keys {

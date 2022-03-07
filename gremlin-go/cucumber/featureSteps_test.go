@@ -164,7 +164,7 @@ func toList(stringList, graphName string) interface{} {
 	return listVal
 }
 
-// parse set to simple set
+// Parse set to simple set.
 func toSet(stringSet, graphName string) interface{} {
 	setVal := gremlingo.NewSimpleSet()
 	if len(stringSet) == 0 {
@@ -219,7 +219,7 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 	}
 }
 
-// TODO add with lambda implementation
+// TODO add with lambda implementation - AN-1037
 // Parse lambda.
 func toLambda(name, graphName string) interface{} {
 	// NOTE: This may cause null pointer exceptions on server in tests that need this parameter
@@ -256,11 +256,6 @@ func (tg *tinkerPopGraph) iteratedToList() error {
 		return err
 	}
 	tg.result = results
-	fmt.Println("RESULT LENGTH", len(results))
-	count, err := tg.traversal.Count().ToList()
-	for _, c := range count {
-		fmt.Println("COUNT() LENGTH", c.GetInterface())
-	}
 	return nil
 }
 
@@ -274,7 +269,7 @@ func (tg *tinkerPopGraph) chooseGraph(graphName string) error {
 	data := tg.graphDataMap[graphName]
 	tg.g = gremlingo.Traversal_().WithRemote(data.connection)
 	if graphName == "empty" {
-		err := tg.cleanEmptyDataGraph()
+		err := tg.cleanEmptyDataGraph(tg.g)
 		if err != nil {
 			return err
 		}
@@ -401,10 +396,19 @@ func (tg *tinkerPopGraph) usingTheParameterDefined(name string, params string) e
 }
 
 func (tg *tinkerPopGraph) usingTheParameterOfP(paramName, pVal, stringVal string) error {
-	// TODO after fully implementing P class
-	// P class need to be able to take in interface{} for it's value arguments
-	//var p = reflect.ValueOf(gremlingo.P).MethodByName(pVal).Call(parseValue(stringVal, tg.graphName))
-	return godog.ErrPending
+	var in []reflect.Value
+	values := parseValue(stringVal, tg.graphName)
+	switch reflect.TypeOf(values).Kind() {
+	case reflect.Array, reflect.Slice:
+		for _, value := range values.([]interface{}) {
+			in = append(in, reflect.ValueOf(value))
+		}
+	default:
+		in = append(in, reflect.ValueOf(values))
+	}
+	var p = reflect.ValueOf(gremlingo.P).MethodByName(pVal).Call(in)
+	tg.parameters[paramName] = p
+	return nil
 }
 
 // safe?
@@ -445,7 +449,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the result should have a count of (\d+)$`, tg.theResultShouldHaveACountOf)
 	ctx.Step(`^the traversal of$`, tg.theTraversalOf)
 	ctx.Step(`^using the parameter (.+) defined as "(.+)"$`, tg.usingTheParameterDefined)
-
-	// TODO depends on implementation of class P (comparators)
 	ctx.Step(`^using the parameter (.+) of P\.(.+)\("(.+)"\)$`, tg.usingTheParameterOfP)
 }
