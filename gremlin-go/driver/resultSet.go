@@ -77,13 +77,13 @@ func (channelResultSet *channelResultSet) setError(err error) {
 func (channelResultSet *channelResultSet) IsEmpty() bool {
 	channelResultSet.channelMutex.Lock()
 	// If our channel is empty and we have no data in it, wait for signal that the state has been updated.
-	channelIsEmpty := len(channelResultSet.channel) == 0
-	if !channelIsEmpty {
+	if !len(channelResultSet.channel) == 0 {
 		// Channel is not empty.
 		channelResultSet.channelMutex.Unlock()
 		return false
 	} else if channelResultSet.closed {
 		// Channel is empty and closed.
+                channelResultSet.channelMutex.Unlock()
 		return true
 	} else {
 		// Channel is empty and not closed. Need to wait for signal that state has changed, otherwise
