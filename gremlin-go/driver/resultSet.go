@@ -79,6 +79,7 @@ func (channelResultSet *channelResultSet) IsEmpty() bool {
 		return false
 	} else if channelResultSet.closed {
 		// Channel is empty and closed.
+                channelResultSet.channelMutex.Unlock()
 		return true
 	} else {
 		// Channel is empty and not closed. Need to wait for signal that state has changed, otherwise
