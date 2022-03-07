@@ -80,7 +80,7 @@ func parseValue(value string, graphName string) interface{} {
 	}
 }
 
-// parse numeric
+// Parse numeric.
 func toNumeric(stringVal, graphName string) interface{} {
 	if strings.Contains(stringVal, ".") {
 		val, err := strconv.ParseFloat(stringVal, 64)
@@ -96,12 +96,12 @@ func toNumeric(stringVal, graphName string) interface{} {
 	return val
 }
 
-// parse vertex
+// Parse vertex.
 func toVertex(name, graphName string) interface{} {
 	return tg.getDataGraphFromMap(graphName).vertices[name]
 }
 
-// parse vertex id
+// Parse vertex id.
 func toVertexId(name, graphName string) interface{} {
 	if tg.getDataGraphFromMap(graphName).vertices[name] == nil {
 		return nil
@@ -109,7 +109,7 @@ func toVertexId(name, graphName string) interface{} {
 	return tg.getDataGraphFromMap(graphName).vertices[name].Id
 }
 
-// parse vertex id as string
+// Parse vertex id as string.
 func toVertexIdString(name, graphName string) interface{} {
 	if tg.getDataGraphFromMap(graphName).vertices[name] == nil {
 		return nil
@@ -117,12 +117,12 @@ func toVertexIdString(name, graphName string) interface{} {
 	return fmt.Sprint(tg.getDataGraphFromMap(graphName).vertices[name].Id)
 }
 
-// parse edge
+// Parse edge.
 func toEdge(name, graphName string) interface{} {
 	return tg.getDataGraphFromMap(graphName).edges[name]
 }
 
-// parse edge id
+// Parse edge id.
 func toEdgeId(name, graphName string) interface{} {
 	if tg.getDataGraphFromMap(graphName).edges[name] == nil {
 		return nil
@@ -130,7 +130,7 @@ func toEdgeId(name, graphName string) interface{} {
 	return tg.getDataGraphFromMap(graphName).edges[name].Id
 }
 
-// parse edge id as string
+// Parse edge id as string.
 func toEdgeIdString(name, graphName string) interface{} {
 	if tg.getDataGraphFromMap(graphName).edges[name] == nil {
 		return nil
@@ -138,7 +138,7 @@ func toEdgeIdString(name, graphName string) interface{} {
 	return fmt.Sprint(tg.getDataGraphFromMap(graphName).edges[name])
 }
 
-//parse path
+// Parse path.
 func toPath(stringObjects, graphName string) interface{} {
 	objects := make([]interface{}, 0)
 	for _, str := range strings.Split(stringObjects, ",") {
@@ -151,7 +151,7 @@ func toPath(stringObjects, graphName string) interface{} {
 	}
 }
 
-// parse list
+// Parse list.
 func toList(stringList, graphName string) interface{} {
 	listVal := make([]interface{}, 0)
 	if len(stringList) == 0 {
@@ -176,7 +176,7 @@ func toSet(stringSet, graphName string) interface{} {
 	return setVal
 }
 
-// parse json as a map
+// Parse json as a map.
 func toMap(name, graphName string) interface{} {
 	var jsonMap interface{}
 	err := json.Unmarshal([]byte(name), &jsonMap)
@@ -201,7 +201,7 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 		for i := 0; i < oriSlice.Len(); i++ {
 			valSlice = append(valSlice, parseMapValue(oriSlice.Index(i).Interface(), graphName))
 		}
-		// use SliceKey struct or convert to array if this will be used as key
+		// Use SliceKey struct or convert to array if this will be used as key.
 		return valSlice
 	case reflect.Map:
 		valMap := make(map[interface{}]interface{})
@@ -214,20 +214,20 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 		}
 		return valMap
 	default:
-		// not supported types
+		// Not supported types.
 		return nil
 	}
 }
 
 // TODO add with lambda implementation
-// parse lambda
+// Parse lambda.
 func toLambda(name, graphName string) interface{} {
 	// NOTE: This may cause null pointer exceptions on server in tests that need this parameter
 	return nil
 }
 
 func toT(name, graphName string) interface{} {
-	// return as is, since T values are just strings
+	// Return as is, since T values are just strings.
 	return name
 }
 
@@ -268,7 +268,7 @@ func (tg *tinkerPopGraph) nothingShouldHappenBecause(arg1 *godog.DocString) erro
 	return nil
 }
 
-// choose the graph
+// Choose the graph.
 func (tg *tinkerPopGraph) chooseGraph(graphName string) error {
 	tg.graphName = graphName
 	data := tg.graphDataMap[graphName]
@@ -292,7 +292,7 @@ func (tg *tinkerPopGraph) theGraphInitializerOf(arg1 *godog.DocString) error {
 		return err
 	}
 	<-future
-	// We may have modified the so-called `empty` graph
+	// We may have modified the so-called `empty` graph.
 	if tg.graphName == "empty" {
 		tg.reloadEmptyData()
 	}
@@ -326,13 +326,13 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		var expectedResult []interface{}
 		for idx, row := range table.Rows {
 			if idx == 0 {
-				// skip the header line
+				// Skip the header line.
 				continue
 			}
 			val := parseValue(row.Cells[0].Value, tg.graphName)
 			v, ok := val.(*gremlingo.Path)
 			if ok {
-				// clear the labels since we don't define them in .feature files
+				// Clear the labels since we don't define them in feature files.
 				v.Labels = []gremlingo.Set{}
 				val = v
 			}
@@ -342,8 +342,6 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		for _, res := range tg.result {
 			actualResult = append(actualResult, res.GetInterface())
 		}
-		fmt.Println("EXPECTED", expectedResult)
-		fmt.Println("ACTUAL", actualResult)
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
 			err := fmt.Sprintf("actual result length %d does not equal to expected result length %d.", len(actualResult), len(expectedResult))
 			return errors.New(err)
@@ -361,11 +359,10 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 				}
 			}
 		}
-		break
+		return nil
 	default:
 		return errors.New("scenario not supported")
 	}
-	return nil
 }
 
 func contains(list []interface{}, item interface{}) bool {

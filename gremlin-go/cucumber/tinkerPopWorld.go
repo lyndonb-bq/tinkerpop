@@ -76,8 +76,6 @@ func scenarioPort() int {
 	return getEnvOrDefaultInt("GREMLIN_SERVER_PORT", defaultScenarioPort)
 }
 
-//var cache = make(map[string]DataGraph)
-
 func NewTinkerPopWorld() *TinkerPopWorld {
 	return &TinkerPopWorld{
 		scenario:     nil,
