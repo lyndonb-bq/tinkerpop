@@ -144,7 +144,6 @@ func toPath(stringObjects, graphName string) interface{} {
 	for _, str := range strings.Split(stringObjects, ",") {
 		objects = append(objects, parseValue(str, graphName))
 	}
-	// return object or pointer?
 	return &gremlingo.Path{
 		Labels:  []gremlingo.Set{},
 		Objects: objects,
@@ -411,7 +410,6 @@ func (tg *tinkerPopGraph) usingTheParameterOfP(paramName, pVal, stringVal string
 	return nil
 }
 
-// safe?
 var tg = &tinkerPopGraph{
 	NewTinkerPopWorld(),
 }
