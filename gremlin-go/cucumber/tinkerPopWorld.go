@@ -23,7 +23,9 @@ import (
 	"fmt"
 	"github.com/cucumber/godog"
 	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"os"
 	"reflect"
+	"strconv"
 )
 
 type TinkerPopWorld struct {
@@ -43,8 +45,36 @@ type DataGraph struct {
 	edges      map[string]*gremlingo.Edge
 }
 
-const scenarioHost string = "localhost"
-const scenarioPort int = 8182
+func getEnvOrDefaultString(key string, defaultValue string) string {
+	// Missing value is returned as "".
+	value := os.Getenv(key)
+	if len(value) != 0 {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvOrDefaultInt(key string, defaultValue int) int {
+	value := getEnvOrDefaultString(key, "")
+	if len(value) != 0 {
+		intValue, err := strconv.Atoi(value)
+		if err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
+}
+
+const defaultScenarioHost string = "localhost"
+const defaultScenarioPort int = 8182
+
+func scenarioHost() string {
+	return getEnvOrDefaultString("GREMLIN_SERVER_HOSTNAME", defaultScenarioHost)
+}
+
+func scenarioPort() int {
+	return getEnvOrDefaultInt("GREMLIN_SERVER_PORT", defaultScenarioPort)
+}
 
 //var cache = make(map[string]DataGraph)
 
@@ -78,9 +108,13 @@ func (t *TinkerPopWorld) loadAllDataGraph() {
 		if name == "empty" {
 			t.loadEmptyDataGraph()
 		} else {
-			connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
-				settings.TraversalSource = "g" + name
-			})
+			connection, err := gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(),
+				func(settings *gremlingo.DriverRemoteConnectionSettings) {
+					settings.TraversalSource = "g" + name
+				})
+			if err != nil {
+				panic(fmt.Sprintf("Failed to create connection '%v'", err))
+			}
 			g := gremlingo.Traversal_().WithRemote(connection)
 			t.graphDataMap[name] = &DataGraph{
 				name:       name,
@@ -94,7 +128,7 @@ func (t *TinkerPopWorld) loadAllDataGraph() {
 
 // May be redundant, currently not needed
 func (t *TinkerPopWorld) loadEmptyDataGraph() {
-	connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+	connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 		settings.TraversalSource = "ggraph"
 	})
 	t.graphDataMap["empty"] = &DataGraph{connection: connection}
@@ -170,11 +204,11 @@ func (t *TinkerPopWorld) recreateAllDataGraphConnection() error {
 	var err error
 	for _, name := range getGraphNames() {
 		if name == "empty" {
-			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 				settings.TraversalSource = "ggraph"
 			})
 		} else {
-			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost, scenarioPort, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 				settings.TraversalSource = "g" + name
 			})
 		}

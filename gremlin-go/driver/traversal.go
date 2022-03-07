@@ -112,13 +112,12 @@ func (t *Traversal) Next() (*Result, error) {
 }
 
 func (t *Traversal) getResults() (ResultSet, error) {
-	var err error = nil
 	if t.results == nil {
-		var results ResultSet
-		results, err = t.remote.SubmitBytecode(t.bytecode)
-		t.results = results
+		var err error
+		t.results, err = t.remote.SubmitBytecode(t.bytecode)
+		return t.results, err
 	}
-	return t.results, err
+	return t.results, nil
 }
 
 type Barrier string

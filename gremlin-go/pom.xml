@@ -77,10 +77,6 @@ limitations under the License.
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <!--
-                                        Plugin to execute Godog tests.
-                                        TODO AN-1045: Verify this lifecycle works properly.
-                                    -->
                                     <executable>docker-compose</executable>
                                     <arguments>
                                         <argument>up</argument>
