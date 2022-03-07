@@ -163,7 +163,5 @@ radishGremlinFile.withWriter('UTF-8') { Writer writer ->
     '       }\n' +
     '   }\n'
     )
-
 }
-
 

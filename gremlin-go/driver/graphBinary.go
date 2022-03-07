@@ -228,9 +228,8 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		if err != nil {
 			return nil, err
 		}
-		// TODO this may need to be double checked
 		if key == nil {
-			return nil, errors.New("nil key")
+			return nil, errors.New("cannot generate map with nil key")
 		}
 		switch reflect.TypeOf(key).Kind() {
 		case reflect.Map:
@@ -482,28 +481,29 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 	e := new(Edge)
 	var err error
 
-	// edge ID
+	// Edge ID.
 	e.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
 
-	// edge label - Not fully qualified
+	// Edge label - not fully qualified.
 	newLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
 	}
 	e.Label = newLabel.(string)
 
-	// create new in-vertex
+	// Create new in-vertex.
 	inV := new(Vertex)
-	// in-vertex ID - Fully qualified.
+
+	// In-vertex ID - fully qualified.
 	inV.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
 
-	// in-vertex label - Not fully qualified.
+	// In-vertex label -nNot fully qualified.
 	inVLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
@@ -512,15 +512,16 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 
 	e.InV = *inV
 
-	// create new out-vertex
+	// Create new out-vertex.
 	outV := new(Vertex)
-	// in-vertex ID - Fully qualified.
+
+	// In-vertex ID - fully qualified.
 	outV.Id, err = typeSerializer.read(buffer)
 	if err != nil {
 		return nil, err
 	}
 
-	// in-vertex label - Not fully qualified.
+	// In-vertex label - not fully qualified.
 	outVLabel, err := typeSerializer.readValue(buffer, byte(StringType), false)
 	if err != nil {
 		return nil, err
@@ -529,7 +530,7 @@ func edgeReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer)
 
 	e.OutV = *outV
 
-	// read null bytes
+	// Read null bytes.
 	_, _ = typeSerializer.read(buffer)
 	_, _ = typeSerializer.read(buffer)
 	return e, nil

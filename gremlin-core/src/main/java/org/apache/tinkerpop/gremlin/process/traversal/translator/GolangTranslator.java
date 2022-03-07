@@ -302,7 +302,6 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
             TO_GO_MAP.put("OUT", "Out");
             TO_GO_MAP.put("IN", "In");
             TO_GO_MAP.put("BOTH", "Both");
-            //
             TO_GO_MAP.forEach((k, v) -> FROM_GO_MAP.put(v, k));
         }
 
