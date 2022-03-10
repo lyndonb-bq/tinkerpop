@@ -43,7 +43,7 @@ func (t *Traversal) ToList() ([]*Result, error) {
 		return nil, errors.New("cannot invoke this method from an anonymous traversal")
 	}
 
-	results, err := t.remote.SubmitBytecode(t.bytecode)
+	results, err := t.remote.submitBytecode(t.bytecode)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 		return nil, nil, err
 	}
 
-	res, err := t.remote.SubmitBytecode(t.bytecode)
+	res, err := t.remote.submitBytecode(t.bytecode)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -115,7 +115,7 @@ func (t *Traversal) getResults() (ResultSet, error) {
 	var err error = nil
 	if t.results == nil {
 		var results ResultSet
-		results, err = t.remote.SubmitBytecode(t.bytecode)
+		results, err = t.remote.submitBytecode(t.bytecode)
 		t.results = results
 	}
 	return t.results, err
@@ -132,7 +132,7 @@ type Cardinality string
 const (
 	Single Cardinality = "single"
 	List   Cardinality = "list"
-	Set_    Cardinality = "set"
+	Set_   Cardinality = "set"
 )
 
 type Column string

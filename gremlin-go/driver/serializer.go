@@ -53,7 +53,9 @@ const versionByte byte = 0x81
 
 func convertArgs(request *request, gs graphBinarySerializer) (map[string]interface{}, error) {
 	// TODO AN-981: Remote transaction session processor is same as bytecode
-	if request.processor == bytecodeProcessor {
+	if request.op == authOp {
+		return request.args, nil
+	} else if request.processor == bytecodeProcessor {
 		// Convert to format:
 		// args["gremlin"]: <serialized args["gremlin"]>
 		gremlin := request.args["gremlin"]

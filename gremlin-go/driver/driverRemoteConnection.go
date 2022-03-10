@@ -19,13 +19,49 @@ under the License.
 
 package gremlingo
 
-import "golang.org/x/text/language"
+import (
+	"crypto/tls"
+	"golang.org/x/text/language"
+	"net/http"
+)
+
+// AuthInfo is an option struct that allows authentication information to be specified.
+// Authentication can be provided via http.Header Header directly.
+// Basic authentication can also be used via the BasicAuthInfo function.
+type AuthInfo struct {
+	Header   http.Header
+	Username string
+	Password string
+}
+
+// getHeader provides a safe way to get a header from the AuthInfo even if it is nil.
+// This way we don't need any additional logic in the transport layer.
+func (authInfo *AuthInfo) getHeader() http.Header {
+	if authInfo == nil {
+		return nil
+	} else {
+		return authInfo.Header
+	}
+}
+
+// getUseBasicAuth provides a safe way to get a if basic auth info is available from the AuthInfo even if it is nil.
+// This way we don't need any additional logic in the transport layer.
+func (authInfo *AuthInfo) getUseBasicAuth() bool {
+	if authInfo == nil {
+		return false
+	} else {
+		return authInfo.Username != "" && authInfo.Password != ""
+	}
+}
+
+// BasicAuthInfo provides a way to generate AuthInfo. Enter username and password and get the AuthInfo back.
+func BasicAuthInfo(username string, password string) *AuthInfo {
+	return &AuthInfo{Username: username, Password: password}
+}
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection
 type DriverRemoteConnectionSettings struct {
 	TraversalSource string
-	Username        string
-	Password        string
 	TransporterType TransporterType
 	LogVerbosity    LogVerbosity
 	Logger          Logger
@@ -46,13 +82,12 @@ type DriverRemoteConnection struct {
 // Gorilla as the default Transporter, Info as the default LogVerbosity, a default logger stuct, and English and as the
 // default language
 func NewDriverRemoteConnection(
-	host string,
-	port int,
+	url string,
+	authInfo *AuthInfo,
+	tlsConfig *tls.Config,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
 		TraversalSource: "g",
-		Username:        "",
-		Password:        "",
 		TransporterType: Gorilla,
 		LogVerbosity:    Info,
 		Logger:          &defaultLogger{},
@@ -67,14 +102,15 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	connection, err := createConnection(host, port, logHandler)
+	connection, err := createConnection(url, authInfo, tlsConfig, logHandler)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
-		host:            host,
-		port:            port,
+		url:             url,
+		authInfo:        authInfo,
+		tlsConfig:       tlsConfig,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,
@@ -93,9 +129,9 @@ func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet,
 	return driver.client.Submit(traversalString)
 }
 
-// SubmitBytecode sends a bytecode traversal to the server
-func (driver *DriverRemoteConnection) SubmitBytecode(bytecode *bytecode) (ResultSet, error) {
-	return driver.client.SubmitBytecode(bytecode)
+// submitBytecode sends a bytecode traversal to the server
+func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (ResultSet, error) {
+	return driver.client.submitBytecode(bytecode)
 }
 
 // TODO: Bytecode, OptionsStrategy, RequestOptions

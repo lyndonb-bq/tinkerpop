@@ -20,6 +20,7 @@ under the License.
 package gremlingo
 
 import (
+	"crypto/tls"
 	"golang.org/x/text/language"
 )
 
@@ -33,15 +34,16 @@ type ClientSettings struct {
 
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
-	host            string
-	port            int
+	url             string
+	authInfo        *AuthInfo
+	tlsConfig       *tls.Config
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
 }
 
 // NewClient creates a Client and configures it with the given parameters.
-func NewClient(host string, port int, configurations ...func(settings *ClientSettings)) (*Client, error) {
+func NewClient(url string, authInfo *AuthInfo, tlsConfig *tls.Config, configurations ...func(settings *ClientSettings)) (*Client, error) {
 	settings := &ClientSettings{
 		TransporterType: Gorilla,
 		LogVerbosity:    Info,
@@ -53,13 +55,14 @@ func NewClient(host string, port int, configurations ...func(settings *ClientSet
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	conn, err := createConnection(host, port, logHandler)
+	conn, err := createConnection(url, authInfo, tlsConfig, logHandler)
 	if err != nil {
 		return nil, err
 	}
 	client := &Client{
-		host:            host,
-		port:            port,
+		url:             url,
+		authInfo:        authInfo,
+		tlsConfig:       tlsConfig,
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connection:      conn,
@@ -80,8 +83,8 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	return client.connection.write(&request)
 }
 
-// SubmitBytecode submits bytecode to the server to execute and returns a ResultSet
-func (client *Client) SubmitBytecode(bytecode *bytecode) (ResultSet, error) {
+// submitBytecode submits bytecode to the server to execute and returns a ResultSet
+func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode)
 	return client.connection.write(&request)

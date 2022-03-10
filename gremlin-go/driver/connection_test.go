@@ -20,19 +20,26 @@ under the License.
 package gremlingo
 
 import (
+	"crypto/tls"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/text/language"
 	"os"
 	"reflect"
 	"sort"
 	"strconv"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/text/language"
 )
 
 const personLabel = "Person"
 const testLabel = "Test"
 const nameKey = "name"
+const integrationTestSuiteName = "integration"
+const basicAuthIntegrationTestSuite = "basic authentication integration"
+const iamAuthIntegrationTestSuite = "iam authentication integration"
+const validHostInvalidPortValidPath = "ws://localhost:12341253/gremlin"
+const invalidHostValidPortValidPath = "ws://invalidhost:8182/gremlin"
+const validHostvalidPortInvalidPath = "ws://localhost:8182/invalid"
 
 func dropGraph(t *testing.T, g *GraphTraversalSource) {
 	// Drop vertices that were added.
@@ -157,266 +164,314 @@ func getEnvOrDefaultBool(key string, defaultValue bool) bool {
 	return defaultValue
 }
 
-func getEnvOrDefaultInt(key string, defaultValue int) int {
-	value := getEnvOrDefaultString(key, "")
-	if len(value) != 0 {
-		intValue, err := strconv.Atoi(value)
-		if err == nil {
-			return intValue
-		}
+func getBasicAuthInfo() *AuthInfo {
+	return BasicAuthInfo(getEnvOrDefaultString("GREMLIN_GO_BASIC_AUTH_USERNAME", "stephen"),
+		getEnvOrDefaultString("GREMLIN_GO_BASIC_AUTH_PASSWORD", "password"))
+}
+
+func skipTestsIfNotEnabled(t *testing.T, testSuiteName string, testSuiteEnabled bool) {
+	if !testSuiteEnabled {
+		t.Skip(fmt.Sprintf("Skipping %s because %s tests are not enabled.", t.Name(), testSuiteName))
 	}
-	return defaultValue
 }
 
 func TestConnection(t *testing.T) {
-	testHost := getEnvOrDefaultString("GREMLIN_SERVER_HOSTNAME", "localhost")
-	testPort := getEnvOrDefaultInt("GREMLIN_SERVER_PORT", 8182)
-	runIntegration := getEnvOrDefaultBool("RUN_INTEGRATION_TESTS", true)
+	// Integration test variables.
+	testNoAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
+	testNoAuthEnable := getEnvOrDefaultBool("RUN_INTEGRATION_TESTS", true)
+	testNoAuthAuthInfo := &AuthInfo{}
+	testNoAuthTlsConfig := &tls.Config{}
 
-	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
-		if runIntegration {
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
-			assert.Nil(t, err)
-			assert.NotNil(t, remote)
-			g := Traversal_().WithRemote(remote)
+	// Basic authentication integration test variables.
+	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", "wss://localhost:8183/gremlin")
+	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", false)
+	testBasicAuthAuthInfo := getBasicAuthInfo()
+	testBasicAuthTlsConfig := &tls.Config{InsecureSkipVerify: true}
 
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
-			readCount(t, g, "", 0)
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, 0)
+	t.Run("Test createConnection without valid server", func(t *testing.T) {
+		connection, err := createConnection(invalidHostValidPortValidPath, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.NotNil(t, err)
+		assert.Nil(t, connection)
+	})
 
-			// Add data and check that the size of the graph is correct.
-			addTestData(t, g)
+	t.Run("Test createConnection without valid port", func(t *testing.T) {
+		connection, err := createConnection(validHostInvalidPortValidPath, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.NotNil(t, err)
+		assert.Nil(t, connection)
+	})
 
-			readCount(t, g, "", len(getTestNames()))
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, len(getTestNames()))
-
-			// Read test data out of the graph and check that it is correct.
-			readTestDataVertexProperties(t, g)
-			readTestDataValues(t, g)
-
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
-			readCount(t, g, "", 0)
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, 0)
-		}
+	t.Run("Test createConnection without valid path", func(t *testing.T) {
+		connection, err := createConnection(validHostvalidPortInvalidPath, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.NotNil(t, err)
+		assert.Nil(t, connection)
 	})
 
 	t.Run("Test createConnection", func(t *testing.T) {
-		if runIntegration {
-			connection, err := createConnection(testHost, testPort, newLogHandler(&defaultLogger{}, Info, language.English))
-			assert.Nil(t, err)
-			assert.NotNil(t, connection)
-			err = connection.close()
-			assert.Nil(t, err)
-		}
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		connection, err := createConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		assert.NotNil(t, connection)
+		err = connection.close()
+		assert.Nil(t, err)
 	})
 
 	t.Run("Test connection.write()", func(t *testing.T) {
-		if runIntegration {
-			connection, err := createConnection(testHost, testPort, newLogHandler(&defaultLogger{}, Info, language.English))
-			assert.Nil(t, err)
-			assert.NotNil(t, connection)
-			request := makeStringRequest("g.V().count()")
-			resultSet, err := connection.write(&request)
-			assert.Nil(t, err)
-			assert.NotNil(t, resultSet)
-			result, err := resultSet.one()
-			assert.Nil(t, err)
-			assert.NotNil(t, result)
-			assert.Equal(t, "0", result.GetString())
-			err = connection.close()
-			assert.Nil(t, err)
-		}
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		connection, err := createConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		assert.NotNil(t, connection)
+		request := makeStringRequest("g.V().count()")
+		resultSet, err := connection.write(&request)
+		assert.Nil(t, err)
+		assert.NotNil(t, resultSet)
+		result, err := resultSet.one()
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
+		err = connection.close()
+		assert.Nil(t, err)
 	})
 
 	t.Run("Test client.submit()", func(t *testing.T) {
-		if runIntegration {
-			client, err := NewClient(testHost, testPort)
-			assert.Nil(t, err)
-			assert.NotNil(t, client)
-			resultSet, err := client.Submit("g.V().count()")
-			assert.Nil(t, err)
-			assert.NotNil(t, resultSet)
-			result, err := resultSet.one()
-			assert.Nil(t, err)
-			assert.NotNil(t, result)
-			assert.Equal(t, "0", result.GetString())
-			err = client.Close()
-			assert.Nil(t, err)
-		}
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		client, err := NewClient(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, client)
+		resultSet, err := client.Submit("g.V().count()")
+		assert.Nil(t, err)
+		assert.NotNil(t, resultSet)
+		result, err := resultSet.one()
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, "0", result.GetString())
+		err = client.Close()
+		assert.Nil(t, err)
+	})
+
+	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
+
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+		readCount(t, g, "", 0)
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, 0)
+
+		// Add data and check that the size of the graph is correct.
+		addTestData(t, g)
+
+		readCount(t, g, "", len(getTestNames()))
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, len(getTestNames()))
+
+		// Read test data out of the graph and check that it is correct.
+		readTestDataVertexProperties(t, g)
+		readTestDataValues(t, g)
+
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+		readCount(t, g, "", 0)
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, 0)
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal With Label", func(t *testing.T) {
-		if runIntegration {
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
-			assert.Nil(t, err)
-			assert.NotNil(t, remote)
-			g := Traversal_().WithRemote(remote)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-			// Drop the graph.
-			dropGraph(t, g)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
 
-			// Add vertices and edges to graph.
-			_, i, err := g.AddV("company").
-				Property("name", "Bit-Quill").As("bq").
-				AddV("software").
-				Property("name", "GremlinServer").As("gs").
-				AddV("software").
-				Property("name", "TinkerPop").As("tp").
-				AddE("WORKS_ON").From("bq").To("tp").
-				AddE("IS_IN").From("gs").To("tp").
-				AddE("LIKES").From("bq").To("tp").Iterate()
-			assert.Nil(t, err)
-			<-i
+		// Drop the graph.
+		dropGraph(t, g)
 
-			results, errs := g.V().OutE().InV().Path().By("name").By(Label).ToList()
-			assert.Nil(t, errs)
-			assert.NotNil(t, results)
-			assert.Equal(t, 3, len(results))
+		// Add vertices and edges to graph.
+		_, i, err := g.AddV("company").
+			Property("name", "Bit-Quill").As("bq").
+			AddV("software").
+			Property("name", "GremlinServer").As("gs").
+			AddV("software").
+			Property("name", "TinkerPop").As("tp").
+			AddE("WORKS_ON").From("bq").To("tp").
+			AddE("IS_IN").From("gs").To("tp").
+			AddE("LIKES").From("bq").To("tp").Iterate()
+		assert.Nil(t, err)
+		<-i
 
-			possiblePaths := []string{"path[Bit-Quill, WORKS_ON, TinkerPop]", "path[Bit-Quill, LIKES, TinkerPop]", "path[GremlinServer, IS_IN, TinkerPop]"}
-			for _, result := range results {
-				found := false
-				for _, path := range possiblePaths {
-					p, err := result.GetPath()
-					assert.Nil(t, err)
-					if path == p.String() {
-						found = true
-						break
-					}
+		results, errs := g.V().OutE().InV().Path().By("name").By(Label).ToList()
+		assert.Nil(t, errs)
+		assert.NotNil(t, results)
+		assert.Equal(t, 3, len(results))
+
+		possiblePaths := []string{"path[Bit-Quill, WORKS_ON, TinkerPop]", "path[Bit-Quill, LIKES, TinkerPop]", "path[GremlinServer, IS_IN, TinkerPop]"}
+		for _, result := range results {
+			found := false
+			for _, path := range possiblePaths {
+				p, err := result.GetPath()
+				assert.Nil(t, err)
+				if path == p.String() {
+					found = true
+					break
 				}
-				assert.True(t, found)
 			}
-
-			// Drop the graph.
-			dropGraph(t, g)
+			assert.True(t, found)
 		}
+
+		// Drop the graph.
+		dropGraph(t, g)
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal P", func(t *testing.T) {
-		if runIntegration {
-			// Add data
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
-			assert.Nil(t, err)
-			assert.NotNil(t, remote)
-			g := Traversal_().WithRemote(remote)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
-			readCount(t, g, "", 0)
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, 0)
+		// Add data
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
 
-			// Add data and check that the size of the graph is correct.
-			addTestData(t, g)
-			readCount(t, g, "", len(getTestNames()))
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, len(getTestNames()))
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+		readCount(t, g, "", 0)
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, 0)
 
-			// Read test data out of the graph and check that it is correct.
-			results, err := g.V().Has("name", P.Eq("Lyndon")).ValueMap("name").ToList()
-			assert.Nil(t, err)
-			assert.Equal(t, 1, len(results))
+		// Add data and check that the size of the graph is correct.
+		addTestData(t, g)
+		readCount(t, g, "", len(getTestNames()))
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, len(getTestNames()))
 
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
-			readCount(t, g, "", 0)
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, 0)
-		}
+		// Read test data out of the graph and check that it is correct.
+		results, err := g.V().Has("name", P.Eq("Lyndon")).ValueMap("name").ToList()
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(results))
+
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+		readCount(t, g, "", 0)
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, 0)
 	})
 
 	t.Run("Test DriverRemoteConnection Next and HasNext", func(t *testing.T) {
-		if runIntegration {
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
+
+		dropGraph(t, g)
+		addTestData(t, g)
+
+		// Run traversal and test Next/HasNext calls
+		traversal := g.V().HasLabel(personLabel).Properties(nameKey)
+		var names []string
+		for i := 0; i < len(getTestNames()); i++ {
+			hasN, err := traversal.HasNext()
 			assert.Nil(t, err)
-			assert.NotNil(t, remote)
-			g := Traversal_().WithRemote(remote)
-
-			dropGraph(t, g)
-			addTestData(t, g)
-
-			// Run traversal and test Next/HasNext calls
-			traversal := g.V().HasLabel(personLabel).Properties(nameKey)
-			var names []string
-			for i := 0; i < len(getTestNames()); i++ {
-				hasN, err := traversal.HasNext()
-				assert.Nil(t, err)
-				assert.True(t, hasN)
-				res, err := traversal.Next()
-				assert.Nil(t, err)
-				assert.NotNil(t, res)
-				vp, err := res.GetVertexProperty()
-				assert.Nil(t, err)
-				names = append(names, vp.value.(string))
-			}
-			hasN, _ := traversal.HasNext()
-			assert.False(t, hasN)
-			assert.True(t, sortAndCompareTwoStringSlices(names, getTestNames()))
+			assert.True(t, hasN)
+			res, err := traversal.Next()
+			assert.Nil(t, err)
+			assert.NotNil(t, res)
+			vp, err := res.GetVertexProperty()
+			assert.Nil(t, err)
+			names = append(names, vp.value.(string))
 		}
+		hasN, _ := traversal.HasNext()
+		assert.False(t, hasN)
+		assert.True(t, sortAndCompareTwoStringSlices(names, getTestNames()))
 	})
 
 	t.Run("Test anonymousTraversal", func(t *testing.T) {
-		if runIntegration {
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
-			assert.Nil(t, err)
-			assert.NotNil(t, remote)
-			g := Traversal_().WithRemote(remote)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
-			readCount(t, g, "", 0)
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, 0)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
 
-			// Add data and check that the size of the graph is correct.
-			addTestData(t, g)
-			readCount(t, g, "", len(getTestNames()))
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, len(getTestNames()))
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+		readCount(t, g, "", 0)
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, 0)
 
-			readUsingAnonymousTraversal(t, g)
+		// Add data and check that the size of the graph is correct.
+		addTestData(t, g)
+		readCount(t, g, "", len(getTestNames()))
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, len(getTestNames()))
 
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
-			readCount(t, g, "", 0)
-			readCount(t, g, testLabel, 0)
-			readCount(t, g, personLabel, 0)
-		}
+		readUsingAnonymousTraversal(t, g)
+
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+		readCount(t, g, "", 0)
+		readCount(t, g, testLabel, 0)
+		readCount(t, g, personLabel, 0)
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
-		if runIntegration {
-			remote, err := NewDriverRemoteConnection(testHost, testPort)
-			assert.Nil(t, err)
-			assert.NotNil(t, remote)
-			g := Traversal_().WithRemote(remote)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-			// Drop the graph and check that it is empty.
-			dropGraph(t, g)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
 
-			// Add data and check that the size of the graph is correct.
-			addTestData(t, g)
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
 
-			r, err := g.V().Has("name", "Lyndon").Values("foo").ToList()
-			assert.Nil(t, err)
-			assert.NotNil(t, r)
-			assert.Equal(t, 1, len(r))
-			val, err := r[0].GetInt32()
-			assert.Nil(t, err)
-			assert.Equal(t, int32(1), val)
+		// Add data and check that the size of the graph is correct.
+		addTestData(t, g)
 
-			r, err = g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
-			assert.Nil(t, err)
-			assert.NotNil(t, r)
-			assert.Equal(t, 1, len(r))
-			val, err = r[0].GetInt32()
-			assert.Nil(t, err)
-			assert.Equal(t, int32(2), val)
-		}
+		r, err := g.V().Has("name", "Lyndon").Values("foo").ToList()
+		assert.Nil(t, err)
+		assert.NotNil(t, r)
+		assert.Equal(t, 1, len(r))
+		val, err := r[0].GetInt32()
+		assert.Nil(t, err)
+		assert.Equal(t, int32(1), val)
+
+		r, err = g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
+		assert.Nil(t, err)
+		assert.NotNil(t, r)
+		assert.Equal(t, 1, len(r))
+		val, err = r[0].GetInt32()
+		assert.Nil(t, err)
+		assert.Equal(t, int32(2), val)
+	})
+
+	t.Run("Test DriverRemoteConnection with basic authentication", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, basicAuthIntegrationTestSuite, testBasicAuthEnable)
+
+		remote, err := NewDriverRemoteConnection(testBasicAuthUrl, testBasicAuthAuthInfo, testBasicAuthTlsConfig)
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
+
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+
+		// Check that graph is empty.
+		count, err := g.V().Count().ToList()
+		assert.Nil(t, err)
+		assert.NotNil(t, count)
+		assert.Equal(t, 1, len(count))
+		val, err := count[0].GetInt32()
+		assert.Nil(t, err)
+		assert.Equal(t, int32(0), val)
+
+		// Close remote connection.
+		err = remote.Close()
+		assert.Nil(t, err)
 	})
 }
