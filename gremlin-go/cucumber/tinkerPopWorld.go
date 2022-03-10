@@ -186,7 +186,7 @@ func getEdges(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Edge {
 	for _, k := range keys {
 		convKey := k.Convert(valMap.Type().Key())
 		val := valMap.MapIndex(convKey)
-		keyMap := reflect.ValueOf(k.Interface()).Elem().Interface().(gremlingo.MapKey).KeyValue
+		keyMap := reflect.ValueOf(k.Interface()).Elem().Interface().(map[interface{}]interface{})
 		edgeMap[getEdgeKey(keyMap)] = val.Interface().(*gremlingo.Edge)
 	}
 	return edgeMap
