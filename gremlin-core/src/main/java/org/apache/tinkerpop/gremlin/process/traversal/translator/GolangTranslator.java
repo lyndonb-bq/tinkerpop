@@ -273,6 +273,13 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
                         script.append("int32(");
                         convertToScript(arguments[i]);
                         script.append(")");
+                    } else if (methodName.equals("inject") && arguments[i] instanceof Integer) {
+                        script.append("int32(");
+                        convertToScript(arguments[i]);
+                        script.append(")");
+                        if (i != arguments.length - 1) {
+                            script.append(", ");
+                        }
                     } else {
                         convertToScript(arguments[i]);
                         if (i != arguments.length - 1) {

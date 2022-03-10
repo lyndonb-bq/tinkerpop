@@ -45,24 +45,27 @@ var parsers map[*regexp.Regexp]func(string, string) interface{}
 
 func init() {
 	parsers = map[*regexp.Regexp]func(string, string) interface{}{
-		regexp.MustCompile(`^d\[(.*)]\.[ilfdm]$`): toNumeric,
-		regexp.MustCompile(`^v\[(.+)]$`):          toVertex,
-		regexp.MustCompile(`^v\[(.+)]\.id$`):      toVertexId,
-		regexp.MustCompile(`^e\[(.+)]$`):          toEdge,
-		regexp.MustCompile(`^v\[(.+)]\.sid$`):     toVertexIdString,
-		regexp.MustCompile(`^e\[(.+)]\.id$`):      toEdgeId,
-		regexp.MustCompile(`^e\[(.+)]\.sid$`):     toEdgeIdString,
-		regexp.MustCompile(`^p\[(.+)]$`):          toPath,
-		regexp.MustCompile(`^l\[(.*)$]`):          toList,
-		regexp.MustCompile(`^s\[(.*)$]`):          toSet,
-		regexp.MustCompile(`^m\[(.+)]$`):          toMap,
-		regexp.MustCompile(`^c\[(.+)]$`):          toLambda,
-		regexp.MustCompile(`^t\[(.+)]$`):          toT,
-		regexp.MustCompile(`^null$`):              func(string, string) interface{} { return nil },
+		regexp.MustCompile(`^d\[(.*)]\.[lfdm]$`): toNumeric,
+		regexp.MustCompile(`^d\[(.*)]\.[i]$`):    toInt32,
+		regexp.MustCompile(`^v\[(.+)]$`):         toVertex,
+		regexp.MustCompile(`^v\[(.+)]\.id$`):     toVertexId,
+		regexp.MustCompile(`^e\[(.+)]$`):         toEdge,
+		regexp.MustCompile(`^v\[(.+)]\.sid$`):    toVertexIdString,
+		regexp.MustCompile(`^e\[(.+)]\.id$`):     toEdgeId,
+		regexp.MustCompile(`^e\[(.+)]\.sid$`):    toEdgeIdString,
+		regexp.MustCompile(`^p\[(.+)]$`):         toPath,
+		regexp.MustCompile(`^l\[(.*)]$`):         toList,
+		regexp.MustCompile(`^s\[(.*)]$`):         toSet,
+		regexp.MustCompile(`^m\[(.+)]$`):         toMap,
+		regexp.MustCompile(`^c\[(.+)]$`):         toLambda,
+		regexp.MustCompile(`^t\[(.+)]$`):         toT,
 	}
 }
 
 func parseValue(value string, graphName string) interface{} {
+	if regexp.MustCompile(`^null$`).MatchString(value) {
+		return nil
+	}
 	var extractedValue string
 	var parser func(string, string) interface{}
 	for key, element := range parsers {
@@ -96,8 +99,18 @@ func toNumeric(stringVal, graphName string) interface{} {
 	return val
 }
 
+// Parse int32.
+func toInt32(stringVal, graphName string) interface{} {
+	val, err := strconv.ParseInt(stringVal, 10, 32)
+	if err != nil {
+		return nil
+	}
+	return int32(val)
+}
+
 // Parse vertex.
 func toVertex(name, graphName string) interface{} {
+	//fmt.Println("GETTING VERTICES", tg.getDataGraphFromMap(graphName).vertices, "FROM", graphName)
 	return tg.getDataGraphFromMap(graphName).vertices[name]
 }
 
@@ -200,7 +213,6 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 		for i := 0; i < oriSlice.Len(); i++ {
 			valSlice = append(valSlice, parseMapValue(oriSlice.Index(i).Interface(), graphName))
 		}
-		// Use SliceKey struct or convert to array if this will be used as key.
 		return valSlice
 	case reflect.Map:
 		valMap := make(map[interface{}]interface{})
@@ -209,7 +221,14 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 		for _, k := range keys {
 			convKey := k.Convert(v.Type().Key())
 			val := v.MapIndex(convKey)
-			valMap[parseMapValue(k.Interface(), graphName)] = parseMapValue(val.Interface(), graphName)
+			keyVal := parseMapValue(k.Interface(), graphName)
+			if reflect.ValueOf(keyVal).Kind() == reflect.Slice {
+				// Turning map keys of slice type into string type for comparison purposes
+				// string slices should also be converted into slices more easily
+				valMap[fmt.Sprint(keyVal)] = parseMapValue(val.Interface(), graphName)
+			} else {
+				valMap[keyVal] = parseMapValue(val.Interface(), graphName)
+			}
 		}
 		return valMap
 	default:
@@ -351,7 +370,8 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 		} else {
 			for _, res := range actualResult {
 				if !contains(expectedResult, res) {
-					return errors.New("actual result does not match expected result")
+					err := fmt.Sprintf("actual result %v is not in expected results %v.", res, expectedResult)
+					return errors.New(err)
 				}
 			}
 		}
@@ -421,20 +441,28 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 		tg.loadAllDataGraph()
 	})
 	ctx.AfterSuite(func() {
-		tg.closeAllDataGraphConnection()
+		err := tg.closeAllDataGraphConnection()
+		if err != nil {
+			return
+		}
 	})
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
-		//tg.loadAllDataGraph()
-		tg.recreateAllDataGraphConnection()
+		err := tg.recreateAllDataGraphConnection()
+		if err != nil {
+			return nil, err
+		}
 		return ctx, nil
 	})
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		tg.closeAllDataGraphConnection()
+		err = tg.closeAllDataGraphConnection()
+		if err != nil {
+			return nil, err
+		}
 		return ctx, nil
 	})
 

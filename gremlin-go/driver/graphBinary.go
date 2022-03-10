@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math/big"
 	"reflect"
 	"time"
@@ -83,14 +84,6 @@ func (dataType DataType) getCodeByte() byte {
 
 func (dataType DataType) getCodeBytes() []byte {
 	return []byte{dataType.getCodeByte()}
-}
-
-type MapKey struct {
-	KeyValue map[interface{}]interface{}
-}
-
-type SliceKey struct {
-	KeyValue []interface{}
 }
 
 // graphBinaryTypeSerializer struct for the different types of serializers
@@ -228,16 +221,20 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("MAP KEY", key, "MAP VAL", val)
 		if key == nil {
-			return nil, errors.New("cannot generate map with nil key")
+			valMap[""] = val
+			continue
+			//return nil, errors.New("cannot generate map with nil key")
 		}
 		switch reflect.TypeOf(key).Kind() {
 		case reflect.Map:
-			keyMap := MapKey{KeyValue: key.(map[interface{}]interface{})}
-			valMap[&keyMap] = val
-		case reflect.Array, reflect.Slice:
-			sliceMap := SliceKey{KeyValue: key.([]interface{})}
-			valMap[&sliceMap] = val
+			// Passing the pointer to the map as key, as maps are not hashable
+			valMap[&key] = val
+		case reflect.Slice:
+			// Turning map keys of slice type into string type for comparison purposes
+			// string slices should also be converted into slices more easily
+			valMap[fmt.Sprint(key)] = val
 		default:
 			valMap[key] = val
 		}
