@@ -70,12 +70,12 @@ func NewClient(url string, authInfo *AuthInfo, tlsConfig *tls.Config, configurat
 	return client, nil
 }
 
-// Close closes the client via connection
+// Close closes the client via connection.
 func (client *Client) Close() error {
 	return client.connection.close()
 }
 
-// Submit submits a Gremlin script to the server and returns a ResultSet
+// Submit submits a Gremlin script to the server and returns a ResultSet.
 func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
@@ -83,7 +83,7 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	return client.connection.write(&request)
 }
 
-// submitBytecode submits bytecode to the server to execute and returns a ResultSet
+// submitBytecode submits bytecode to the server to execute and returns a ResultSet.
 func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode)

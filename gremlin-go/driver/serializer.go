@@ -53,27 +53,24 @@ const versionByte byte = 0x81
 
 func convertArgs(request *request, gs graphBinarySerializer) (map[string]interface{}, error) {
 	// TODO AN-981: Remote transaction session processor is same as bytecode
-	if request.op == authOp {
+	if request.op != bytecodeProcessor {
 		return request.args, nil
-	} else if request.processor == bytecodeProcessor {
-		// Convert to format:
-		// args["gremlin"]: <serialized args["gremlin"]>
-		gremlin := request.args["gremlin"]
-		switch gremlin.(type) {
-		case bytecode:
-			buffer := bytes.Buffer{}
-			gremlinBuffer, err := gs.ser.write(gremlin, &buffer)
-			if err != nil {
-				return nil, err
-			}
-			request.args["gremlin"] = gremlinBuffer
-			return request.args, nil
-		default:
-			return nil, fmt.Errorf("failed to find serializer for type '%s'", reflect.TypeOf(gremlin).Name())
+	}
+
+	// Convert to format:
+	// args["gremlin"]: <serialized args["gremlin"]>
+	gremlin := request.args["gremlin"]
+	switch gremlin.(type) {
+	case bytecode:
+		buffer := bytes.Buffer{}
+		gremlinBuffer, err := gs.ser.write(gremlin, &buffer)
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		// Use standard processor, which effectively does nothing.
+		request.args["gremlin"] = gremlinBuffer
 		return request.args, nil
+	default:
+		return nil, fmt.Errorf("failed to find serializer for type '%s'", reflect.TypeOf(gremlin).Name())
 	}
 }
 
@@ -193,7 +190,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		if err != nil {
 			return nil, err
 		} else if keyType != StringType {
-			return nil, fmt.Errorf("expected string key for map, got type='0x%x'", keyType)
+			return nil, fmt.Errorf("expected string Key for map, got type='0x%x'", keyType)
 		}
 		var nullable byte
 		err = binary.Read(buffer, binary.BigEndian, &nullable)
@@ -201,7 +198,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 			return nil, err
 		}
 		if nullable != 0 {
-			return nil, errors.New("expected non-null key for map")
+			return nil, errors.New("expected non-null Key for map")
 		}
 
 		k, err := readString(buffer)

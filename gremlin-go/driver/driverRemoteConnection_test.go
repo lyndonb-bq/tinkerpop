@@ -20,8 +20,6 @@ under the License.
 package gremlingo
 
 import (
-	"encoding/base64"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -30,15 +28,9 @@ import (
 func TestAuthentication(t *testing.T) {
 
 	t.Run("Test BasicAuthInfo.", func(t *testing.T) {
-		username := "Lyndon"
-		password := "Bauto"
 		header := BasicAuthInfo("Lyndon", "Bauto")
-		assert.NotNil(t, header.getHeader())
-
-		// fmt.Sprintf("%v, <value>) is used below because it strips off the http.Header type comparison issue.
-		// http.Header is technically a map[string][]string underneath.
-		usernamePasswordEncoded := map[string][]string{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte(username+":"+password))}}
-		assert.Equal(t, fmt.Sprintf("%v", usernamePasswordEncoded), fmt.Sprintf("%v", header.getHeader()))
+		assert.Nil(t, header.getHeader())
+		assert.True(t, header.getUseBasicAuth())
 	})
 
 	t.Run("Test getHeader.", func(t *testing.T) {

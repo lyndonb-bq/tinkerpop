@@ -19,8 +19,6 @@ under the License.
 
 package gremlingo
 
-// AN-968 Finish Result implementation.
-
 import (
 	"errors"
 	"fmt"
@@ -33,8 +31,8 @@ type Result struct {
 	result interface{}
 }
 
-// ToString returns the string representation of the Result struct in Go-syntax format
-func (r *Result) ToString() string {
+// String returns the string representation of the Result struct in Go-syntax format
+func (r *Result) String() string {
 	return fmt.Sprintf("result{object=%v class=%T}", r.result, r.result)
 }
 
@@ -145,7 +143,7 @@ func (r *Result) IsNil() bool {
 	return nil == r.result
 }
 
-// GetVertex returns the result if it is a vertex, otherwise returns an error
+// GetVertex returns the result if it is a Vertex, otherwise returns an error
 func (r *Result) GetVertex() (*Vertex, error) {
 	res, ok := r.result.(*Vertex)
 	if !ok {
@@ -163,7 +161,7 @@ func (r *Result) GetEdge() (*Edge, error) {
 	return res, nil
 }
 
-// GetElement returns the result if it is an element, otherwise returns an error
+// GetElement returns the result if it is an Element, otherwise returns an error
 func (r *Result) GetElement() (*Element, error) {
 	res, ok := r.result.(*Element)
 	if !ok {
@@ -190,7 +188,7 @@ func (r *Result) GetProperty() (*Property, error) {
 	return res, nil
 }
 
-// GetVertexProperty returns the result if it is a vertex property, otherwise returns an error
+// GetVertexProperty returns the result if it is a Vertex property, otherwise returns an error
 func (r *Result) GetVertexProperty() (*VertexProperty, error) {
 	res, ok := r.result.(*VertexProperty)
 	if !ok {
@@ -199,6 +197,7 @@ func (r *Result) GetVertexProperty() (*VertexProperty, error) {
 	return res, nil
 }
 
+// GetTraverser returns the Result if it is a Traverser, otherwise returns an error
 func (r *Result) GetTraverser() (*Traverser, error) {
 	res, ok := r.result.(Traverser)
 	if !ok {
@@ -207,6 +206,7 @@ func (r *Result) GetTraverser() (*Traverser, error) {
 	return &res, nil
 }
 
+// GetSlice returns the Result if it is a Slice, otherwise returns an error
 func (r *Result) GetSlice() (*[]interface{}, error) {
 	res, ok := r.result.([]interface{})
 	if !ok {
