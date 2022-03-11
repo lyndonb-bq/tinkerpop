@@ -846,7 +846,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			return buffer.Bytes(), err
 		}, logHandler: serializer.logHandler}, nil
 	case bool:
-		return &graphBinaryTypeSerializer{dataType: ByteType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+		return &graphBinaryTypeSerializer{dataType: BooleanType, writer: func(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 			err := binary.Write(buffer, binary.BigEndian, value.(bool))
 			return buffer.Bytes(), err
 		}, logHandler: serializer.logHandler}, nil
