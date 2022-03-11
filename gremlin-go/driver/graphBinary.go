@@ -73,6 +73,7 @@ const (
 	ShortType          DataType = 0x26
 	BooleanType        DataType = 0x27
 	TextPType          DataType = 0x28
+	BulkSetType        DataType = 0x2a
 	DurationType       DataType = 0x81
 	NullType           DataType = 0xFE
 )
@@ -799,6 +800,35 @@ func textPWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphB
 	return buffer.Bytes(), err
 }
 
+// Format: {length}{item_0}...{item_n}
+// Where:
+// {length} is an Int describing the length of the BulkSet.
+// {item_0}...{item_n} are the items of the BulkSet. {item_i} is a sequence of a fully qualified typed value composed of {type_code}{type_info}{value_flag}{value} followed by the "bulk" which is a Long value.
+// If the implementing language does not have a BulkSet object to deserialize into, this format can be coerced to a List and still be considered compliant with Gremlin. Simply "expand the bulk" by adding the item to the List the number of times specified by the bulk.
+func bulkSetReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) (interface{}, error) {
+	var size int32
+	err := binary.Read(buffer, binary.BigEndian, &size)
+	if err != nil {
+		return nil, err
+	}
+	var valList []interface{}
+	for i := 0; i < int(size); i++ {
+		val, err := typeSerializer.read(buffer)
+		if err != nil {
+			return nil, err
+		}
+		var rep int64
+		err = binary.Read(buffer, binary.BigEndian, &rep)
+		if err != nil {
+			return nil, err
+		}
+		for j := 0; j < int(rep); j++ {
+			valList = append(valList, val)
+		}
+	}
+	return valList, nil
+}
+
 // gets the type of the serializer based on the value
 func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{}) (*graphBinaryTypeSerializer, error) {
 	switch val.(type) {
@@ -1019,6 +1049,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: DurationType, reader: durationReader, nullFlagReturn: time.Duration(0), logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
+	case BulkSetType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: bulkSetReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
 		return nil, errors.New("unknown data type to deserialize")
