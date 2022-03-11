@@ -68,11 +68,7 @@ func parseValue(value string, graphName string) interface{} {
 		var match = key.FindAllStringSubmatch(value, -1)
 		if len(match) > 0 {
 			parser = element
-			if len(match[0]) == 1 && match[0][0] == "null" {
-				extractedValue = "null"
-			} else {
-				extractedValue = match[0][1]
-			}
+			extractedValue = match[0][1]
 			break
 		}
 	}
@@ -259,7 +255,23 @@ func (tg *tinkerPopGraph) iteratedNext() error {
 	if err != nil {
 		return err
 	}
-	tg.result = []*gremlingo.Result{result}
+	var nextResults []interface{}
+	switch result.GetType().Kind() {
+	case reflect.Array, reflect.Slice:
+		resSlice := reflect.ValueOf(result.GetInterface())
+		for i := 0; i < resSlice.Len(); i++ {
+			nextResults = append(nextResults, resSlice.Index(i).Interface())
+		}
+	default:
+		simpleSet, ok := result.GetInterface().(*gremlingo.SimpleSet)
+		if ok {
+			nextResults = simpleSet.ToSlice()
+		} else {
+			nextResults = append(nextResults, result)
+		}
+	}
+
+	tg.result = nextResults
 	return nil
 }
 
@@ -271,7 +283,11 @@ func (tg *tinkerPopGraph) iteratedToList() error {
 	if err != nil {
 		return err
 	}
-	tg.result = results
+	var listResults []interface{}
+	for _, res := range results {
+		listResults = append(listResults, res)
+	}
+	tg.result = listResults
 	return nil
 }
 
@@ -306,6 +322,15 @@ func (tg *tinkerPopGraph) theGraphInitializerOf(arg1 *godog.DocString) error {
 	// We may have modified the so-called `empty` graph.
 	if tg.graphName == "empty" {
 		tg.reloadEmptyData()
+	}
+	return nil
+}
+
+func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
+	actualCount := len(tg.result)
+	if len(tg.result) != expectedCount {
+		err := fmt.Sprintf("result should return %d for count, but returned %d.", expectedCount, actualCount)
+		return errors.New(err)
 	}
 	return nil
 }
@@ -352,11 +377,12 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			expectedResult = append(expectedResult, val)
 		}
 		var actualResult []interface{}
-		if len(tg.result) == 1 && reflect.TypeOf(tg.result[0].GetInterface()).Kind() == reflect.Slice {
-			actualResult = tg.result[0].GetInterface().([]interface{})
-		} else {
-			for _, res := range tg.result {
-				actualResult = append(actualResult, res.GetInterface())
+		for _, res := range tg.result {
+			switch r := res.(type) {
+			case *gremlingo.Result:
+				actualResult = append(actualResult, r.GetInterface())
+			default:
+				actualResult = append(actualResult, r)
 			}
 		}
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
@@ -443,15 +469,6 @@ func contains(list []interface{}, item interface{}) bool {
 		}
 	}
 	return false
-}
-
-func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
-	actualCount := len(tg.result)
-	if len(tg.result) != expectedCount {
-		err := fmt.Sprintf("result should return %d for count, but returned %d.", expectedCount, actualCount)
-		return errors.New(err)
-	}
-	return nil
 }
 
 func (tg *tinkerPopGraph) theTraversalOf(arg1 *godog.DocString) error {

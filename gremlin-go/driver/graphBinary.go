@@ -223,7 +223,6 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("MAP KEY", key, "MAP VAL", val)
 		if key == nil {
 			valMap[""] = val
 			continue
