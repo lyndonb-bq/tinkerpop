@@ -49,7 +49,7 @@ func makeStringRequest(stringGremlin string) (req request) {
 const bytecodeOp = "bytecode"
 const bytecodeProcessor = "traversal"
 
-func makeBytecodeRequest(bytecodeGremlin *bytecode) (req request) {
+func makeBytecodeRequest(bytecodeGremlin *bytecode, traversalSource string) (req request) {
 	return request{
 		requestID: uuid.New(),
 		op:        bytecodeOp,
@@ -57,7 +57,7 @@ func makeBytecodeRequest(bytecodeGremlin *bytecode) (req request) {
 		args: map[string]interface{}{
 			"gremlin": *bytecodeGremlin,
 			"aliases": map[string]interface{}{
-				"g": "g",
+				"g": traversalSource,
 			},
 		},
 	}

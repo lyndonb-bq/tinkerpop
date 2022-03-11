@@ -75,6 +75,7 @@ func NewDriverRemoteConnection(
 	client := &Client{
 		host:            host,
 		port:            port,
+		traversalSource: settings.TraversalSource,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,

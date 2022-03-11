@@ -164,6 +164,9 @@ func TestConnection(t *testing.T) {
 	testHost := getEnvOrDefaultString("GREMLIN_SERVER_HOSTNAME", "localhost")
 	testPort := getEnvOrDefaultInt("GREMLIN_SERVER_PORT", 8182)
 	runIntegration := getEnvOrDefaultBool("RUN_INTEGRATION_TESTS", true)
+	// Set this to true to will when TinkerGraphs are configured on the test server
+	// TODO: remove after setting up docker integration testing that automatically sets up TinkerGraphs on test server
+	runIntegrationWithAlias := false
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
 		if runIntegration {
@@ -409,6 +412,23 @@ func TestConnection(t *testing.T) {
 			val, err = r[0].GetInt32()
 			assert.Nil(t, err)
 			assert.Equal(t, int32(2), val)
+		}
+	})
+
+	t.Run("Test DriverRemoteConnection To Server Configured with Modern Graph", func(t *testing.T) {
+		if runIntegrationWithAlias {
+			remote, err := NewDriverRemoteConnection(testHost, testPort,
+				func(settings *DriverRemoteConnectionSettings) {
+					settings.TraversalSource = "gmodern"
+				})
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			g := Traversal_().WithRemote(remote)
+
+			r, err := g.V().Count().ToList()
+			for _, res := range r {
+				assert.Equal(t, int64(6), res.GetInterface())
+			}
 		}
 	})
 }

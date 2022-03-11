@@ -37,10 +37,6 @@ type tinkerPopGraph struct {
 	*TinkerPopWorld
 }
 
-type SliceKey struct {
-	KeyValue []interface{}
-}
-
 var parsers map[*regexp.Regexp]func(string, string) interface{}
 
 func init() {
@@ -502,6 +498,7 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
+		tg.loadEmptyDataGraph()
 		err := tg.recreateAllDataGraphConnection()
 		if err != nil {
 			return nil, err

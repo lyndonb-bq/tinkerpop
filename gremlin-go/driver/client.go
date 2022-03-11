@@ -25,6 +25,7 @@ import (
 
 // ClientSettings is used to modify a Client's settings on initialization.
 type ClientSettings struct {
+	TraversalSource string
 	TransporterType TransporterType
 	LogVerbosity    LogVerbosity
 	Logger          Logger
@@ -35,6 +36,7 @@ type ClientSettings struct {
 type Client struct {
 	host            string
 	port            int
+	traversalSource string
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
@@ -44,6 +46,7 @@ type Client struct {
 // Return a non-nil error if creating this connection fails.
 func NewClient(host string, port int, configurations ...func(settings *ClientSettings)) (*Client, error) {
 	settings := &ClientSettings{
+		TraversalSource: "g",
 		TransporterType: Gorilla,
 		LogVerbosity:    Info,
 		Logger:          &defaultLogger{},
@@ -84,6 +87,6 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 // SubmitBytecode submits bytecode to the server to execute and returns a ResultSet.
 func (client *Client) SubmitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
-	request := makeBytecodeRequest(bytecode)
+	request := makeBytecodeRequest(bytecode, client.traversalSource)
 	return client.connection.write(&request)
 }
