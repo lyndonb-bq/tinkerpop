@@ -68,7 +68,11 @@ func parseValue(value string, graphName string) interface{} {
 		var match = key.FindAllStringSubmatch(value, -1)
 		if len(match) > 0 {
 			parser = element
-			extractedValue = match[0][1]
+			if len(match[0]) == 1 && match[0][0] == "null" {
+				extractedValue = "null"
+			} else {
+				extractedValue = match[0][1]
+			}
 			break
 		}
 	}
@@ -255,7 +259,7 @@ func (tg *tinkerPopGraph) iteratedNext() error {
 	if err != nil {
 		return err
 	}
-	tg.result = append(tg.result, result)
+	tg.result = []*gremlingo.Result{result}
 	return nil
 }
 
@@ -348,8 +352,12 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			expectedResult = append(expectedResult, val)
 		}
 		var actualResult []interface{}
-		for _, res := range tg.result {
-			actualResult = append(actualResult, res.GetInterface())
+		if len(tg.result) == 1 && reflect.TypeOf(tg.result[0].GetInterface()).Kind() == reflect.Slice {
+			actualResult = tg.result[0].GetInterface().([]interface{})
+		} else {
+			for _, res := range tg.result {
+				actualResult = append(actualResult, res.GetInterface())
+			}
 		}
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
 			err := fmt.Sprintf("actual result length does not equal expected (%d!=%d).", len(actualResult), len(expectedResult))
