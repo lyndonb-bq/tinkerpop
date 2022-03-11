@@ -237,11 +237,9 @@ func parseMapValue(mapVal interface{}, graphName string) interface{} {
 	}
 }
 
-// TODO add with lambda implementation - AN-1037
 // Parse lambda.
 func toLambda(name, graphName string) interface{} {
-	// NOTE: This may cause null pointer exceptions on server in tests that need this parameter
-	return nil
+	return &gremlingo.Lambda{Script: name}
 }
 
 func toT(name, graphName string) interface{} {
@@ -358,20 +356,17 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			actualResult = append(actualResult, res.GetInterface())
 		}
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
-			err := fmt.Sprintf("actual result length %d does not equal to expected result length %d.", len(actualResult), len(expectedResult))
+			err := fmt.Sprintf("actual result length does not equal expected (%d!=%d).", len(actualResult), len(expectedResult))
 			return errors.New(err)
 		}
 		if ordered {
-			for idx, res := range actualResult {
-				if !reflect.DeepEqual(expectedResult[idx], res) {
-					return errors.New("actual result is not ordered")
-				}
+			if fmt.Sprint(actualResult) != fmt.Sprint(expectedResult) {
+				return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
 			}
 		} else {
 			for _, res := range actualResult {
 				if !contains(expectedResult, res) {
-					err := fmt.Sprintf("actual result %v is not in expected results %v.", res, expectedResult)
-					return errors.New(err)
+					return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
 				}
 			}
 		}
@@ -383,8 +378,64 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 
 func contains(list []interface{}, item interface{}) bool {
 	for _, v := range list {
-		if reflect.DeepEqual(v, item) {
-			return true
+		if v != nil {
+			t := reflect.TypeOf(v)
+			isEqual := true
+			switch t.Kind() {
+			case reflect.Array, reflect.Slice:
+				isEqual = false
+				valueArray := v.([]interface{})
+				itemArray := item.([]interface{})
+				if len(valueArray) != len(itemArray) {
+					isEqual = false
+				} else {
+					for _, val := range valueArray {
+						found := false
+						for _, subVal := range itemArray {
+							if fmt.Sprint(subVal) == fmt.Sprint(val) {
+								found = true
+								break
+							}
+						}
+						if !found {
+							isEqual = false
+						}
+					}
+				}
+				if isEqual {
+					return true
+				}
+			case reflect.Map:
+				valueMap := v.(map[interface{}]interface{})
+				itemMap := item.(map[interface{}]interface{})
+				if len(valueMap) != len(itemMap) {
+					isEqual = false
+				} else {
+					for key, val := range valueMap {
+						found := false
+						for subKey, subVal := range itemMap {
+							if fmt.Sprint(subKey) == fmt.Sprint(key) && fmt.Sprint(subVal) == fmt.Sprint(val) {
+								found = true
+								break
+							}
+						}
+						if !found {
+							isEqual = false
+						}
+					}
+				}
+				if isEqual {
+					return true
+				}
+			default:
+				if reflect.DeepEqual(v, item) {
+					return true
+				}
+			}
+		} else {
+			if item == nil {
+				return true
+			}
 		}
 	}
 	return false

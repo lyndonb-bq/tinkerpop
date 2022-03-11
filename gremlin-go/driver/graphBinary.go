@@ -54,6 +54,7 @@ const (
 	PropertyType       DataType = 0x0f
 	VertexType         DataType = 0x11
 	VertexPropertyType DataType = 0x12
+	LambdaType         DataType = 0x1d
 	BarrierType        DataType = 0x13
 	CardinalityType    DataType = 0x16
 	BytecodeType       DataType = 0x15
@@ -730,6 +731,32 @@ func enumWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 	return buffer.Bytes(), err
 }
 
+func lambdaWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
+	lambda := value.(*Lambda)
+	if lambda.Language == "" {
+		lambda.Language = "gremlin-groovy"
+	}
+	_, err := typeSerializer.writeValue(lambda.Language, buffer, false)
+	fmt.Println("LANGUAGE: ", lambda.Language)
+	if err != nil {
+		return nil, err
+	}
+	_, err = typeSerializer.writeValue(lambda.Script, buffer, false)
+	fmt.Println("SCRIPT: ", lambda.Script)
+	if err != nil {
+		return nil, err
+	}
+
+	// It's hard to know how many parameters there are without extensive string parsing.
+	// Instead, we can set -1 which means unknown.
+	err = binary.Write(buffer, binary.BigEndian, int32(-1))
+	if err != nil {
+		return nil, err
+	}
+
+	return buffer.Bytes(), nil
+}
+
 func pWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	v := value.(*p)
 	_, err := typeSerializer.writeValue(v.operator, buffer, false)
@@ -846,6 +873,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: PropertyType, writer: propertyWriter, logHandler: serializer.logHandler}, nil
 	case *VertexProperty:
 		return &graphBinaryTypeSerializer{dataType: VertexPropertyType, writer: vertexPropertyWriter, logHandler: serializer.logHandler}, nil
+	case *Lambda:
+		return &graphBinaryTypeSerializer{dataType: LambdaType, writer: lambdaWriter, logHandler: serializer.logHandler}, nil
 	case *Path:
 		return &graphBinaryTypeSerializer{dataType: PathType, writer: pathWriter, logHandler: serializer.logHandler}, nil
 	case Set:
