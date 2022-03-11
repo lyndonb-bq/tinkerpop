@@ -153,9 +153,7 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
 
         @Override
         protected String getSyntax(final Lambda o) {
-            // TODO: AN-1037 Lambda support in Gremlin-Go
-            // return "gremlingo.GroovyLambda(\"" + StringEscapeUtils.escapeEcmaScript(o.getLambdaScript().trim()) + "\")";
-            throw new NotImplementedException("Lambda translation not currently supported");
+            return "&gremlingo.Lambda{Script:\"" + o.getLambdaScript().trim() + "\", Language:\"\"}";
         }
 
         @Override
@@ -273,6 +271,13 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
                         script.append("int32(");
                         convertToScript(arguments[i]);
                         script.append(")");
+                    } else if (methodName.equals("withSack") && arguments[i] instanceof Integer) {
+                        script.append("int32(");
+                        convertToScript(arguments[i]);
+                        script.append(")");
+                        if (i != arguments.length - 1) {
+                            script.append(", ");
+                        }
                     } else if (methodName.equals("inject") && arguments[i] instanceof Integer) {
                         script.append("int32(");
                         convertToScript(arguments[i]);

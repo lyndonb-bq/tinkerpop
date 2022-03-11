@@ -225,7 +225,7 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		}
 		fmt.Println("MAP KEY", key, "MAP VAL", val)
 		if key == nil {
-			valMap[""] = val
+			valMap[nil] = val
 			continue
 			//return nil, errors.New("cannot generate map with nil key")
 		}

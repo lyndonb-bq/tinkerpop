@@ -69,7 +69,7 @@ func TestGraphBinaryV1(t *testing.T) {
 			var boolArr = [2]bool{true, false}
 			for _, x := range boolArr {
 				writeToBuffer(x, &buff)
-				assert.Equal(t, x, readToValue(&buff).(uint8) != 0)
+				assert.Equal(t, x, readToValue(&buff).(bool))
 			}
 		})
 		t.Run("test byte(uint8)", func(t *testing.T) {

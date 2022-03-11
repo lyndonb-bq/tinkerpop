@@ -253,7 +253,8 @@ func (tg *tinkerPopGraph) anUnsupportedTest() error {
 
 func (tg *tinkerPopGraph) iteratedNext() error {
 	if tg.traversal == nil {
-		return errors.New("nil traversal, feature need to be implemented in go")
+		// Return pending because this is not currently implemented.
+		return godog.ErrPending
 	}
 	result, err := tg.traversal.Next()
 	if err != nil {
@@ -265,7 +266,8 @@ func (tg *tinkerPopGraph) iteratedNext() error {
 
 func (tg *tinkerPopGraph) iteratedToList() error {
 	if tg.traversal == nil {
-		return errors.New("nil traversal, feature need to be implemented in go")
+		// Return pending because this is not currently implemented.
+		return godog.ErrPending
 	}
 	results, err := tg.traversal.ToList()
 	if err != nil {
@@ -352,11 +354,23 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			expectedResult = append(expectedResult, val)
 		}
 		var actualResult []interface{}
-		if len(tg.result) == 1 && reflect.TypeOf(tg.result[0].GetInterface()).Kind() == reflect.Slice {
+		if len(tg.result) == 1 && tg.result[0].GetInterface() != nil &&
+			reflect.TypeOf(tg.result[0].GetInterface()).Kind() == reflect.Slice {
 			actualResult = tg.result[0].GetInterface().([]interface{})
 		} else {
-			for _, res := range tg.result {
-				actualResult = append(actualResult, res.GetInterface())
+			if len(tg.result) == 1 && tg.result[0].GetInterface() != nil {
+				simpleSet, ok := tg.result[0].GetInterface().(*gremlingo.SimpleSet)
+				if ok {
+					actualResult = simpleSet.ToSlice()
+				} else {
+					for _, res := range tg.result {
+						actualResult = append(actualResult, res.GetInterface())
+					}
+				}
+			} else {
+				for _, res := range tg.result {
+					actualResult = append(actualResult, res.GetInterface())
+				}
 			}
 		}
 		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
@@ -432,7 +446,7 @@ func contains(list []interface{}, item interface{}) bool {
 					return true
 				}
 			default:
-				if reflect.DeepEqual(v, item) {
+				if fmt.Sprint(v) == fmt.Sprint(item) {
 					return true
 				}
 			}
