@@ -33,7 +33,7 @@ type TinkerPopWorld struct {
 	g            *gremlingo.GraphTraversalSource
 	graphName    string
 	traversal    *gremlingo.GraphTraversal
-	result       []*gremlingo.Result
+	result       []interface{}
 	graphDataMap map[string]*DataGraph
 	parameters   map[string]interface{}
 }
