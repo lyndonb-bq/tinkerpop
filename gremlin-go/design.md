@@ -33,7 +33,7 @@ The entities are as follows, from the highest level to the lowest:
 
 #### Client
 
-A `Client` represents the entry point to interaction with a Gremlin-supported server. It takes in basic configuration such as the hostname, port, as well as any additional configuration.
+A `Client` represents the entry point to interaction with a Gremlin-supported server. A URL parameter is required for construction, with additional configuration options such as HTTP headers and TLS configuration available.
 
 The `Client` has two main responsibilities:
 
@@ -113,7 +113,7 @@ sequenceDiagram
 
 #### protocol
 
-The `protocol` entity handles invoking serialization and deserialization of data, as well as handling the lifecycle of raw data passed to and received from the `transporter` layer. Upon creation, an instance of `protocol` starts a `go routine` to asynchronously read and popular data into a  `ResultSet` that is owned by the parent `connection`.
+The `protocol` entity handles invoking serialization and deserialization of data, as well as handling the lifecycle of raw data passed to and received from the `transporter` layer. Upon creation, an instance of `protocol` starts a `go routine` to asynchronously read and populate data into a  `ResultSet` that is owned by the parent `connection`.
 
 ##### Cardinalities
 
