@@ -144,7 +144,7 @@ func toEdgeIdString(name, graphName string) interface{} {
 	if tg.getDataGraphFromMap(graphName).edges[name] == nil {
 		return nil
 	}
-	return fmt.Sprint(tg.getDataGraphFromMap(graphName).edges[name])
+	return fmt.Sprint(tg.getDataGraphFromMap(graphName).edges[name].Id)
 }
 
 // Parse path.
@@ -321,10 +321,6 @@ func (tg *tinkerPopGraph) theGraphInitializerOf(arg1 *godog.DocString) error {
 		return err
 	}
 	<-future
-	// We may have modified the so-called `empty` graph.
-	if tg.graphName == "empty" {
-		tg.reloadEmptyData()
-	}
 	return nil
 }
 
