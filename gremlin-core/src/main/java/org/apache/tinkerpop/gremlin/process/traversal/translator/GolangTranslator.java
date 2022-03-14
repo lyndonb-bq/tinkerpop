@@ -192,13 +192,12 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
         @Override
         protected Script produceScript(final List<?> o) {
             final Iterator<?> iterator = o.iterator();
-            script.append("[]interface{}{");
             while(iterator.hasNext()) {
                 convertToScript(iterator.next());
                 if (iterator.hasNext())
                     script.append(", ");
             }
-            return script.append("}");
+            return script;
         }
 
         @Override
@@ -271,14 +270,9 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
                         script.append("int32(");
                         convertToScript(arguments[i]);
                         script.append(")");
-                    } else if (methodName.equals("withSack") && arguments[i] instanceof Integer) {
-                        script.append("int32(");
-                        convertToScript(arguments[i]);
-                        script.append(")");
-                        if (i != arguments.length - 1) {
-                            script.append(", ");
-                        }
-                    } else if (methodName.equals("inject") && arguments[i] instanceof Integer) {
+                    } else if ((methodName.equals("inject") ||methodName.equals("withSack")  ||
+                                methodName.equals("sample") || methodName.equals("with"))
+                            && arguments[i] instanceof Integer) {
                         script.append("int32(");
                         convertToScript(arguments[i]);
                         script.append(")");

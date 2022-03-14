@@ -85,6 +85,7 @@ Feature: Step - range()
     When iterated to list
     Then the result should be of
       | result |
+      | v[marko] |
       | v[josh] |
       | v[peter] |
     And the result should have a count of 2
@@ -99,6 +100,7 @@ Feature: Step - range()
     When iterated to list
     Then the result should be of
       | result |
+      | v[marko] |
       | v[josh] |
       | v[peter] |
     And the result should have a count of 2

@@ -420,22 +420,22 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 }
 
 func compareMapEquals(expected map[interface{}]interface{}, actual map[interface{}]interface{}) bool {
-	for k, e := range expected {
-		var a interface{}
+	for k, a := range actual {
+		var e interface{}
 		containsKey := false
-		for ka, aa := range actual {
-			if fmt.Sprint(k) == fmt.Sprint(ka) {
+		for ke, ee := range expected {
+			if fmt.Sprint(k) == fmt.Sprint(ke) {
 				containsKey = true
-				a = aa
+				e = ee
 				break
 			} else {
 				if reflect.ValueOf(k).Kind() == reflect.Ptr &&
-					reflect.ValueOf(ka).Kind() == reflect.Ptr {
+					reflect.ValueOf(ke).Kind() == reflect.Ptr {
 					switch k.(type) {
 					case *gremlingo.Vertex:
-						switch ka.(type) {
+						switch ke.(type) {
 						case *gremlingo.Vertex:
-							if fmt.Sprint(*k.(*gremlingo.Vertex)) == fmt.Sprint(*ka.(*gremlingo.Vertex)) {
+							if fmt.Sprint(*k.(*gremlingo.Vertex)) == fmt.Sprint(*ke.(*gremlingo.Vertex)) {
 								containsKey = true
 							}
 						default:
@@ -443,36 +443,36 @@ func compareMapEquals(expected map[interface{}]interface{}, actual map[interface
 						}
 					default:
 						// If we are here we probably need to implement an additional type like the Vertex above.
-						if fmt.Sprint(*k.(*interface{})) == fmt.Sprint(*ka.(*interface{})) {
+						if fmt.Sprint(*k.(*interface{})) == fmt.Sprint(*ke.(*interface{})) {
 							fmt.Println("WARNING: Encountered unknown pointer type as map key.")
 							containsKey = true
 						}
 					}
 					if containsKey {
-						a = aa
+						e = ee
 						break
 					}
 				}
 			}
 		}
 		if !containsKey {
-			fmt.Printf("Map comparison error: Failed to find key %s.\n", k)
+			fmt.Printf("Map comparison error: Failed to find key %s in %v\n", k, expected)
 			return false
 		}
 
-		if e == nil && a == nil {
+		if a == nil && e == nil {
 			continue
-		} else if e == nil || a == nil {
+		} else if a == nil || e == nil {
 			// One value is nil, other is not. They are not equal.
 			fmt.Printf("Map comparison error: One map has a nil key, other does not.\n")
 			return false
 		} else {
-			switch reflect.TypeOf(e).Kind() {
+			switch reflect.TypeOf(a).Kind() {
 			case reflect.Array, reflect.Slice:
-				switch reflect.TypeOf(a).Kind() {
+				switch reflect.TypeOf(e).Kind() {
 				case reflect.Array, reflect.Slice:
 					// Compare arrays
-					if !compareListEqualsWithoutOrder(e.([]interface{}), a.([]interface{})) {
+					if !compareListEqualsWithoutOrder(a.([]interface{}), e.([]interface{})) {
 						return false
 					}
 				default:
@@ -483,7 +483,7 @@ func compareMapEquals(expected map[interface{}]interface{}, actual map[interface
 				switch reflect.TypeOf(a).Kind() {
 				case reflect.Map:
 					// Compare maps
-					if !compareMapEquals(e.(map[interface{}]interface{}), a.(map[interface{}]interface{})) {
+					if !compareMapEquals(a.(map[interface{}]interface{}), e.(map[interface{}]interface{})) {
 						return false
 					}
 				default:
@@ -491,8 +491,8 @@ func compareMapEquals(expected map[interface{}]interface{}, actual map[interface
 					return false
 				}
 			default:
-				if fmt.Sprint(e) != fmt.Sprint(a) {
-					fmt.Printf("Map comparison error: Expected != Actual (%s!=%s)\n", fmt.Sprint(e), fmt.Sprint(a))
+				if fmt.Sprint(a) != fmt.Sprint(e) {
+					fmt.Printf("Map comparison error: Expected != Actual (%s!=%s)\n", fmt.Sprint(a), fmt.Sprint(e))
 					return false
 				}
 			}
@@ -510,27 +510,27 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 	//		2. Create a new slice with the index removed when we fix the item we want to delete.
 	// To do an orderless copy, a copy of the actual result is created. Results are removed as they are found. This stops
 	// the following from returning equal [1 2 2 2] and [1 1 1 2]
-	actualCopy := make([]interface{}, len(actual))
-	copy(actualCopy, actual)
-	for _, e := range expected {
+	expectedCopy := make([]interface{}, len(expected))
+	copy(expectedCopy, actual)
+	for _, a := range actual {
 		found := false
-		if e == nil {
-			for i := len(actualCopy) - 1; i >= 0; i-- {
-				if actualCopy[i] == nil {
-					actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+		if a == nil {
+			for i := len(expectedCopy) - 1; i >= 0; i-- {
+				if expectedCopy[i] == nil {
+					expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 					found = true
 					break
 				}
 			}
 		} else {
-			switch reflect.TypeOf(e).Kind() {
+			switch reflect.TypeOf(a).Kind() {
 			case reflect.Array, reflect.Slice:
-				for i := len(actualCopy) - 1; i >= 0; i-- {
-					if actualCopy[i] != nil {
-						switch reflect.TypeOf(actualCopy[i]).Kind() {
+				for i := len(expectedCopy) - 1; i >= 0; i-- {
+					if expectedCopy[i] != nil {
+						switch reflect.TypeOf(expectedCopy[i]).Kind() {
 						case reflect.Array, reflect.Slice:
-							if compareListEqualsWithoutOrder(e.([]interface{}), actualCopy[i].([]interface{})) {
-								actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+							if compareListEqualsWithoutOrder(a.([]interface{}), expectedCopy[i].([]interface{})) {
+								expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 								found = true
 							}
 						}
@@ -540,12 +540,12 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 					}
 				}
 			case reflect.Map:
-				for i := len(actualCopy) - 1; i >= 0; i-- {
-					if actualCopy[i] != nil {
-						switch reflect.TypeOf(actualCopy[i]).Kind() {
+				for i := len(expectedCopy) - 1; i >= 0; i-- {
+					if expectedCopy[i] != nil {
+						switch reflect.TypeOf(expectedCopy[i]).Kind() {
 						case reflect.Map:
-							if compareMapEquals(e.(map[interface{}]interface{}), actualCopy[i].(map[interface{}]interface{})) {
-								actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+							if compareMapEquals(a.(map[interface{}]interface{}), expectedCopy[i].(map[interface{}]interface{})) {
+								expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 								found = true
 							}
 						}
@@ -555,9 +555,9 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 					}
 				}
 			default:
-				for i := len(actualCopy) - 1; i >= 0; i-- {
-					if fmt.Sprint(e) == fmt.Sprint(actualCopy[i]) {
-						actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+				for i := len(expectedCopy) - 1; i >= 0; i-- {
+					if fmt.Sprint(a) == fmt.Sprint(expectedCopy[i]) {
+						expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 						found = true
 						break
 					}
@@ -565,6 +565,7 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 			}
 		}
 		if !found {
+			fmt.Printf("Failed to find %v in %v\n", a, expectedCopy)
 			return false
 		}
 	}
