@@ -133,9 +133,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets map[string]R
 
 			authBytes := make([]byte, 0)
 			authBytes = append(authBytes, 0)
-			for _, c := range username {
-				authBytes = append(authBytes, c)
-			}
+			authBytes = append(authBytes, []byte(username)...)
 			authBytes = append(authBytes, 0)
 			for _, c := range password {
 				authBytes = append(authBytes, c)
