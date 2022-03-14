@@ -66,6 +66,8 @@ type DriverRemoteConnectionSettings struct {
 	LogVerbosity    LogVerbosity
 	Logger          Logger
 	Language        language.Tag
+	AuthInfo        *AuthInfo
+	TlsConfig       *tls.Config
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -83,8 +85,6 @@ type DriverRemoteConnection struct {
 // default language
 func NewDriverRemoteConnection(
 	url string,
-	authInfo *AuthInfo,
-	tlsConfig *tls.Config,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
 		TraversalSource: "g",
@@ -92,6 +92,8 @@ func NewDriverRemoteConnection(
 		LogVerbosity:    Info,
 		Logger:          &defaultLogger{},
 		Language:        language.English,
+		AuthInfo:        &AuthInfo{},
+		TlsConfig:       &tls.Config{},
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -102,15 +104,15 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	connection, err := createConnection(url, authInfo, tlsConfig, logHandler)
+	connection, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
 		url:             url,
-		authInfo:        authInfo,
-		tlsConfig:       tlsConfig,
+		authInfo:        settings.AuthInfo,
+		tlsConfig:       settings.TlsConfig,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,

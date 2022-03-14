@@ -226,7 +226,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test client.submit()", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		client, err := NewClient(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		client, err := NewClient(testNoAuthUrl,
+			func(settings *ClientSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
 		resultSet, err := client.Submit("g.V().count()")
@@ -242,7 +246,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
@@ -274,7 +282,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection GraphTraversal With Label", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
@@ -321,7 +333,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection GraphTraversal P", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 		// Add data
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
@@ -353,7 +369,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection Next and HasNext", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
@@ -383,7 +403,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test anonymousTraversal", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
@@ -412,7 +436,11 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
@@ -442,8 +470,11 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test DriverRemoteConnection with basic authentication", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, basicAuthIntegrationTestSuite, testBasicAuthEnable)
-
-		remote, err := NewDriverRemoteConnection(testBasicAuthUrl, testBasicAuthAuthInfo, testBasicAuthTlsConfig)
+		remote, err := NewDriverRemoteConnection(testBasicAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testBasicAuthTlsConfig
+				settings.AuthInfo = testBasicAuthAuthInfo
+			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)

@@ -30,6 +30,8 @@ type ClientSettings struct {
 	LogVerbosity    LogVerbosity
 	Logger          Logger
 	Language        language.Tag
+	AuthInfo        *AuthInfo
+	TlsConfig       *tls.Config
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -43,26 +45,28 @@ type Client struct {
 }
 
 // NewClient creates a Client and configures it with the given parameters.
-func NewClient(url string, authInfo *AuthInfo, tlsConfig *tls.Config, configurations ...func(settings *ClientSettings)) (*Client, error) {
+func NewClient(url string, configurations ...func(settings *ClientSettings)) (*Client, error) {
 	settings := &ClientSettings{
 		TransporterType: Gorilla,
 		LogVerbosity:    Info,
 		Logger:          &defaultLogger{},
 		Language:        language.English,
+		AuthInfo:        &AuthInfo{},
+		TlsConfig:       &tls.Config{},
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	conn, err := createConnection(url, authInfo, tlsConfig, logHandler)
+	conn, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
 	if err != nil {
 		return nil, err
 	}
 	client := &Client{
 		url:             url,
-		authInfo:        authInfo,
-		tlsConfig:       tlsConfig,
+		authInfo:        settings.AuthInfo,
+		tlsConfig:       settings.TlsConfig,
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connection:      conn,
