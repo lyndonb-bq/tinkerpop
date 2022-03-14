@@ -225,19 +225,18 @@ func mapReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) 
 		}
 		if key == nil {
 			valMap[nil] = val
-			continue
-			//return nil, errors.New("cannot generate map with nil key")
-		}
-		switch reflect.TypeOf(key).Kind() {
-		case reflect.Map:
-			// Passing the pointer to the map as key, as maps are not hashable
-			valMap[&key] = val
-		case reflect.Slice:
-			// Turning map keys of slice type into string type for comparison purposes
-			// string slices should also be converted into slices more easily
-			valMap[fmt.Sprint(key)] = val
-		default:
-			valMap[key] = val
+		} else {
+			switch reflect.TypeOf(key).Kind() {
+			case reflect.Map:
+				// Passing the pointer to the map as key, as maps are not hashable
+				valMap[&key] = val
+			case reflect.Slice:
+				// Turning map keys of slice type into string type for comparison purposes
+				// string slices should also be converted into slices more easily
+				valMap[fmt.Sprint(key)] = val
+			default:
+				valMap[key] = val
+			}
 		}
 	}
 	return valMap, nil
@@ -737,12 +736,11 @@ func lambdaWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 		lambda.Language = "gremlin-groovy"
 	}
 	_, err := typeSerializer.writeValue(lambda.Language, buffer, false)
-	fmt.Println("LANGUAGE: ", lambda.Language)
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = typeSerializer.writeValue(lambda.Script, buffer, false)
-	fmt.Println("SCRIPT: ", lambda.Script)
 	if err != nil {
 		return nil, err
 	}
@@ -758,7 +756,12 @@ func lambdaWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graph
 }
 
 func pWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	v := value.(*p)
+	var v p
+	if reflect.TypeOf(value).Kind() == reflect.Ptr {
+		v = *(value.(*p))
+	} else {
+		v = value.(p)
+	}
 	_, err := typeSerializer.writeValue(v.operator, buffer, false)
 	if err != nil {
 		return nil, err
@@ -779,7 +782,12 @@ func pWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinar
 }
 
 func textPWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
-	v := value.(*textP)
+	var v textP
+	if reflect.TypeOf(value).Kind() == reflect.Ptr {
+		v = *(value.(*textP))
+	} else {
+		v = value.(textP)
+	}
 	_, err := typeSerializer.writeValue(v.operator, buffer, false)
 	if err != nil {
 		return nil, err
@@ -826,6 +834,35 @@ func bulkSetReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializ
 		}
 	}
 	return valList, nil
+}
+
+// Format: a single string representing the enum value
+func enumReader(buffer *bytes.Buffer, serializer *graphBinaryTypeSerializer) (interface{}, error) {
+	var typeCode uint8
+	err := binary.Read(buffer, binary.BigEndian, &typeCode)
+	if err != nil {
+		return nil, err
+	} else if typeCode != StringType.getCodeByte() {
+		return nil, errors.New(fmt.Sprintf("error, expected string type for enum, but got %x", typeCode))
+	}
+
+	var nilByte uint8
+	err = binary.Read(buffer, binary.BigEndian, &nilByte)
+	if err != nil {
+		return nil, err
+	} else if nilByte != 0 {
+		return nil, nil
+	}
+
+	var size int32
+	err = binary.Read(buffer, binary.BigEndian, &size)
+	if err != nil {
+		return nil, err
+	}
+
+	valBytes := make([]byte, size)
+	_, err = buffer.Read(valBytes)
+	return string(valBytes), err
 }
 
 // gets the type of the serializer based on the value
@@ -932,9 +969,9 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: BarrierType, writer: enumWriter, logHandler: serializer.logHandler}, nil
 	case Scope:
 		return &graphBinaryTypeSerializer{dataType: ScopeType, writer: enumWriter, logHandler: serializer.logHandler}, nil
-	case Predicate:
+	case p, Predicate:
 		return &graphBinaryTypeSerializer{dataType: PType, writer: pWriter, logHandler: serializer.logHandler}, nil
-	case TextPredicate:
+	case textP, TextPredicate:
 		return &graphBinaryTypeSerializer{dataType: TextPType, writer: textPWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {
@@ -945,7 +982,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			return &graphBinaryTypeSerializer{dataType: ListType, writer: listWriter, reader: listReader, logHandler: serializer.logHandler}, nil
 		default:
 			serializer.logHandler.logf(Error, serializeDataTypeError, reflect.TypeOf(val).Name())
-			return nil, errors.New("unknown data type to serialize")
+			return nil, errors.New(fmt.Sprintf("unknown data type to serialize %s", reflect.TypeOf(val).Name()))
 		}
 	}
 }
@@ -1050,9 +1087,11 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	case BulkSetType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: bulkSetReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
+	case TType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: enumReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
-		return nil, errors.New("unknown data type to deserialize")
+		return nil, errors.New(fmt.Sprintf("unknown data type to deserialize %x", typ))
 	}
 }
 

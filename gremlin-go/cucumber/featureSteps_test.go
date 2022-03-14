@@ -330,9 +330,22 @@ func (tg *tinkerPopGraph) theGraphInitializerOf(arg1 *godog.DocString) error {
 
 func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
 	actualCount := len(tg.result)
-	if len(tg.result) != expectedCount {
-		err := fmt.Sprintf("result should return %d for count, but returned %d.", expectedCount, actualCount)
-		return errors.New(err)
+	if actualCount == 1 {
+		switch reflect.TypeOf(tg.result).Kind() {
+		case reflect.Slice, reflect.Array:
+			if actualCount == 1 {
+				result := tg.result[0].(*gremlingo.Result).GetInterface()
+				switch reflect.TypeOf(result).Kind() {
+				case reflect.Slice, reflect.Array:
+					actualCount = len(result.([]interface{}))
+				case reflect.Map:
+					actualCount = len(result.(map[interface{}]interface{}))
+				}
+			}
+		}
+	}
+	if actualCount != expectedCount {
+		return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", actualCount, expectedCount))
 	}
 	return nil
 }
@@ -396,10 +409,8 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 				return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
 			}
 		} else {
-			for _, res := range actualResult {
-				if !contains(expectedResult, res) {
-					return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
-				}
+			if !compareListEqualsWithoutOrder(expectedResult, actualResult) {
+				return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
 			}
 		}
 		return nil
@@ -408,69 +419,156 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 	}
 }
 
-func contains(list []interface{}, item interface{}) bool {
-	for _, v := range list {
-		if v != nil {
-			t := reflect.TypeOf(v)
-			isEqual := true
-			switch t.Kind() {
-			case reflect.Array, reflect.Slice:
-				isEqual = false
-				valueArray := v.([]interface{})
-				itemArray := item.([]interface{})
-				if len(valueArray) != len(itemArray) {
-					isEqual = false
-				} else {
-					for _, val := range valueArray {
-						found := false
-						for _, subVal := range itemArray {
-							if fmt.Sprint(subVal) == fmt.Sprint(val) {
-								found = true
-								break
+func compareMapEquals(expected map[interface{}]interface{}, actual map[interface{}]interface{}) bool {
+	for k, e := range expected {
+		var a interface{}
+		containsKey := false
+		for ka, aa := range actual {
+			if fmt.Sprint(k) == fmt.Sprint(ka) {
+				containsKey = true
+				a = aa
+				break
+			} else {
+				if reflect.ValueOf(k).Kind() == reflect.Ptr &&
+					reflect.ValueOf(ka).Kind() == reflect.Ptr {
+					switch k.(type) {
+					case *gremlingo.Vertex:
+						switch ka.(type) {
+						case *gremlingo.Vertex:
+							if fmt.Sprint(*k.(*gremlingo.Vertex)) == fmt.Sprint(*ka.(*gremlingo.Vertex)) {
+								containsKey = true
 							}
+						default:
+							// Not equal.
 						}
-						if !found {
-							isEqual = false
+					default:
+						// If we are here we probably need to implement an additional type like the Vertex above.
+						if fmt.Sprint(*k.(*interface{})) == fmt.Sprint(*ka.(*interface{})) {
+							fmt.Println("WARNING: Encountered unknown pointer type as map key.")
+							containsKey = true
 						}
 					}
-				}
-				if isEqual {
-					return true
-				}
-			case reflect.Map:
-				valueMap := v.(map[interface{}]interface{})
-				itemMap := item.(map[interface{}]interface{})
-				if len(valueMap) != len(itemMap) {
-					isEqual = false
-				} else {
-					for key, val := range valueMap {
-						found := false
-						for subKey, subVal := range itemMap {
-							if fmt.Sprint(subKey) == fmt.Sprint(key) && fmt.Sprint(subVal) == fmt.Sprint(val) {
-								found = true
-								break
-							}
-						}
-						if !found {
-							isEqual = false
-						}
+					if containsKey {
+						a = aa
+						break
 					}
-				}
-				if isEqual {
-					return true
-				}
-			default:
-				if fmt.Sprint(v) == fmt.Sprint(item) {
-					return true
 				}
 			}
+		}
+		if !containsKey {
+			fmt.Printf("Map comparison error: Failed to find key %s.\n", k)
+			return false
+		}
+
+		if e == nil && a == nil {
+			continue
+		} else if e == nil || a == nil {
+			// One value is nil, other is not. They are not equal.
+			fmt.Printf("Map comparison error: One map has a nil key, other does not.\n")
+			return false
 		} else {
-			if item == nil {
-				return true
+			switch reflect.TypeOf(e).Kind() {
+			case reflect.Array, reflect.Slice:
+				switch reflect.TypeOf(a).Kind() {
+				case reflect.Array, reflect.Slice:
+					// Compare arrays
+					if !compareListEqualsWithoutOrder(e.([]interface{}), a.([]interface{})) {
+						return false
+					}
+				default:
+					fmt.Printf("Map comparison error: Expected type is Array/Slice, actual is %s.\n", reflect.TypeOf(a).Kind())
+					return false
+				}
+			case reflect.Map:
+				switch reflect.TypeOf(a).Kind() {
+				case reflect.Map:
+					// Compare maps
+					if !compareMapEquals(e.(map[interface{}]interface{}), a.(map[interface{}]interface{})) {
+						return false
+					}
+				default:
+					fmt.Printf("Map comparison error: Expected type is Map, actual is %s.\n", reflect.TypeOf(a).Kind())
+					return false
+				}
+			default:
+				if fmt.Sprint(e) != fmt.Sprint(a) {
+					fmt.Printf("Map comparison error: Expected != Actual (%s!=%s)\n", fmt.Sprint(e), fmt.Sprint(a))
+					return false
+				}
 			}
 		}
 	}
-	return false
+	return true
+}
+
+func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{}) bool {
+	// This is a little weird, but there isn't a good solution to either of these problems:
+	// 		1. Comparison of types in Go. No deep equals which actually works properly. Needs to be done manually.
+	// 		2. In place deletion in a loop.
+	// So to do in place deletion in a loop we can do the following:
+	// 		1. Loop from back to wrong (don't need to worry about deleted indices that way.
+	//		2. Create a new slice with the index removed when we fix the item we want to delete.
+	// To do an orderless copy, a copy of the actual result is created. Results are removed as they are found. This stops
+	// the following from returning equal [1 2 2 2] and [1 1 1 2]
+	actualCopy := make([]interface{}, len(actual))
+	copy(actualCopy, actual)
+	for _, e := range expected {
+		found := false
+		if e == nil {
+			for i := len(actualCopy) - 1; i >= 0; i-- {
+				if actualCopy[i] == nil {
+					actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+					found = true
+					break
+				}
+			}
+		} else {
+			switch reflect.TypeOf(e).Kind() {
+			case reflect.Array, reflect.Slice:
+				for i := len(actualCopy) - 1; i >= 0; i-- {
+					if actualCopy[i] != nil {
+						switch reflect.TypeOf(actualCopy[i]).Kind() {
+						case reflect.Array, reflect.Slice:
+							if compareListEqualsWithoutOrder(e.([]interface{}), actualCopy[i].([]interface{})) {
+								actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+								found = true
+							}
+						}
+						if found {
+							break
+						}
+					}
+				}
+			case reflect.Map:
+				for i := len(actualCopy) - 1; i >= 0; i-- {
+					if actualCopy[i] != nil {
+						switch reflect.TypeOf(actualCopy[i]).Kind() {
+						case reflect.Map:
+							if compareMapEquals(e.(map[interface{}]interface{}), actualCopy[i].(map[interface{}]interface{})) {
+								actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+								found = true
+							}
+						}
+						if found {
+							break
+						}
+					}
+				}
+			default:
+				for i := len(actualCopy) - 1; i >= 0; i-- {
+					if fmt.Sprint(e) == fmt.Sprint(actualCopy[i]) {
+						actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+						found = true
+						break
+					}
+				}
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 func (tg *tinkerPopGraph) theTraversalOf(arg1 *godog.DocString) error {
