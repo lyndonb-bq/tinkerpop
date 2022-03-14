@@ -55,7 +55,7 @@ func BasicAuthInfo(username string, password string) *AuthInfo {
 	return &AuthInfo{Username: username, Password: password}
 }
 
-// DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection
+// DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
 type DriverRemoteConnectionSettings struct {
 	TraversalSource string
 	TransporterType TransporterType
@@ -70,7 +70,7 @@ type DriverRemoteConnectionSettings struct {
 	Serializer serializer
 }
 
-// DriverRemoteConnection is a remote connection
+// DriverRemoteConnection is a remote connection.
 type DriverRemoteConnection struct {
 	client *Client
 }
@@ -117,17 +117,17 @@ func NewDriverRemoteConnection(
 	return &DriverRemoteConnection{client: client}, nil
 }
 
-// Close closes the DriverRemoteConnection
+// Close closes the DriverRemoteConnection.
 func (driver *DriverRemoteConnection) Close() error {
 	return driver.client.Close()
 }
 
-// Submit sends a string traversal to the server
+// Submit sends a string traversal to the server.
 func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet, error) {
 	return driver.client.Submit(traversalString)
 }
 
-// submitBytecode sends a bytecode traversal to the server
+// submitBytecode sends a bytecode traversal to the server.
 func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	return driver.client.submitBytecode(bytecode)
 }
