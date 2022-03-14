@@ -33,6 +33,8 @@ import (
 const personLabel = "Person"
 const testLabel = "Test"
 const nameKey = "name"
+const failureHost = "invalidHost"
+const failurePort = 9999
 
 func dropGraph(t *testing.T, g *GraphTraversalSource) {
 	// Drop vertices that were added.
@@ -262,6 +264,21 @@ func TestConnection(t *testing.T) {
 			err = connection.close()
 			assert.Nil(t, err)
 		}
+	})
+
+	t.Run("Test connection.close() failure", func(t *testing.T) {
+		connection, err := createConnection(testHost, testPort, newLogHandler(&defaultLogger{}, Info, language.English))
+		err = connection.close()
+		assert.Nil(t, err)
+		err = connection.close()
+		assert.NotNil(t, err)
+		err = connection.close()
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Test createConnection failure", func(t *testing.T) {
+		_, err := createConnection(failureHost, failurePort, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.NotNil(t, err)
 	})
 
 	t.Run("Test client.submit()", func(t *testing.T) {
