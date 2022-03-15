@@ -259,6 +259,7 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test connection.close() failure", func(t *testing.T) {
 		connection, err := createConnection(testHost, testPort, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
 		err = connection.close()
 		assert.Nil(t, err)
 		err = connection.close()

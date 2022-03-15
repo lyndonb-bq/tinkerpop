@@ -277,12 +277,11 @@ func instructionWriter(instructions []instruction, buffer *bytes.Buffer, typeSer
 //		{value_i} is a fully qualified typed value composed of {type_code}{type_info}{value_flag}{value} describing the step argument.
 func bytecodeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	var bc bytecode
-	switch value.(type) {
+	switch typedVal := value.(type) {
 	case *GraphTraversal:
-		gt := value.(*GraphTraversal)
-		bc = *gt.bytecode
+		bc = *typedVal.bytecode
 	case bytecode:
-		bc = value.(bytecode)
+		bc = typedVal
 	default:
 		return nil, errors.New("need GraphTraversal or bytecode to write bytecode")
 	}

@@ -297,6 +297,7 @@ func TestGraphBinaryV1(t *testing.T) {
 			assert.Nil(t, err)
 			assert.NotNil(t, val)
 			x, err := serializer.readTypeValue(&buff, &serializer, true)
+			assert.Nil(t, err)
 			assert.Equal(t, nil, x)
 		})
 		t.Run("test write nil case success", func(t *testing.T) {
@@ -305,6 +306,7 @@ func TestGraphBinaryV1(t *testing.T) {
 			assert.Nil(t, err)
 			assert.NotNil(t, val)
 			x, err := serializer.read(&buff)
+			assert.Nil(t, err)
 			assert.Equal(t, value, x)
 		})
 		t.Run("test read nil case isNull check failure", func(t *testing.T) {
@@ -331,6 +333,7 @@ func TestGraphBinaryV1(t *testing.T) {
 			assert.Nil(t, err)
 			assert.NotNil(t, val)
 			x, err := serializer.readTypeValue(&buff, &serializer, true)
+			assert.Nil(t, err)
 			assert.Equal(t, x, value)
 		})
 	})
