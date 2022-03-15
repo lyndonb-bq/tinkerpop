@@ -106,7 +106,6 @@ func toInt32(stringVal, graphName string) interface{} {
 
 // Parse vertex.
 func toVertex(name, graphName string) interface{} {
-	//fmt.Println("GETTING VERTICES", tg.getDataGraphFromMap(graphName).vertices, "FROM", graphName)
 	return tg.getDataGraphFromMap(graphName).vertices[name]
 }
 
