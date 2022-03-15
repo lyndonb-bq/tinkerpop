@@ -1087,6 +1087,8 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	case BulkSetType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: bulkSetReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
+	case DirectionType.getCodeByte():
+		return &graphBinaryTypeSerializer{dataType: DirectionType, reader: enumReader, logHandler: serializer.logHandler}, nil
 	case TType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: enumReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:

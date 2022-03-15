@@ -157,7 +157,7 @@ func getVertices(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Vertex
 	}
 	v := reflect.ValueOf(res.GetInterface())
 	if v.Kind() != reflect.Map {
-		fmt.Println("not map")
+		fmt.Printf("Expecting to get a map as a result, got %v instead.", v.Kind())
 		return nil
 	}
 	keys := v.MapKeys()
@@ -179,7 +179,7 @@ func getEdges(g *gremlingo.GraphTraversalSource) map[string]*gremlingo.Edge {
 	}
 	valMap := reflect.ValueOf(resE.GetInterface())
 	if valMap.Kind() != reflect.Map {
-		fmt.Println("not map")
+		fmt.Printf("Expecting to get a map as a result, got %v instead.", valMap.Kind())
 		return nil
 	}
 	keys := valMap.MapKeys()
@@ -196,6 +196,9 @@ func getEdgeKey(edgeKeyMap map[interface{}]interface{}) string {
 	return fmt.Sprint(edgeKeyMap["o"], "-", edgeKeyMap["l"], "->", edgeKeyMap["i"])
 }
 
+// This function is used to isolate connection problems to each scenario, and used in the Before context hook to prevent
+// a failing test in one scenario closing the shared connection that leads to failing subsequent scenario tests.
+// This function can be removed once all pending tests pass.
 func (t *TinkerPopWorld) recreateAllDataGraphConnection() error {
 	var err error
 	for _, name := range getGraphNames() {

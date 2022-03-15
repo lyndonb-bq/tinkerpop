@@ -55,6 +55,7 @@ func init() {
 		regexp.MustCompile(`^m\[(.+)]$`):         toMap,
 		regexp.MustCompile(`^c\[(.+)]$`):         toLambda,
 		regexp.MustCompile(`^t\[(.+)]$`):         toT,
+		regexp.MustCompile(`^D\[(.+)]$`):         toDirection,
 	}
 }
 
@@ -242,6 +243,11 @@ func toT(name, graphName string) interface{} {
 	return name
 }
 
+func toDirection(name, graphName string) interface{} {
+	// Return as is, since Direction values are just strings.
+	return name
+}
+
 func (tg *tinkerPopGraph) anUnsupportedTest() error {
 	return nil
 }
@@ -325,22 +331,24 @@ func (tg *tinkerPopGraph) theGraphInitializerOf(arg1 *godog.DocString) error {
 
 func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
 	actualCount := len(tg.result)
-	if actualCount == 1 {
-		switch reflect.TypeOf(tg.result).Kind() {
-		case reflect.Slice, reflect.Array:
-			if actualCount == 1 {
-				result := tg.result[0].(*gremlingo.Result).GetInterface()
-				switch reflect.TypeOf(result).Kind() {
-				case reflect.Slice, reflect.Array:
-					actualCount = len(result.([]interface{}))
-				case reflect.Map:
-					actualCount = len(result.(map[interface{}]interface{}))
+	if actualCount != expectedCount {
+		if actualCount == 1 {
+			switch reflect.TypeOf(tg.result).Kind() {
+			case reflect.Slice, reflect.Array:
+				if actualCount == 1 {
+					result := tg.result[0].(*gremlingo.Result).GetInterface()
+					switch reflect.TypeOf(result).Kind() {
+					case reflect.Map:
+						actualCount = len(result.(map[interface{}]interface{}))
+					}
 				}
 			}
+			if actualCount != expectedCount {
+				return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", expectedCount, actualCount))
+			}
+		} else {
+			return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", expectedCount, actualCount))
 		}
-	}
-	if actualCount != expectedCount {
-		return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", expectedCount, actualCount))
 	}
 	return nil
 }
@@ -708,18 +716,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		tg.scenario = sc
 		tg.loadEmptyDataGraph()
-		err := tg.recreateAllDataGraphConnection()
-		if err != nil {
-			return nil, err
-		}
-		return ctx, nil
-	})
-
-	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		err = tg.closeAllDataGraphConnection()
-		if err != nil {
-			return nil, err
-		}
+		// Add tg.recreateAllDataGraphConnection() here and tg.closeAllDataGraphConnection() in an After scenario
+		// hook if necessary to isolate failing tests that closes the shared connection.
 		return ctx, nil
 	})
 
