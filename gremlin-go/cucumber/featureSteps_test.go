@@ -335,19 +335,17 @@ func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
 		if actualCount == 1 {
 			switch reflect.TypeOf(tg.result).Kind() {
 			case reflect.Slice, reflect.Array:
-				if actualCount == 1 {
-					result := tg.result[0].(*gremlingo.Result).GetInterface()
-					switch reflect.TypeOf(result).Kind() {
-					case reflect.Map:
-						actualCount = len(result.(map[interface{}]interface{}))
-					}
+				result := tg.result[0].(*gremlingo.Result).GetInterface()
+				switch reflect.TypeOf(result).Kind() {
+				case reflect.Map:
+					actualCount = len(result.(map[interface{}]interface{}))
 				}
 			}
 			if actualCount != expectedCount {
-				return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", expectedCount, actualCount))
+				return fmt.Errorf("result should return %d for count, but returned %d", expectedCount, actualCount)
 			}
 		} else {
-			return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", expectedCount, actualCount))
+			return fmt.Errorf("result should return %d for count, but returned %d", expectedCount, actualCount)
 		}
 	}
 	return nil
@@ -430,22 +428,22 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			if expectSet {
 				for i, a := range actualResult {
 					if fmt.Sprint(a.(*gremlingo.SimpleSet).ToSlice()) != fmt.Sprint(expectedResult[i].(*gremlingo.SimpleSet).ToSlice()) {
-						return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+						return fmt.Errorf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 					}
 				}
 			} else {
 				if fmt.Sprint(actualResult) != fmt.Sprint(expectedResult) {
-					return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+					return fmt.Errorf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 				}
 			}
 		} else {
 			if characterizedAs == "of" {
 				if !compareListEqualsWithOf(expectedResult, actualResult) {
-					return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+					return fmt.Errorf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 				}
 			} else {
 				if !compareListEqualsWithoutOrder(expectedResult, actualResult) {
-					return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+					return fmt.Errorf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 				}
 			}
 		}

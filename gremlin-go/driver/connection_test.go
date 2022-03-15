@@ -164,7 +164,7 @@ func TestConnection(t *testing.T) {
 	testHost := getEnvOrDefaultString("GREMLIN_SERVER_HOSTNAME", "localhost")
 	testPort := getEnvOrDefaultInt("GREMLIN_SERVER_PORT", 8182)
 	runIntegration := getEnvOrDefaultBool("RUN_INTEGRATION_TESTS", true)
-	// Set this to true to will when TinkerGraphs are configured on the test server
+	// Set this to true to when TinkerGraphs are configured on the test server
 	// TODO: remove after setting up docker integration testing that automatically sets up TinkerGraphs on test server
 	runIntegrationWithAlias := false
 

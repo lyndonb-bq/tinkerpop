@@ -730,6 +730,7 @@ func enumWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBi
 	return buffer.Bytes(), err
 }
 
+// Format: {language}{script}{arguments_length}
 func lambdaWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	lambda := value.(*Lambda)
 	if lambda.Language == "" {
@@ -843,7 +844,7 @@ func enumReader(buffer *bytes.Buffer, serializer *graphBinaryTypeSerializer) (in
 	if err != nil {
 		return nil, err
 	} else if typeCode != StringType.getCodeByte() {
-		return nil, errors.New(fmt.Sprintf("error, expected string type for enum, but got %x", typeCode))
+		return nil, fmt.Errorf("error, expected string type for enum, but got %x", typeCode)
 	}
 
 	var nilByte uint8
@@ -982,7 +983,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			return &graphBinaryTypeSerializer{dataType: ListType, writer: listWriter, reader: listReader, logHandler: serializer.logHandler}, nil
 		default:
 			serializer.logHandler.logf(Error, serializeDataTypeError, reflect.TypeOf(val).Name())
-			return nil, errors.New(fmt.Sprintf("unknown data type to serialize %s", reflect.TypeOf(val).Name()))
+			return nil, fmt.Errorf("unknown data type to serialize %s", reflect.TypeOf(val).Name())
 		}
 	}
 }
@@ -1093,7 +1094,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: enumReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
-		return nil, errors.New(fmt.Sprintf("unknown data type to deserialize %x", typ))
+		return nil, fmt.Errorf("unknown data type to deserialize %x", typ)
 	}
 }
 

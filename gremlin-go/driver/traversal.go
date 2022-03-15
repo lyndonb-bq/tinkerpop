@@ -290,18 +290,14 @@ var P Predicate = &p{}
 
 func newP(operator string, args ...interface{}) Predicate {
 	values := make([]interface{}, 0)
-	for _, arg := range args {
-		values = append(values, arg)
-	}
+	values = append(values, args...)
 	return &p{operator: operator, values: values}
 }
 
 func newPWithP(operator string, pp p, args ...interface{}) Predicate {
 	values := make([]interface{}, 1)
 	values[0] = pp
-	for _, arg := range args {
-		values = append(values, arg)
-	}
+	values = append(values, args...)
 	return &p{operator: operator, values: values}
 }
 
@@ -405,18 +401,14 @@ var TextP TextPredicate = &textP{}
 
 func newTextP(operator string, args ...interface{}) TextPredicate {
 	values := make([]interface{}, 0)
-	for _, arg := range args {
-		values = append(values, arg)
-	}
+	values = append(values, args...)
 	return &textP{operator: operator, values: values}
 }
 
 func newTextPWithP(operator string, tp textP, args ...interface{}) TextPredicate {
 	values := make([]interface{}, 1)
 	values[0] = tp
-	for _, arg := range args {
-		values = append(values, arg)
-	}
+	values = append(values, args...)
 	return &textP{operator: operator, values: values}
 }
 
