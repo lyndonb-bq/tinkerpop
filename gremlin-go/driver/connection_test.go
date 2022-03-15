@@ -33,8 +33,6 @@ import (
 const personLabel = "Person"
 const testLabel = "Test"
 const nameKey = "name"
-const failureHost = "invalidHost"
-const failurePort = 9999
 
 var testNames = []string{"Lyndon", "Yang", "Simon", "Rithin", "Alexey", "Valentyn"}
 
@@ -266,11 +264,6 @@ func TestConnection(t *testing.T) {
 		err = connection.close()
 		assert.NotNil(t, err)
 		err = connection.close()
-		assert.NotNil(t, err)
-	})
-
-	t.Run("Test createConnection failure", func(t *testing.T) {
-		_, err := createConnection(failureHost, failurePort, newLogHandler(&defaultLogger{}, Info, language.English))
 		assert.NotNil(t, err)
 	})
 
