@@ -33,10 +33,10 @@ import (
 
 // Version 1.0
 
-// DataType graphBinary types
+// DataType graphBinary types.
 type DataType uint8
 
-// DataType defined as constants
+// DataType defined as constants.
 const (
 	IntType            DataType = 0x01
 	LongType           DataType = 0x02
@@ -88,7 +88,7 @@ func (dataType DataType) getCodeBytes() []byte {
 	return []byte{dataType.getCodeByte()}
 }
 
-// graphBinaryTypeSerializer struct for the different types of serializers
+// graphBinaryTypeSerializer struct for the different types of serializers.
 type graphBinaryTypeSerializer struct {
 	dataType       DataType
 	writer         func(interface{}, *bytes.Buffer, *graphBinaryTypeSerializer) ([]byte, error)
@@ -987,7 +987,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 	}
 }
 
-// gets the type of the serializer based on the DataType byte value
+// gets the type of the serializer based on the DataType byte value.
 func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*graphBinaryTypeSerializer, error) {
 	switch typ {
 	case TraverserType.getCodeByte():
