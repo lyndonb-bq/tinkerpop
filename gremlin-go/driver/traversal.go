@@ -256,11 +256,11 @@ func newP(operator string, args ...interface{}) Predicate {
 }
 
 func newPWithP(operator string, pp p, args ...interface{}) Predicate {
-	values := make([]interface{}, len(args)+1)
+	values := make([]interface{}, 1)
+	values[0] = pp
 	for _, arg := range args {
 		values = append(values, arg)
 	}
-	values[len(values)-1] = pp
 	return &p{operator: operator, values: values}
 }
 
@@ -356,11 +356,11 @@ func newTextP(operator string, args ...interface{}) TextPredicate {
 }
 
 func newTextPWithP(operator string, tp textP, args ...interface{}) TextPredicate {
-	values := make([]interface{}, len(args)+1)
+	values := make([]interface{}, 1)
+	values[0] = tp
 	for _, arg := range args {
 		values = append(values, arg)
 	}
-	values[len(values)-1] = tp
 	return &textP{operator: operator, values: values}
 }
 

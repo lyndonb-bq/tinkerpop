@@ -586,18 +586,14 @@ func (tg *tinkerPopGraph) usingTheParameterDefined(name string, params string) e
 }
 
 func (tg *tinkerPopGraph) usingTheParameterOfP(paramName, pVal, stringVal string) error {
-	var in []reflect.Value
+	predicate := reflect.ValueOf(gremlingo.P).MethodByName(strings.Title(pVal)).Interface().(func(...interface{}) gremlingo.Predicate)
 	values := parseValue(stringVal, tg.graphName)
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Array, reflect.Slice:
-		for _, value := range values.([]interface{}) {
-			in = append(in, reflect.ValueOf(value))
-		}
+		tg.parameters[paramName] = predicate(values.([]interface{})...)
 	default:
-		in = append(in, reflect.ValueOf(values))
+		tg.parameters[paramName] = predicate(values)
 	}
-	var p = reflect.ValueOf(gremlingo.P).MethodByName(pVal).Call(in)
-	tg.parameters[paramName] = p
 	return nil
 }
 
