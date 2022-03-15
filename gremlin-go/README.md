@@ -39,13 +39,30 @@ Docker allows you to test the driver without installing any dependencies. The fo
 To build the driver you must install `go`. The following command can be used to build the driver:
 `go build <path to source code>`
 
-### Using the Linter and staticcheck
+### Code Styling and Linting
+Before generating a pull request, you should manually run the following to ensure correct code styling and fix any issues indicated by the linters.
 
-Before generating a pull request, you should manually run [go vet][https://pkg.go.dev/cmd/vet] and [staticcheck][https://staticcheck.io] and correct any errors.
+#### Formatting files with Gofmt
+To ensure clean and readable code [Gofmt][gofmt] is used. 
 
-`go vet` is installed when you install go, and can be run with `go vet <path to source code>`.
+Navigate to file path in a terminal window and run:
 
-Please review the [staticcheck documentation][https://staticcheck.io/docs/getting-started] for more details on installing staticcheck. `staticcheck` can be run with `staticcheck <path to source code>`.
+`gofmt -s -w` 
+
+Gofmt will recursively check for and format `.go` files.
+
+Note: If your IDE of choice is [GoLand][goland], code can be automatically formatted with Gofmt on file save. Instructions on how to enable this feature can be found [here][fmtsave].
+
+#### Using the Linter and staticcheck
+Run [go vet][gvet] and [staticcheck][scheck] and correct any errors.
+
+[go vet][gvet] is installed when you install go, and can be run with:
+
+ `go vet <path to source code>`
+
+Please review the [staticcheck documentation][scheck docs] for more details on installing [staticcheck][scheck]. It can be run with:
+
+`staticcheck <path to source code>`
 
 ### Prerequisites
 
@@ -146,8 +163,8 @@ Note: The exact import name as well as the module prefix for `NewDriverRemoteCon
 data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's
 property graph.
 
-Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. One important distinction with Go and Java is that 
-the functions are capitalized, as is required to export functions is Go. 
+Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. One
+important distinction with Go and Java is that the functions are capitalized, as is required to export functions is Go. 
 
 Gremlin-Go is designed to connect to a "server" that is hosting a TinkerPop-enabled graph system. That "server"
 could be [Gremlin Server][gs] or a [remote Gremlin provider][rgp] that exposes protocols by which Gremlin-Go
@@ -263,10 +280,10 @@ Gremlin variant for that language.
 ### Create Vertex
 Adding a vertex with properties.
 ```go
-_, promise, err :=g.AddV("gremlin").Property("language", "java").Iterate()
+_, promise, err := g.AddV("gremlin").Property("language", "go").Iterate()
 // Handle error
 if err != nil {
-	fmt.Println(err)
+    fmt.Println(err)
     return
 }
 // Wait for all steps to finish execution
@@ -278,12 +295,12 @@ Getting the property value associated with the added vertex. We currently only s
 result, err := g.V().HasLabel("gremlin").Values("language").ToList()
 // Handle error
 if err != nil {
-fmt.Println(err)
-return
+    fmt.Println(err)
+    return
 }
 // Print result
 for _, r := range result {
-fmt.Println(r.GetString())
+    fmt.Println(r.GetString())
 }
 ```
 
@@ -342,3 +359,9 @@ SetType             DataType = 0x0b     // see limitations
 [differences]: https://tinkerpop.apache.org/docs/current/reference/#gremlin-go-differences
 [go]: https://go.dev/dl/
 [gomods]: https://go.dev/blog/using-go-modules
+[gvet]: https://pkg.go.dev/cmd/vet
+[scheck]: https://staticcheck.io
+[scheck docs]: https://staticcheck.io/docs/getting-started
+[gofmt]: https://pkg.go.dev/cmd/gofmt
+[goland]: https://www.jetbrains.com/go/
+[fmtsave]: https://www.jetbrains.com/help/go/reformat-and-rearrange-code.html#reformat-on-save

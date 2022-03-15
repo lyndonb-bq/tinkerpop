@@ -33,13 +33,13 @@ import (
 
 const graphBinaryMimeType = "application/vnd.graphbinary-v1.0"
 
-// serializer interface for serializers
+// serializer interface for serializers.
 type serializer interface {
 	serializeMessage(request *request) ([]byte, error)
 	deserializeMessage(message []byte) (response, error)
 }
 
-// graphBinarySerializer serializes/deserializes message to/from GraphBinary
+// graphBinarySerializer serializes/deserializes message to/from GraphBinary.
 type graphBinarySerializer struct {
 	ser *graphBinaryTypeSerializer
 }
@@ -53,29 +53,28 @@ const versionByte byte = 0x81
 
 func convertArgs(request *request, gs graphBinarySerializer) (map[string]interface{}, error) {
 	// TODO AN-981: Remote transaction session processor is same as bytecode
-	if request.processor == bytecodeProcessor {
-		// Convert to format:
-		// args["gremlin"]: <serialized args["gremlin"]>
-		gremlin := request.args["gremlin"]
-		switch gremlin.(type) {
-		case bytecode:
-			buffer := bytes.Buffer{}
-			gremlinBuffer, err := gs.ser.write(gremlin, &buffer)
-			if err != nil {
-				return nil, err
-			}
-			request.args["gremlin"] = gremlinBuffer
-			return request.args, nil
-		default:
-			return nil, fmt.Errorf("failed to find serializer for type '%s'", reflect.TypeOf(gremlin).Name())
-		}
-	} else {
+	if request.processor != bytecodeProcessor {
 		// Use standard processor, which effectively does nothing.
 		return request.args, nil
 	}
+	// Convert to format:
+	// args["gremlin"]: <serialized args["gremlin"]>
+	gremlin := request.args["gremlin"]
+	switch gremlin.(type) {
+	case bytecode:
+		buffer := bytes.Buffer{}
+		gremlinBuffer, err := gs.ser.write(gremlin, &buffer)
+		if err != nil {
+			return nil, err
+		}
+		request.args["gremlin"] = gremlinBuffer
+		return request.args, nil
+	default:
+		return nil, fmt.Errorf("failed to find serializer for type '%s'", reflect.TypeOf(gremlin).Name())
+	}
 }
 
-// serializeMessage serializes a request message into GraphBinary
+// serializeMessage serializes a request message into GraphBinary.
 func (gs graphBinarySerializer) serializeMessage(request *request) ([]byte, error) {
 	args, err := convertArgs(request, gs)
 	if err != nil {
@@ -191,7 +190,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		if err != nil {
 			return nil, err
 		} else if keyType != StringType {
-			return nil, fmt.Errorf("expected string key for map, got type='0x%x'", keyType)
+			return nil, fmt.Errorf("expected string Key for map, got type='0x%x'", keyType)
 		}
 		var nullable byte
 		err = binary.Read(buffer, binary.BigEndian, &nullable)
@@ -199,7 +198,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 			return nil, err
 		}
 		if nullable != 0 {
-			return nil, errors.New("expected non-null key for map")
+			return nil, errors.New("expected non-null Key for map")
 		}
 
 		k, err := readString(buffer)
@@ -229,7 +228,7 @@ func readString(buffer *bytes.Buffer) (string, error) {
 	return string(strBytes[:]), nil
 }
 
-// deserializeMessage deserializes a response message
+// deserializeMessage deserializes a response message.
 func (gs graphBinarySerializer) deserializeMessage(responseMessage []byte) (response, error) {
 	var msg response
 	buffer := bytes.Buffer{}

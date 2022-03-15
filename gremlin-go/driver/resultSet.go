@@ -37,9 +37,10 @@ type ResultSet interface {
 	Close()
 	Channel() chan *Result
 	addResult(result *Result)
-	one() *Result
-	All() []*Result
+	one() (*Result, error)
+	All() ([]*Result, error)
 	GetError() error
+	setError(error)
 }
 
 // channelResultSet Channel based implementation of ResultSet.
@@ -50,25 +51,70 @@ type channelResultSet struct {
 	statusAttributes map[string]interface{}
 	closed           bool
 	err              error
-	mux              sync.Mutex
+	waitSignal       chan bool
+	channelMutex     sync.Mutex
+	waitSignalMutex  sync.Mutex
 }
 
+func (channelResultSet *channelResultSet) sendSignal() {
+	// Lock wait
+	channelResultSet.waitSignalMutex.Lock()
+	defer channelResultSet.waitSignalMutex.Unlock()
+	if channelResultSet.waitSignal != nil {
+		channelResultSet.waitSignal <- true
+		channelResultSet.waitSignal = nil
+	}
+}
+
+// GetError returns error from the channelResultSet.
 func (channelResultSet *channelResultSet) GetError() error {
 	return channelResultSet.err
 }
 
-func (channelResultSet *channelResultSet) IsEmpty() bool {
-	channelResultSet.mux.Lock()
-	defer channelResultSet.mux.Unlock()
-	return channelResultSet.closed && len(channelResultSet.channel) == 0
+func (channelResultSet *channelResultSet) setError(err error) {
+	channelResultSet.err = err
 }
 
+// IsEmpty returns true when the channelResultSet is empty.
+func (channelResultSet *channelResultSet) IsEmpty() bool {
+	channelResultSet.channelMutex.Lock()
+	// If our channel is empty and we have no data in it, wait for signal that the state has been updated.
+	if len(channelResultSet.channel) != 0 {
+		// Channel is not empty.
+		channelResultSet.channelMutex.Unlock()
+		return false
+	} else if channelResultSet.closed {
+		// Channel is empty and closed.
+		channelResultSet.channelMutex.Unlock()
+		return true
+	} else {
+		// Channel is empty and not closed. Need to wait for signal that state has changed, otherwise
+		// we do not know if it is empty or not.
+		// We need to grab the wait signal mutex before we release the channel mutex.
+		channelResultSet.waitSignalMutex.Lock()
+		channelResultSet.channelMutex.Unlock()
+
+		// Create a wait signal and unlock the wait signal mutex.
+		waitSignal := make(chan bool)
+		channelResultSet.waitSignal = waitSignal
+		channelResultSet.waitSignalMutex.Unlock()
+
+		// Technically if we assigned channelResultSet.waitSignal then unlocked, it could be set to nil or
+		// overwritten to another channel before we check it, so to be safe, create additional variable and
+		// check that instead.
+		<-waitSignal
+		return channelResultSet.IsEmpty()
+	}
+}
+
+// Close can be used to close the channelResultSet.
 func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
-		channelResultSet.mux.Lock()
-		defer channelResultSet.mux.Unlock()
+		channelResultSet.channelMutex.Lock()
 		channelResultSet.closed = true
 		close(channelResultSet.channel)
+		channelResultSet.channelMutex.Unlock()
+		channelResultSet.sendSignal()
 	}
 }
 
@@ -76,6 +122,7 @@ func (channelResultSet *channelResultSet) setAggregateTo(val string) {
 	channelResultSet.aggregateTo = val
 }
 
+// GetAggregateTo returns aggregateTo for the channelResultSet.
 func (channelResultSet *channelResultSet) GetAggregateTo() string {
 	return channelResultSet.aggregateTo
 }
@@ -84,35 +131,48 @@ func (channelResultSet *channelResultSet) setStatusAttributes(val map[string]int
 	channelResultSet.statusAttributes = val
 }
 
+// GetStatusAttributes returns statusAttributes for the channelResultSet.
 func (channelResultSet *channelResultSet) GetStatusAttributes() map[string]interface{} {
 	return channelResultSet.statusAttributes
 }
 
+// GetRequestID returns requestID for the channelResultSet.
 func (channelResultSet *channelResultSet) GetRequestID() string {
 	return channelResultSet.requestID
 }
 
+// Channel returns channel for the channelResultSet.
 func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
-func (channelResultSet *channelResultSet) one() *Result {
-	return <-channelResultSet.channel
+func (channelResultSet *channelResultSet) one() (*Result, error) {
+	if channelResultSet.err != nil {
+		return nil, channelResultSet.err
+	}
+	return <-channelResultSet.channel, channelResultSet.err
 }
 
-func (channelResultSet *channelResultSet) All() []*Result {
+// All returns all results for the channelResultSet.
+func (channelResultSet *channelResultSet) All() ([]*Result, error) {
 	var results []*Result
+	if channelResultSet.err != nil {
+		return nil, channelResultSet.err
+	}
 	for result := range channelResultSet.channel {
 		results = append(results, result)
 	}
-	return results
+	return results, channelResultSet.err
 }
 
 func (channelResultSet *channelResultSet) addResult(r *Result) {
+	channelResultSet.channelMutex.Lock()
 	if r.GetType().Kind() == reflect.Array || r.GetType().Kind() == reflect.Slice {
 		for _, v := range r.result.([]interface{}) {
 			if reflect.TypeOf(v) == reflect.TypeOf(&Traverser{}) {
-				channelResultSet.channel <- &Result{(v.(*Traverser)).value}
+				for i := int64(0); i < (v.(*Traverser)).bulk; i++ {
+					channelResultSet.channel <- &Result{(v.(*Traverser)).value}
+				}
 			} else {
 				channelResultSet.channel <- &Result{v}
 			}
@@ -120,10 +180,12 @@ func (channelResultSet *channelResultSet) addResult(r *Result) {
 	} else {
 		channelResultSet.channel <- &Result{r.result}
 	}
+	channelResultSet.channelMutex.Unlock()
+	channelResultSet.sendSignal()
 }
 
 func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil, sync.Mutex{}}
+	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil, nil, sync.Mutex{}, sync.Mutex{}}
 }
 
 func newChannelResultSet(requestID string) ResultSet {

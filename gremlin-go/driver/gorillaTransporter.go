@@ -20,11 +20,16 @@ under the License.
 package gremlingo
 
 import (
+	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+const maxFailCount = 3
 
 // Transport layer that uses gorilla/websocket: https://github.com/gorilla/websocket
 // Gorilla WebSocket is a widely used and stable Go implementation of the WebSocket protocol.
@@ -35,6 +40,7 @@ type gorillaTransporter struct {
 	isClosed   bool
 }
 
+// Connect used to establish a connection.
 func (transporter *gorillaTransporter) Connect() (err error) {
 	if transporter.connection != nil {
 		return
@@ -56,6 +62,7 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 	return
 }
 
+// Write used to write data to the transporter. Opens connection if closed.
 func (transporter *gorillaTransporter) Write(data []byte) (err error) {
 	if transporter.connection == nil {
 		err = transporter.Connect()
@@ -68,18 +75,51 @@ func (transporter *gorillaTransporter) Write(data []byte) (err error) {
 	return err
 }
 
-func (transporter *gorillaTransporter) Read() (bytes []byte, err error) {
+// Read used to read data from the transporter. Opens connection if closed.
+func (transporter *gorillaTransporter) Read() ([]byte, error) {
 	if transporter.connection == nil {
-		err = transporter.Connect()
+		err := transporter.Connect()
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
+	transporter.connection.SetPongHandler(func(string) error {
+		err := transporter.connection.SetReadDeadline(time.Now().Add(time.Second))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 
-	_, bytes, err = transporter.connection.ReadMessage()
-	return
+	err := transporter.connection.SetReadDeadline(time.Now().Add(time.Second))
+	if err != nil {
+		return nil, err
+	}
+
+	failureCount := 0
+	for {
+		_, bytes, err := transporter.connection.ReadMessage()
+		if err == nil {
+			return bytes, nil
+		}
+		failureCount += 1
+		if failureCount > maxFailCount {
+			return nil, errors.New(fmt.Sprintf("failed to read from socket more than %d times", maxFailCount))
+		}
+
+		// Try pinging server.
+		err = transporter.connection.SetWriteDeadline(time.Now().Add(500 * time.Millisecond))
+		if err != nil {
+			return nil, err
+		}
+		err = transporter.connection.WriteMessage(websocket.PingMessage, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
 }
 
+// Close used to close a connection if it is opened.
 func (transporter *gorillaTransporter) Close() (err error) {
 	if transporter.connection != nil && !transporter.isClosed {
 		transporter.isClosed = true
@@ -88,6 +128,7 @@ func (transporter *gorillaTransporter) Close() (err error) {
 	return
 }
 
+// IsClosed returns true when the transporter is closed.
 func (transporter *gorillaTransporter) IsClosed() bool {
 	return transporter.isClosed
 }

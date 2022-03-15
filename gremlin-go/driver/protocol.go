@@ -27,7 +27,7 @@ import (
 )
 
 // protocol handles invoking serialization and deserialization, as well as handling the lifecycle of raw data passed to
-// and received from the transport layer
+// and received from the transport layer.
 type protocol interface {
 	readLoop(resultSets map[string]ResultSet, errorCallback func(), log *logHandler)
 	write(request *request) error
@@ -128,8 +128,10 @@ func responseHandler(resultSets map[string]ResultSet, response response, log *lo
 		resultSets[responseIDString].Close()
 		return errors.New("authentication is not currently supported")
 	} else {
+		errorMessage := fmt.Sprint("Error in read loop, error message '", response.responseStatus, "'. statusCode: ", statusCode)
+		resultSets[responseIDString].setError(errors.New(errorMessage))
 		resultSets[responseIDString].Close()
-		return errors.New(fmt.Sprint("Error in read loop, error message '", response.responseStatus, "'. statusCode: ", statusCode))
+		log.logger.Log(Info, errorMessage)
 	}
 	return nil
 }
