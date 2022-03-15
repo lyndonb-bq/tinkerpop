@@ -369,6 +369,8 @@ func (tg *tinkerPopGraph) theResultShouldBeEmpty() error {
 
 func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog.Table) error {
 	ordered := characterizedAs == "ordered"
+	// For comparing ordered gremlingo.SimpleSet case.
+	var expectSet bool
 	switch characterizedAs {
 	case "ordered", "unordered", "of":
 		var expectedResult []interface{}
@@ -384,6 +386,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 				v.Labels = []gremlingo.Set{}
 				val = v
 			}
+			_, expectSet = val.(*gremlingo.SimpleSet)
 			expectedResult = append(expectedResult, val)
 		}
 		var actualResult []interface{}
@@ -400,8 +403,16 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			return errors.New(err)
 		}
 		if ordered {
-			if fmt.Sprint(actualResult) != fmt.Sprint(expectedResult) {
-				return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+			if expectSet {
+				for i, a := range actualResult {
+					if fmt.Sprint(a.(*gremlingo.SimpleSet).ToSlice()) != fmt.Sprint(expectedResult[i].(*gremlingo.SimpleSet).ToSlice()) {
+						return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+					}
+				}
+			} else {
+				if fmt.Sprint(actualResult) != fmt.Sprint(expectedResult) {
+					return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+				}
 			}
 		} else {
 			if characterizedAs == "of" {
