@@ -113,7 +113,7 @@ sequenceDiagram
 
 #### protocol
 
-The `protocol` entity handles invoking serialization and deserialization of data, as well as handling the lifecycle of raw data passed to and received from the `transporter` layer. Upon creation, an instance of `protocol` starts a `go routine` to asynchronously read and populate data into a  `ResultSet` that is owned by the parent `connection`.
+The `protocol` entity handles invoking serialization and deserialization of data, as well as handling the lifecycle of raw data passed to and received from the `transporter` layer. Upon creation, an instance of `protocol` starts a `goroutine` to asynchronously read and populate data into a  `ResultSet` that is owned by the parent `connection`.
 
 ##### Cardinalities
 
@@ -124,7 +124,7 @@ The `protocol` entity handles invoking serialization and deserialization of data
 
 * States
   * `closed bool`
-* When `close()` is invoked, set the `closed` boolean to `true` which will terminate the `go routine` used for asynchronously reading, and invoke `close()` on the `transporter`.
+* When `close()` is invoked, set the `closed` boolean to `true` which will terminate the `goroutine` used for asynchronously reading, and invoke `close()` on the `transporter`.
 
 ```mermaid
 classDiagram
@@ -171,7 +171,7 @@ classDiagram
 
 #### transporter
 
-The `transporter` is an interface that describes the lowest-level methods that are required for sending and receiving requests, which implementing types are ones that are implementations of network protocols. The default implementation used for Gremlin-Go is Gorilla WebSocket, a Go implementation of the WebSocket protocol.
+The `transporter` is an interface that describes the lowest-level methods that are required for sending and receiving requests, which implementing types are ones that are implementations of network protocols. The default implementation used for Gremlin-Go is [Gorilla WebSocket](https://github.com/gorilla/websocket), a Go implementation of the WebSocket protocol.
 
 ##### Cardinalities (Gorilla)
 
@@ -214,7 +214,7 @@ classDiagram
 
 #### ResultSet
 
-A `ResultSet` is the immediate output of executing a Gremlin traversal. It contains a set of the individual `Result` types. `ResultSet` is populated asynchronously by a go routine and thus also handles the providing of `Result` as they are available transparently to the user.
+A `ResultSet` is the immediate output of executing a Gremlin traversal. It contains a set of the individual `Result` types. `ResultSet` is populated asynchronously by a `goroutine` and thus also handles the providing of `Result` as they are available transparently to the user.
 
 ##### Cardinalities
 
@@ -245,7 +245,7 @@ classDiagram
 
 ### Gremlin
 
-Gremlin-related entities are for the purpose of enabling the Gremlin query language to be used programmatically in Go. They responsible for integration with the Driver components, as well as translating the query language to a format that can be sent and consumed by a Gremlin-supported server. Most importantly, these entities are what allows the actual writing of Gremlin traversals in Go.
+Gremlin-related entities are for the purpose of enabling the Gremlin query language to be used programmatically in Go. They responsible for integration with the Driver components, as well as translating the query language to a format that can be sent and consumed by a Gremlin-supported server. Most importantly, these entities are what allow the actual writing of Gremlin traversals in Go.
 
 #### DriverRemoteConnection
 
