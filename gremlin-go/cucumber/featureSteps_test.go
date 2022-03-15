@@ -371,6 +371,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 	ordered := characterizedAs == "ordered"
 	// For comparing ordered gremlingo.SimpleSet case.
 	var expectSet bool
+	var expectPath bool
 	switch characterizedAs {
 	case "ordered", "unordered", "of":
 		var expectedResult []interface{}
@@ -381,6 +382,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			}
 			val := parseValue(row.Cells[0].Value, tg.graphName)
 			v, ok := val.(*gremlingo.Path)
+			expectPath = ok
 			if ok {
 				// Clear the labels since we don't define them in feature files.
 				v.Labels = []gremlingo.Set{}
@@ -390,12 +392,26 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 			expectedResult = append(expectedResult, val)
 		}
 		var actualResult []interface{}
-		for _, res := range tg.result {
-			switch r := res.(type) {
+		if len(tg.result) == 1 {
+			switch r := tg.result[0].(type) {
 			case *gremlingo.Result:
-				actualResult = append(actualResult, r.GetInterface())
+				val, ok := r.GetInterface().(*gremlingo.Path)
+				if !expectPath && ok {
+					actualResult = val.Objects
+				} else {
+					actualResult = append(actualResult, r.GetInterface())
+				}
 			default:
 				actualResult = append(actualResult, r)
+			}
+		} else {
+			for _, res := range tg.result {
+				switch r := res.(type) {
+				case *gremlingo.Result:
+					actualResult = append(actualResult, r.GetInterface())
+				default:
+					actualResult = append(actualResult, r)
+				}
 			}
 		}
 		if characterizedAs != "of" && (len(actualResult) != len(expectedResult)) {

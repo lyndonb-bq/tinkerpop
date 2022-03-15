@@ -271,7 +271,7 @@ public final class GolangTranslator implements Translator.ScriptTranslator {
                         convertToScript(arguments[i]);
                         script.append(")");
                     } else if ((methodName.equals("inject") ||methodName.equals("withSack")  ||
-                                methodName.equals("sample") || methodName.equals("with"))
+                                methodName.equals("sample") || methodName.equals("with") || methodName.equals("constant"))
                             && arguments[i] instanceof Integer) {
                         script.append("int32(");
                         convertToScript(arguments[i]);

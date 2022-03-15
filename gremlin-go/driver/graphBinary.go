@@ -798,7 +798,7 @@ func textPWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphB
 		return nil, err
 	}
 
-	for pValue := range v.values {
+	for _, pValue := range v.values {
 		_, err := typeSerializer.write(pValue, buffer)
 		if err != nil {
 			return nil, err
