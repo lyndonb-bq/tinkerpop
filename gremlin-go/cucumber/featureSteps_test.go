@@ -340,7 +340,7 @@ func (tg *tinkerPopGraph) theResultShouldHaveACountOf(expectedCount int) error {
 		}
 	}
 	if actualCount != expectedCount {
-		return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", actualCount, expectedCount))
+		return errors.New(fmt.Sprintf("result should return %d for count, but returned %d", expectedCount, actualCount))
 	}
 	return nil
 }
@@ -395,7 +395,7 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 				actualResult = append(actualResult, r)
 			}
 		}
-		if characterizedAs != "of" && len(actualResult) != len(expectedResult) {
+		if characterizedAs != "of" && (len(actualResult) != len(expectedResult)) {
 			err := fmt.Sprintf("actual result length does not equal expected (%d!=%d).", len(actualResult), len(expectedResult))
 			return errors.New(err)
 		}
@@ -404,8 +404,14 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 				return errors.New(fmt.Sprintf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
 			}
 		} else {
-			if !compareListEqualsWithoutOrder(expectedResult, actualResult) {
-				return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+			if characterizedAs == "of" {
+				if !compareListEqualsWithOf(expectedResult, actualResult) {
+					return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+				}
+			} else {
+				if !compareListEqualsWithoutOrder(expectedResult, actualResult) {
+					return errors.New(fmt.Sprintf("actual result does not match expected (order not expected)\nActual: %v\nExpected: %v", actualResult, expectedResult))
+				}
 			}
 		}
 		return nil
@@ -503,16 +509,16 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 	// So to do in place deletion in a loop we can do the following:
 	// 		1. Loop from back to wrong (don't need to worry about deleted indices that way.
 	//		2. Create a new slice with the index removed when we fix the item we want to delete.
-	// To do an orderless copy, a copy of the actual result is created. Results are removed as they are found. This stops
+	// To do an orderless copy, a copy of the expected result is created. Results are removed as they are found. This stops
 	// the following from returning equal [1 2 2 2] and [1 1 1 2]
-	actualCopy := make([]interface{}, len(actual))
-	copy(actualCopy, actual)
+	expectedCopy := make([]interface{}, len(expected))
+	copy(expectedCopy, expected)
 	for _, a := range actual {
 		found := false
 		if a == nil {
-			for i := len(actualCopy) - 1; i >= 0; i-- {
-				if actualCopy[i] == nil {
-					actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+			for i := len(expectedCopy) - 1; i >= 0; i-- {
+				if expectedCopy[i] == nil {
+					expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 					found = true
 					break
 				}
@@ -520,12 +526,12 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 		} else {
 			switch reflect.TypeOf(a).Kind() {
 			case reflect.Array, reflect.Slice:
-				for i := len(actualCopy) - 1; i >= 0; i-- {
-					if actualCopy[i] != nil {
-						switch reflect.TypeOf(actualCopy[i]).Kind() {
+				for i := len(expectedCopy) - 1; i >= 0; i-- {
+					if expectedCopy[i] != nil {
+						switch reflect.TypeOf(expectedCopy[i]).Kind() {
 						case reflect.Array, reflect.Slice:
-							if compareListEqualsWithoutOrder(a.([]interface{}), actualCopy[i].([]interface{})) {
-								actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+							if compareListEqualsWithoutOrder(a.([]interface{}), expectedCopy[i].([]interface{})) {
+								expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 								found = true
 							}
 						}
@@ -535,12 +541,12 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 					}
 				}
 			case reflect.Map:
-				for i := len(actualCopy) - 1; i >= 0; i-- {
-					if actualCopy[i] != nil {
-						switch reflect.TypeOf(actualCopy[i]).Kind() {
+				for i := len(expectedCopy) - 1; i >= 0; i-- {
+					if expectedCopy[i] != nil {
+						switch reflect.TypeOf(expectedCopy[i]).Kind() {
 						case reflect.Map:
-							if compareMapEquals(a.(map[interface{}]interface{}), actualCopy[i].(map[interface{}]interface{})) {
-								actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+							if compareMapEquals(a.(map[interface{}]interface{}), expectedCopy[i].(map[interface{}]interface{})) {
+								expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 								found = true
 							}
 						}
@@ -550,9 +556,68 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 					}
 				}
 			default:
-				for i := len(actualCopy) - 1; i >= 0; i-- {
-					if fmt.Sprint(a) == fmt.Sprint(actualCopy[i]) {
-						actualCopy = append(actualCopy[:i], actualCopy[i+1:]...)
+				for i := len(expectedCopy) - 1; i >= 0; i-- {
+					if fmt.Sprint(a) == fmt.Sprint(expectedCopy[i]) {
+						expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
+						found = true
+						break
+					}
+				}
+			}
+		}
+		if !found {
+			fmt.Printf("Failed to find %v in %v\n", a, expected)
+			return false
+		}
+	}
+	return true
+}
+
+func compareListEqualsWithOf(expected []interface{}, actual []interface{}) bool {
+	// When comparing with "of", we expect cases like [1 2] (expected) and [1 1 1 2] (actual) , or
+	// [1 1 1 2] (expected) and [1 2] (actual) to return equal.
+	for _, a := range actual {
+		found := false
+		if a == nil {
+			for i := len(expected) - 1; i >= 0; i-- {
+				if expected[i] == nil {
+					found = true
+					break
+				}
+			}
+		} else {
+			switch reflect.TypeOf(a).Kind() {
+			case reflect.Array, reflect.Slice:
+				for i := len(expected) - 1; i >= 0; i-- {
+					if expected[i] != nil {
+						switch reflect.TypeOf(expected[i]).Kind() {
+						case reflect.Array, reflect.Slice:
+							if compareListEqualsWithoutOrder(a.([]interface{}), expected[i].([]interface{})) {
+								found = true
+							}
+						}
+						if found {
+							break
+						}
+					}
+				}
+			case reflect.Map:
+				for i := len(expected) - 1; i >= 0; i-- {
+					if expected[i] != nil {
+						switch reflect.TypeOf(expected[i]).Kind() {
+						case reflect.Map:
+							if compareMapEquals(a.(map[interface{}]interface{}), expected[i].(map[interface{}]interface{})) {
+								found = true
+							}
+						}
+						if found {
+							break
+						}
+					}
+				}
+			default:
+				for i := len(expected) - 1; i >= 0; i-- {
+					if fmt.Sprint(a) == fmt.Sprint(expected[i]) {
 						found = true
 						break
 					}
