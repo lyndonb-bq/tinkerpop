@@ -544,7 +544,6 @@ func vertexPropertyReader(buffer *bytes.Buffer, typeSerializer *graphBinaryTypeS
 }
 
 //Format: {labels}{objects}
-// TODO: Path serialization is currently incomplete as labels are represented as list of lists due to lack of native set types in go. Fully functional Path serialization will be implemented when set is implemented in AN-1032
 func pathWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *graphBinaryTypeSerializer) ([]byte, error) {
 	p := value.(*Path)
 	_, err := typeSerializer.write(p.labels, buffer)
@@ -838,7 +837,6 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: DurationType, reader: durationReader, nullFlagReturn: time.Duration(0), logHandler: serializer.logHandler}, nil
 	case MapType.getCodeByte():
 		return &graphBinaryTypeSerializer{dataType: MapType, writer: mapWriter, reader: mapReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
-	// TODO: Add a read test for an unknown Tinkerpop type to check for this case
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
 		return nil, errors.New("unknown data type to deserialize")
