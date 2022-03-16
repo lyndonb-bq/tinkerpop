@@ -37,8 +37,6 @@ type ClientSettings struct {
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
 	url             string
-	authInfo        *AuthInfo
-	tlsConfig       *tls.Config
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
@@ -65,8 +63,6 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	}
 	client := &Client{
 		url:             url,
-		authInfo:        settings.AuthInfo,
-		tlsConfig:       settings.TlsConfig,
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connection:      conn,

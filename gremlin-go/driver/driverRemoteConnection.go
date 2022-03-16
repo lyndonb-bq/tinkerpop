@@ -22,38 +22,7 @@ package gremlingo
 import (
 	"crypto/tls"
 	"golang.org/x/text/language"
-	"net/http"
 )
-
-// AuthInfo is an option struct that allows authentication information to be specified.
-// Authentication can be provided via http.Header Header directly.
-// Basic authentication can also be used via the BasicAuthInfo function.
-type AuthInfo struct {
-	Header   http.Header
-	Username string
-	Password string
-}
-
-// getHeader provides a safe way to get a header from the AuthInfo even if it is nil.
-// This way we don't need any additional logic in the transport layer.
-func (authInfo *AuthInfo) getHeader() http.Header {
-	if authInfo == nil {
-		return nil
-	} else {
-		return authInfo.Header
-	}
-}
-
-// getUseBasicAuth provides a safe way to get a if basic auth info is available from the AuthInfo even if it is nil.
-// This way we don't need any additional logic in the transport layer.
-func (authInfo *AuthInfo) getUseBasicAuth() bool {
-	return authInfo != nil && authInfo.Username != "" && authInfo.Password != ""
-}
-
-// BasicAuthInfo provides a way to generate AuthInfo. Enter username and password and get the AuthInfo back.
-func BasicAuthInfo(username string, password string) *AuthInfo {
-	return &AuthInfo{Username: username, Password: password}
-}
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
 type DriverRemoteConnectionSettings struct {
@@ -107,8 +76,6 @@ func NewDriverRemoteConnection(
 
 	client := &Client{
 		url:             url,
-		authInfo:        settings.AuthInfo,
-		tlsConfig:       settings.TlsConfig,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,

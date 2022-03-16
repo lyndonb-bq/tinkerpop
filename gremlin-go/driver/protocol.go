@@ -124,7 +124,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets map[string]R
 		resultSets[responseIDString].addResult(&Result{data})
 		log.logger.Logf(Info, "Partial %v===>%v", response.responseStatus, data)
 	} else if statusCode == http.StatusProxyAuthRequired || statusCode == 151 {
-		// http status code 151 is not defined here, but corresponds with 403, i.e authetication has failed.
+		// http status code 151 is not defined here, but corresponds with 403, i.e. authentication has failed.
 		// Server has requested basic auth.
 		authInfo := protocol.transporter.getAuthInfo()
 		if authInfo.getUseBasicAuth() {
@@ -133,11 +133,9 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets map[string]R
 
 			authBytes := make([]byte, 0)
 			authBytes = append(authBytes, 0)
-			authBytes = append(authBytes, []byte(username)...)
+			authBytes = append(authBytes, username...)
 			authBytes = append(authBytes, 0)
-			for _, c := range password {
-				authBytes = append(authBytes, c)
-			}
+			authBytes = append(authBytes, password...)
 			encoded := base64.StdEncoding.EncodeToString(authBytes)
 			request := makeBasicAuthRequest(encoded)
 			err := protocol.write(&request)
