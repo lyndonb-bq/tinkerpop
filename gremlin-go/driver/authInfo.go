@@ -40,7 +40,7 @@ func (authInfo *AuthInfo) getHeader() http.Header {
 	}
 }
 
-// getUseBasicAuth provides a safe way to get a if basic auth info is available from the AuthInfo even if it is nil.
+// getUseBasicAuth provides a safe way to check if basic auth info is available from the AuthInfo even if it is nil.
 // This way we don't need any additional logic in the transport layer.
 func (authInfo *AuthInfo) getUseBasicAuth() bool {
 	return authInfo != nil && authInfo.Username != "" && authInfo.Password != ""
