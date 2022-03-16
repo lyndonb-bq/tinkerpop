@@ -68,6 +68,39 @@ func addTestData(t *testing.T, g *GraphTraversalSource) {
 	<-promise
 }
 
+func initializeGraph(t *testing.T, url string, auth *AuthInfo, tls *tls.Config) *GraphTraversalSource {
+	remote, err := NewDriverRemoteConnection(url,
+		func(settings *DriverRemoteConnectionSettings) {
+			settings.TlsConfig = tls
+			settings.AuthInfo = auth
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, remote)
+	g := Traversal_().WithRemote(remote)
+
+	// Drop the graph and check that it is empty.
+	dropGraph(t, g)
+	readCount(t, g, "", 0)
+	readCount(t, g, testLabel, 0)
+	readCount(t, g, personLabel, 0)
+
+	// Add data and check that the size of the graph is correct.
+	addTestData(t, g)
+	readCount(t, g, "", len(testNames))
+	readCount(t, g, testLabel, 0)
+	readCount(t, g, personLabel, len(testNames))
+
+	return g
+}
+
+func resetGraph(t *testing.T, g *GraphTraversalSource) {
+	// Drop the graph and check that it is empty.
+	dropGraph(t, g)
+	readCount(t, g, "", 0)
+	readCount(t, g, testLabel, 0)
+	readCount(t, g, personLabel, 0)
+}
+
 func readTestDataVertexProperties(t *testing.T, g *GraphTraversalSource) {
 	// Read names from graph
 	var names []string
@@ -136,6 +169,29 @@ func readUsingAnonymousTraversal(t *testing.T, g *GraphTraversalSource) {
 	assert.Equal(t, int64(len(testNames)), resultMap[personLabel])
 }
 
+func readWithNextAndHasNext(t *testing.T, g *GraphTraversalSource) {
+	traversal := g.V().HasLabel(personLabel).Properties(nameKey)
+	var names []string
+	for i := 0; i < len(testNames); i++ {
+		hasN, err := traversal.HasNext()
+		assert.Nil(t, err)
+		assert.True(t, hasN)
+		res, err := traversal.Next()
+		assert.Nil(t, err)
+		assert.NotNil(t, res)
+		vp, err := res.GetVertexProperty()
+		assert.Nil(t, err)
+		names = append(names, vp.Value.(string))
+	}
+	hasN, _ := traversal.HasNext()
+	assert.False(t, hasN)
+	// Check for Next error when no more elements left
+	res, err := traversal.Next()
+	assert.Nil(t, res)
+	assert.NotNil(t, err)
+	assert.True(t, sortAndCompareTwoStringSlices(names, testNames))
+}
+
 func getEnvOrDefaultString(key string, defaultValue string) string {
 	// Missing value is returned as "".
 	value := os.Getenv(key)
@@ -175,8 +231,8 @@ func TestConnection(t *testing.T) {
 	testNoAuthTlsConfig := &tls.Config{}
 
 	// Basic authentication integration test variables.
-	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", "wss://localhost:8183/gremlin")
-	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", false)
+	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", "wss://localhost:8185/gremlin")
+	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", true)
 	testBasicAuthAuthInfo := getBasicAuthInfo()
 	testBasicAuthTlsConfig := &tls.Config{InsecureSkipVerify: true}
 
@@ -196,6 +252,20 @@ func TestConnection(t *testing.T) {
 		connection, err := createConnection(validHostvalidPortInvalidPath, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
 		assert.NotNil(t, err)
 		assert.Nil(t, connection)
+	})
+
+	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+
+		// Read test data out of the graph and check that it is correct.
+		readTestDataVertexProperties(t, g)
+		readTestDataValues(t, g)
+
+		// Reset Graph
+		resetGraph(t, g)
 	})
 
 	t.Run("Test createConnection", func(t *testing.T) {
@@ -223,6 +293,18 @@ func TestConnection(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	t.Run("Test connection.close() failure", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		connection, err := createConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		err = connection.close()
+		assert.Nil(t, err)
+		err = connection.close()
+		assert.NotNil(t, err)
+		err = connection.close()
+		assert.NotNil(t, err)
+	})
+
 	t.Run("Test client.submit()", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
@@ -246,27 +328,8 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
-
-		// Drop the graph and check that it is empty.
-		dropGraph(t, g)
-		readCount(t, g, "", 0)
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, 0)
-
-		// Add data and check that the size of the graph is correct.
-		addTestData(t, g)
-
-		readCount(t, g, "", len(testNames))
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, len(testNames))
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
 
 		// Read test data out of the graph and check that it is correct.
 		readTestDataVertexProperties(t, g)
@@ -279,17 +342,21 @@ func TestConnection(t *testing.T) {
 		readCount(t, g, personLabel, 0)
 	})
 
+	t.Run("Test Traversal. Next and HasNext", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+
+		readWithNextAndHasNext(t, g)
+		resetGraph(t, g)
+	})
+
 	t.Run("Test DriverRemoteConnection GraphTraversal With Label", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
 
 		// Drop the graph.
 		dropGraph(t, g)
@@ -332,27 +399,9 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test DriverRemoteConnection GraphTraversal P", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
-		// Add data
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
 
-		// Drop the graph and check that it is empty.
-		dropGraph(t, g)
-		readCount(t, g, "", 0)
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, 0)
-
-		// Add data and check that the size of the graph is correct.
-		addTestData(t, g)
-		readCount(t, g, "", len(testNames))
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, len(testNames))
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
 
 		// Read test data out of the graph and check that it is correct.
 		results, err := g.V().Has("name", P.Eq("Lyndon")).ValueMap("name").ToList()
@@ -360,10 +409,7 @@ func TestConnection(t *testing.T) {
 		assert.Equal(t, 1, len(results))
 
 		// Drop the graph and check that it is empty.
-		dropGraph(t, g)
-		readCount(t, g, "", 0)
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, 0)
+		resetGraph(t, g)
 	})
 
 	t.Run("Test DriverRemoteConnection Next and HasNext", func(t *testing.T) {
@@ -433,39 +479,19 @@ func TestConnection(t *testing.T) {
 		readCount(t, g, personLabel, 0)
 	})
 
-	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
-		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+	t.Run("Test Traversal.ToString fail", func(t *testing.T) {
+		anonTrav := T__.Unfold().HasLabel(testLabel)
+		slice, err := anonTrav.ToList()
+		assert.Nil(t, slice)
+		assert.NotNil(t, err)
+	})
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
-
-		// Drop the graph and check that it is empty.
-		dropGraph(t, g)
-
-		// Add data and check that the size of the graph is correct.
-		addTestData(t, g)
-
-		r, err := g.V().Has("name", "Lyndon").Values("foo").ToList()
-		assert.Nil(t, err)
-		assert.NotNil(t, r)
-		assert.Equal(t, 1, len(r))
-		val, err := r[0].GetInt32()
-		assert.Nil(t, err)
-		assert.Equal(t, int32(1), val)
-
-		r, err = g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
-		assert.Nil(t, err)
-		assert.NotNil(t, r)
-		assert.Equal(t, 1, len(r))
-		val, err = r[0].GetInt32()
-		assert.Nil(t, err)
-		assert.Equal(t, int32(2), val)
+	t.Run("Test Traversal.Iterate fail", func(t *testing.T) {
+		anonTrav := T__.Unfold().HasLabel(testLabel)
+		traversal, channel, err := anonTrav.Iterate()
+		assert.Nil(t, traversal)
+		assert.Nil(t, channel)
+		assert.NotNil(t, err)
 	})
 
 	t.Run("Test DriverRemoteConnection with basic authentication", func(t *testing.T) {
@@ -494,5 +520,31 @@ func TestConnection(t *testing.T) {
 		// Close remote connection.
 		err = remote.Close()
 		assert.Nil(t, err)
+	})
+
+	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+			})
+		assert.Nil(t, err)
+		assert.NotNil(t, remote)
+		g := Traversal_().WithRemote(remote)
+
+		// Drop the graph and check that it is empty.
+		dropGraph(t, g)
+
+		r, err := g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
+		assert.Nil(t, err)
+		assert.NotNil(t, r)
+		assert.Equal(t, 1, len(r))
+		val, err := r[0].GetInt32()
+		assert.Nil(t, err)
+		assert.Equal(t, int32(2), val)
+
+		resetGraph(t, g)
 	})
 }
