@@ -32,7 +32,7 @@ type request struct {
 const stringOp = "eval"
 const stringProcessor = ""
 
-func makeStringRequest(stringGremlin string) (req request) {
+func makeStringRequest(stringGremlin string, traversalSource string) (req request) {
 	return request{
 		requestID: uuid.New(),
 		op:        stringOp,
@@ -40,7 +40,7 @@ func makeStringRequest(stringGremlin string) (req request) {
 		args: map[string]interface{}{
 			"gremlin": stringGremlin,
 			"aliases": map[string]interface{}{
-				"g": "g",
+				"g": traversalSource,
 			},
 		},
 	}
@@ -48,6 +48,8 @@ func makeStringRequest(stringGremlin string) (req request) {
 
 const bytecodeOp = "bytecode"
 const bytecodeProcessor = "traversal"
+const authOp = "authentication"
+const authProcessor = "traversal"
 
 func makeBytecodeRequest(bytecodeGremlin *bytecode, traversalSource string) (req request) {
 	return request{
@@ -63,4 +65,13 @@ func makeBytecodeRequest(bytecodeGremlin *bytecode, traversalSource string) (req
 	}
 }
 
-// TODO: AN-1029 - Enable configurable request aliases
+func makeBasicAuthRequest(auth string) (req request) {
+	return request{
+		requestID: uuid.New(),
+		op:        authOp,
+		processor: authProcessor,
+		args: map[string]interface{}{
+			"sasl": auth,
+		},
+	}
+}

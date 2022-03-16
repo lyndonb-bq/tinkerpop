@@ -506,7 +506,7 @@ func compareMapEquals(expected map[interface{}]interface{}, actual map[interface
 				switch reflect.TypeOf(e).Kind() {
 				case reflect.Array, reflect.Slice:
 					// Compare arrays
-					if !compareListEqualsWithoutOrder(a.([]interface{}), e.([]interface{})) {
+					if !compareListEqualsWithoutOrder(e.([]interface{}), a.([]interface{})) {
 						return false
 					}
 				default:
@@ -517,7 +517,7 @@ func compareMapEquals(expected map[interface{}]interface{}, actual map[interface
 				switch reflect.TypeOf(a).Kind() {
 				case reflect.Map:
 					// Compare maps
-					if !compareMapEquals(a.(map[interface{}]interface{}), e.(map[interface{}]interface{})) {
+					if !compareMapEquals(e.(map[interface{}]interface{}), a.(map[interface{}]interface{})) {
 						return false
 					}
 				default:
@@ -563,7 +563,7 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 					if expectedCopy[i] != nil {
 						switch reflect.TypeOf(expectedCopy[i]).Kind() {
 						case reflect.Array, reflect.Slice:
-							if compareListEqualsWithoutOrder(a.([]interface{}), expectedCopy[i].([]interface{})) {
+							if compareListEqualsWithoutOrder(expectedCopy[i].([]interface{}), a.([]interface{})) {
 								expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 								found = true
 							}
@@ -578,7 +578,7 @@ func compareListEqualsWithoutOrder(expected []interface{}, actual []interface{})
 					if expectedCopy[i] != nil {
 						switch reflect.TypeOf(expectedCopy[i]).Kind() {
 						case reflect.Map:
-							if compareMapEquals(a.(map[interface{}]interface{}), expectedCopy[i].(map[interface{}]interface{})) {
+							if compareMapEquals(expectedCopy[i].(map[interface{}]interface{}), a.(map[interface{}]interface{})) {
 								expectedCopy = append(expectedCopy[:i], expectedCopy[i+1:]...)
 								found = true
 							}
@@ -625,7 +625,7 @@ func compareListEqualsWithOf(expected []interface{}, actual []interface{}) bool 
 					if expected[i] != nil {
 						switch reflect.TypeOf(expected[i]).Kind() {
 						case reflect.Array, reflect.Slice:
-							if compareListEqualsWithoutOrder(a.([]interface{}), expected[i].([]interface{})) {
+							if compareListEqualsWithoutOrder(expected[i].([]interface{}), a.([]interface{})) {
 								found = true
 							}
 						}
@@ -639,7 +639,7 @@ func compareListEqualsWithOf(expected []interface{}, actual []interface{}) bool 
 					if expected[i] != nil {
 						switch reflect.TypeOf(expected[i]).Kind() {
 						case reflect.Map:
-							if compareMapEquals(a.(map[interface{}]interface{}), expected[i].(map[interface{}]interface{})) {
+							if compareMapEquals(expected[i].(map[interface{}]interface{}), a.(map[interface{}]interface{})) {
 								found = true
 							}
 						}

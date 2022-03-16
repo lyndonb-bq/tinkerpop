@@ -65,15 +65,8 @@ func getEnvOrDefaultInt(key string, defaultValue int) int {
 	return defaultValue
 }
 
-const defaultScenarioHost string = "localhost"
-const defaultScenarioPort int = 8182
-
-func scenarioHost() string {
-	return getEnvOrDefaultString("GREMLIN_SERVER_HOSTNAME", defaultScenarioHost)
-}
-
-func scenarioPort() int {
-	return getEnvOrDefaultInt("GREMLIN_SERVER_PORT", defaultScenarioPort)
+func scenarioUrl() string {
+	return getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
 }
 
 func NewTinkerPopWorld() *TinkerPopWorld {
@@ -103,7 +96,7 @@ func (t *TinkerPopWorld) loadAllDataGraph() {
 		if name == "empty" {
 			t.loadEmptyDataGraph()
 		} else {
-			connection, err := gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(),
+			connection, err := gremlingo.NewDriverRemoteConnection(scenarioUrl(),
 				func(settings *gremlingo.DriverRemoteConnectionSettings) {
 					settings.TraversalSource = "g" + name
 				})
@@ -122,7 +115,7 @@ func (t *TinkerPopWorld) loadAllDataGraph() {
 }
 
 func (t *TinkerPopWorld) loadEmptyDataGraph() {
-	connection, _ := gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
+	connection, _ := gremlingo.NewDriverRemoteConnection(scenarioUrl(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 		settings.TraversalSource = "ggraph"
 	})
 	t.graphDataMap["empty"] = &DataGraph{connection: connection}
@@ -201,11 +194,11 @@ func (t *TinkerPopWorld) recreateAllDataGraphConnection() error {
 	var err error
 	for _, name := range graphNames {
 		if name == "empty" {
-			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
+			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioUrl(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 				settings.TraversalSource = "ggraph"
 			})
 		} else {
-			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
+			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioUrl(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 				settings.TraversalSource = "g" + name
 			})
 		}

@@ -45,7 +45,7 @@ func (t *Traversal) ToList() ([]*Result, error) {
 		return nil, errors.New("cannot invoke this method from an anonymous traversal")
 	}
 
-	results, err := t.remote.SubmitBytecode(t.bytecode)
+	results, err := t.remote.submitBytecode(t.bytecode)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (t *Traversal) Iterate() (*Traversal, <-chan bool, error) {
 		return nil, nil, err
 	}
 
-	res, err := t.remote.SubmitBytecode(t.bytecode)
+	res, err := t.remote.submitBytecode(t.bytecode)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -109,7 +109,8 @@ func (t *Traversal) Next() (*Result, error) {
 	results, err := t.getResults()
 	if err != nil {
 		return nil, err
-	} else if results.IsEmpty() {
+	}
+	if results.IsEmpty() {
 		return nil, errors.New("there are no results left")
 	}
 	return results.one()
@@ -117,9 +118,11 @@ func (t *Traversal) Next() (*Result, error) {
 
 func (t *Traversal) getResults() (ResultSet, error) {
 	if t.results == nil {
-		var err error
-		t.results, err = t.remote.SubmitBytecode(t.bytecode)
-		return t.results, err
+		results, err := t.remote.submitBytecode(t.bytecode)
+		if err != nil {
+			return nil, err
+		}
+		t.results = results
 	}
 	return t.results, nil
 }
@@ -302,67 +305,67 @@ func newPWithP(operator string, pp p, args ...interface{}) Predicate {
 }
 
 // Between Predicate to determine if value is within (inclusive) the range of two specified values.
-func (_ *p) Between(args ...interface{}) Predicate {
+func (*p) Between(args ...interface{}) Predicate {
 	return newP("between", args...)
 }
 
 // Eq Predicate to determine if equal to.
-func (_ *p) Eq(args ...interface{}) Predicate {
+func (*p) Eq(args ...interface{}) Predicate {
 	return newP("eq", args...)
 }
 
 // Gt Predicate to determine if greater than.
-func (_ *p) Gt(args ...interface{}) Predicate {
+func (*p) Gt(args ...interface{}) Predicate {
 	return newP("gt", args...)
 }
 
 // Gte Predicate to determine if greater than or equal to.
-func (_ *p) Gte(args ...interface{}) Predicate {
+func (*p) Gte(args ...interface{}) Predicate {
 	return newP("gte", args...)
 }
 
 // Inside Predicate to determine if value is within range of specified values (exclusive).
-func (_ *p) Inside(args ...interface{}) Predicate {
+func (*p) Inside(args ...interface{}) Predicate {
 	return newP("inside", args...)
 }
 
 // Lt Predicate to determine if less than.
-func (_ *p) Lt(args ...interface{}) Predicate {
+func (*p) Lt(args ...interface{}) Predicate {
 	return newP("lt", args...)
 }
 
 // Lte Predicate to determine if less than or equal to.
-func (_ *p) Lte(args ...interface{}) Predicate {
+func (*p) Lte(args ...interface{}) Predicate {
 	return newP("lte", args...)
 }
 
 // Neq Predicate to determine if not equal to.
-func (_ *p) Neq(args ...interface{}) Predicate {
+func (*p) Neq(args ...interface{}) Predicate {
 	return newP("neq", args...)
 }
 
 // Not Predicate gives the opposite of the specified Predicate.
-func (_ *p) Not(args ...interface{}) Predicate {
+func (*p) Not(args ...interface{}) Predicate {
 	return newP("not", args...)
 }
 
 // Outside Predicate to determine of value is not within range of specified values (exclusive).
-func (_ *p) Outside(args ...interface{}) Predicate {
+func (*p) Outside(args ...interface{}) Predicate {
 	return newP("outside", args...)
 }
 
 // Test evaluates Predicate on given argument.
-func (_ *p) Test(args ...interface{}) Predicate {
+func (*p) Test(args ...interface{}) Predicate {
 	return newP("test", args...)
 }
 
 // Within Predicate determines if value is within given list of values.
-func (_ *p) Within(args ...interface{}) Predicate {
+func (*p) Within(args ...interface{}) Predicate {
 	return newP("within", args...)
 }
 
 // Without Predicate determines if value is not within the specified.
-func (_ *p) Without(args ...interface{}) Predicate {
+func (*p) Without(args ...interface{}) Predicate {
 	return newP("without", args...)
 }
 
@@ -413,32 +416,32 @@ func newTextPWithP(operator string, tp textP, args ...interface{}) TextPredicate
 }
 
 // Containing TextPredicate determines if a string contains a given value.
-func (_ *textP) Containing(args ...interface{}) TextPredicate {
+func (*textP) Containing(args ...interface{}) TextPredicate {
 	return newTextP("containing", args...)
 }
 
 // EndingWith TextPredicate determines if a string ends with a given value.
-func (_ *textP) EndingWith(args ...interface{}) TextPredicate {
+func (*textP) EndingWith(args ...interface{}) TextPredicate {
 	return newTextP("endingWith", args...)
 }
 
 // NotContaining TextPredicate determines if a string does not contain a given value.
-func (_ *textP) NotContaining(args ...interface{}) TextPredicate {
+func (*textP) NotContaining(args ...interface{}) TextPredicate {
 	return newTextP("notContaining", args...)
 }
 
 // NotEndingWith TextPredicate determines if a string does not end with a given value.
-func (_ *textP) NotEndingWith(args ...interface{}) TextPredicate {
+func (*textP) NotEndingWith(args ...interface{}) TextPredicate {
 	return newTextP("notEndingWith", args...)
 }
 
 // NotStartingWith TextPredicate determines if a string does not start with a given value.
-func (_ *textP) NotStartingWith(args ...interface{}) TextPredicate {
+func (*textP) NotStartingWith(args ...interface{}) TextPredicate {
 	return newTextP("notStartingWith", args...)
 }
 
 // StartingWith TextPredicate determines if a string starts with a given value.
-func (_ *textP) StartingWith(args ...interface{}) TextPredicate {
+func (*textP) StartingWith(args ...interface{}) TextPredicate {
 	return newTextP("startingWith", args...)
 }
 

@@ -20,6 +20,7 @@ under the License.
 package gremlingo
 
 import (
+	"crypto/tls"
 	"golang.org/x/text/language"
 )
 
@@ -30,40 +31,42 @@ type ClientSettings struct {
 	LogVerbosity    LogVerbosity
 	Logger          Logger
 	Language        language.Tag
+	AuthInfo        *AuthInfo
+	TlsConfig       *tls.Config
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
-	host            string
-	port            int
+	url             string
 	traversalSource string
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
 }
 
-// NewClient creates a Client, configures it with the given parameters and creates connection.
-// Return a non-nil error if creating this connection fails.
-func NewClient(host string, port int, configurations ...func(settings *ClientSettings)) (*Client, error) {
+// NewClient creates a Client and configures it with the given parameters.
+func NewClient(url string, configurations ...func(settings *ClientSettings)) (*Client, error) {
 	settings := &ClientSettings{
 		TraversalSource: "g",
 		TransporterType: Gorilla,
 		LogVerbosity:    Info,
 		Logger:          &defaultLogger{},
 		Language:        language.English,
+		AuthInfo:        &AuthInfo{},
+		TlsConfig:       &tls.Config{},
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	conn, err := createConnection(host, port, logHandler)
+	conn, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
 	if err != nil {
 		return nil, err
 	}
 	client := &Client{
-		host:            host,
-		port:            port,
+		url:             url,
+		traversalSource: "g",
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connection:      conn,
@@ -80,12 +83,12 @@ func (client *Client) Close() error {
 func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
-	request := makeStringRequest(traversalString)
+	request := makeStringRequest(traversalString, client.traversalSource)
 	return client.connection.write(&request)
 }
 
-// SubmitBytecode submits bytecode to the server to execute and returns a ResultSet.
-func (client *Client) SubmitBytecode(bytecode *bytecode) (ResultSet, error) {
+// submitBytecode submits bytecode to the server to execute and returns a ResultSet.
+func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode, client.traversalSource)
 	return client.connection.write(&request)
