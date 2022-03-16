@@ -405,6 +405,7 @@ func TestConnection(t *testing.T) {
 		assert.Nil(t, channel)
 		assert.NotNil(t, err)
 	})
+	
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
 		if runIntegration {
 			g := initializeGraph(t, testHost, testPort)
