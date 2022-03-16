@@ -88,9 +88,7 @@ func NewTinkerPopWorld() *TinkerPopWorld {
 	}
 }
 
-func getGraphNames() []string {
-	return []string{"modern", "classic", "crew", "grateful", "sink", "empty"}
-}
+var graphNames = []string{"modern", "classic", "crew", "grateful", "sink", "empty"}
 
 func (t *TinkerPopWorld) getDataGraphFromMap(name string) *DataGraph {
 	if val, ok := t.graphDataMap[name]; ok {
@@ -101,7 +99,7 @@ func (t *TinkerPopWorld) getDataGraphFromMap(name string) *DataGraph {
 }
 
 func (t *TinkerPopWorld) loadAllDataGraph() {
-	for _, name := range getGraphNames() {
+	for _, name := range graphNames {
 		if name == "empty" {
 			t.loadEmptyDataGraph()
 		} else {
@@ -201,7 +199,7 @@ func getEdgeKey(edgeKeyMap map[interface{}]interface{}) string {
 // This function can be removed once all pending tests pass.
 func (t *TinkerPopWorld) recreateAllDataGraphConnection() error {
 	var err error
-	for _, name := range getGraphNames() {
+	for _, name := range graphNames {
 		if name == "empty" {
 			t.getDataGraphFromMap(name).connection, err = gremlingo.NewDriverRemoteConnection(scenarioHost(), scenarioPort(), func(settings *gremlingo.DriverRemoteConnectionSettings) {
 				settings.TraversalSource = "ggraph"
@@ -216,7 +214,7 @@ func (t *TinkerPopWorld) recreateAllDataGraphConnection() error {
 }
 
 func (t *TinkerPopWorld) closeAllDataGraphConnection() error {
-	for _, name := range getGraphNames() {
+	for _, name := range graphNames {
 		err := t.getDataGraphFromMap(name).connection.Close()
 		if err != nil {
 			return err
