@@ -36,7 +36,6 @@ const testLabel = "Test"
 const nameKey = "name"
 const integrationTestSuiteName = "integration"
 const basicAuthIntegrationTestSuite = "basic authentication integration"
-const iamAuthIntegrationTestSuite = "iam authentication integration"
 const validHostInvalidPortValidPath = "ws://localhost:12341253/gremlin"
 const invalidHostValidPortValidPath = "ws://invalidhost:8182/gremlin"
 const validHostvalidPortInvalidPath = "ws://localhost:8182/invalid"
@@ -231,8 +230,8 @@ func TestConnection(t *testing.T) {
 	testNoAuthTlsConfig := &tls.Config{}
 
 	// Basic authentication integration test variables.
-	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", "wss://localhost:8185/gremlin")
-	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", true)
+	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", "wss://localhost:8183/gremlin")
+	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", false)
 	testBasicAuthAuthInfo := getBasicAuthInfo()
 	testBasicAuthTlsConfig := &tls.Config{InsecureSkipVerify: true}
 
@@ -415,17 +414,8 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection Next and HasNext", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
-
-		dropGraph(t, g)
-		addTestData(t, g)
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
 
 		// Run traversal and test Next/HasNext calls
 		traversal := g.V().HasLabel(personLabel).Properties(nameKey)
@@ -449,26 +439,8 @@ func TestConnection(t *testing.T) {
 	t.Run("Test anonymousTraversal", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
-
-		// Drop the graph and check that it is empty.
-		dropGraph(t, g)
-		readCount(t, g, "", 0)
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, 0)
-
-		// Add data and check that the size of the graph is correct.
-		addTestData(t, g)
-		readCount(t, g, "", len(testNames))
-		readCount(t, g, testLabel, 0)
-		readCount(t, g, personLabel, len(testNames))
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
 
 		readUsingAnonymousTraversal(t, g)
 
@@ -525,17 +497,8 @@ func TestConnection(t *testing.T) {
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
-		remote, err := NewDriverRemoteConnection(testNoAuthUrl,
-			func(settings *DriverRemoteConnectionSettings) {
-				settings.TlsConfig = testNoAuthTlsConfig
-				settings.AuthInfo = testNoAuthAuthInfo
-			})
-		assert.Nil(t, err)
-		assert.NotNil(t, remote)
-		g := Traversal_().WithRemote(remote)
-
-		// Drop the graph and check that it is empty.
-		dropGraph(t, g)
+		// Initialize graph
+		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
 
 		r, err := g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
 		assert.Nil(t, err)

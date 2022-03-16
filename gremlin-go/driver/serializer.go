@@ -70,7 +70,12 @@ func convertArgs(request *request, gs graphBinarySerializer) (map[string]interfa
 		request.args["gremlin"] = gremlinBuffer
 		return request.args, nil
 	default:
-		return nil, fmt.Errorf("failed to find serializer for type '%s'", reflect.TypeOf(gremlin).Name())
+		var typeName string
+		if gremlin != nil {
+			typeName = reflect.TypeOf(gremlin).Name()
+		}
+
+		return nil, fmt.Errorf("failed to find serializer for type '%s'", typeName)
 	}
 }
 
