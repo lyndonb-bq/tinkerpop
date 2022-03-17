@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// If this file is changed, please also update the NOTICE.
+// If this file is changed, please also update the NOTICE file under gremlin-go.
 
 module github.com/lyndonb-bq/tinkerpop/gremlin-go
 
