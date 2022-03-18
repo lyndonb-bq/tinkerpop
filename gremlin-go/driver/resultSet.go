@@ -156,9 +156,6 @@ func (channelResultSet *channelResultSet) one() (*Result, error) {
 // All returns all results for the channelResultSet.
 func (channelResultSet *channelResultSet) All() ([]*Result, error) {
 	var results []*Result
-	if channelResultSet.err != nil {
-		return nil, channelResultSet.err
-	}
 	for result := range channelResultSet.channel {
 		results = append(results, result)
 	}
