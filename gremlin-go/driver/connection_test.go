@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
 	"os"
@@ -534,5 +535,94 @@ func TestConnection(t *testing.T) {
 		for _, res := range r {
 			assert.Equal(t, int64(6), res.GetInterface())
 		}
+	})
+
+	t.Run("Test Sessions", func(t *testing.T) {
+		t.Run("Test CreateSessions", func(t *testing.T) {
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
+			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+				func(settings *DriverRemoteConnectionSettings) {
+					settings.TlsConfig = testNoAuthWithAliasTlsConfig
+					settings.AuthInfo = testNoAuthWithAliasAuthInfo
+					settings.TraversalSource = testServerGraphAlias
+				})
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			remoteSession1, err := remote.CreateSession()
+			assert.Nil(t, err)
+			assert.NotNil(t, remoteSession1)
+			assert.Equal(t, remote.client.session, uuid.Nil)
+			assert.NotEqual(t, remoteSession1.client.session, uuid.Nil)
+			assert.Equal(t, 1, len(remote.spawnedSessions))
+			assert.False(t, remote.client.IsClosed())
+			assert.False(t, remoteSession1.client.IsClosed())
+			fixedUUID := uuid.New()
+			remoteSession2, err := remote.CreateSession(fixedUUID)
+			assert.Nil(t, err)
+			assert.NotNil(t, remoteSession2)
+			assert.Equal(t, remoteSession2.client.session, fixedUUID)
+			assert.Equal(t, 2, len(remote.spawnedSessions))
+			assert.False(t, remoteSession2.client.IsClosed())
+		})
+
+		t.Run("Test Session close", func(t *testing.T) {
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
+			remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+				func(settings *DriverRemoteConnectionSettings) {
+					settings.TlsConfig = testNoAuthWithAliasTlsConfig
+					settings.AuthInfo = testNoAuthWithAliasAuthInfo
+					settings.TraversalSource = testServerGraphAlias
+				})
+			session1, _ := remote.CreateSession()
+			assert.NotNil(t, session1.client.session)
+			err := session1.Close()
+			assert.Nil(t, err)
+			assert.True(t, session1.client.IsClosed())
+			assert.Equal(t, 1, len(remote.spawnedSessions))
+			sId := session1.GetSessionId()
+			session2, _ := remote.CreateSession(sId)
+			assert.NotNil(t, session2.client.session)
+			session3, _ := remote.CreateSession()
+			assert.NotNil(t, session3.client.session)
+			assert.Equal(t, 3, len(remote.spawnedSessions))
+			assert.False(t, session2.client.IsClosed())
+			assert.False(t, session3.client.IsClosed())
+			err = remote.Close()
+			assert.Nil(t, err)
+			assert.Equal(t, 0, len(remote.spawnedSessions))
+			assert.True(t, session2.client.IsClosed())
+			assert.True(t, session3.client.IsClosed())
+			assert.True(t, remote.client.IsClosed())
+		})
+
+		t.Run("Test Session failures", func(t *testing.T) {
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
+			t.Run("Test CreateSession on Session", func(t *testing.T) {
+				remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+					func(settings *DriverRemoteConnectionSettings) {
+						settings.TlsConfig = testNoAuthWithAliasTlsConfig
+						settings.AuthInfo = testNoAuthWithAliasAuthInfo
+						settings.TraversalSource = testServerGraphAlias
+					})
+				s1, err := remote.CreateSession()
+				assert.Nil(t, err)
+				assert.NotNil(t, s1)
+				s2, err := s1.CreateSession()
+				assert.Nil(t, s2)
+				assert.NotNil(t, err)
+			})
+
+			t.Run("Test CreateSession with multiple UUIDs", func(t *testing.T) {
+				remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+					func(settings *DriverRemoteConnectionSettings) {
+						settings.TlsConfig = testNoAuthWithAliasTlsConfig
+						settings.AuthInfo = testNoAuthWithAliasAuthInfo
+						settings.TraversalSource = testServerGraphAlias
+					})
+				s1, err := remote.CreateSession(uuid.New(), uuid.New())
+				assert.Nil(t, s1)
+				assert.NotNil(t, err)
+			})
+		})
 	})
 }

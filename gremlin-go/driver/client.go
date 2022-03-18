@@ -21,6 +21,7 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"github.com/google/uuid"
 	"golang.org/x/text/language"
 )
 
@@ -33,6 +34,8 @@ type ClientSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
+	session         uuid.UUID
+	closed          bool
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -42,6 +45,8 @@ type Client struct {
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
+	session         uuid.UUID
+	closed          bool
 }
 
 // NewClient creates a Client and configures it with the given parameters.
@@ -54,6 +59,8 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
+		session:         uuid.Nil,
+		closed:          false,
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
@@ -71,12 +78,28 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		transporterType: settings.TransporterType,
 		connection:      conn,
 	}
+	// TODO: PoolSize must be 1 on session mode. Implement after AN-980
 	return client, nil
 }
 
 // Close closes the client via connection.
 func (client *Client) Close() error {
+	if client.IsClosed() {
+		return nil
+	}
+	// If it is a Session, call closeSession
+	if client.session != uuid.Nil {
+		_, err := client.closeSession()
+		if err != nil {
+			return err
+		}
+	}
+	client.logHandler.logger.Logf(Info, "Closing Client with url %s", client.url)
 	return client.connection.close()
+}
+
+func (client *Client) IsClosed() bool {
+	return client.closed
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
@@ -92,4 +115,11 @@ func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode, client.traversalSource)
 	return client.connection.write(&request)
+}
+
+func (client *Client) closeSession() (ResultSet, error) {
+	message := makeRequest("close", "session", map[string]interface{}{
+		"session": client.session,
+	})
+	return client.connection.write(&message)
 }

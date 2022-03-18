@@ -21,6 +21,8 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"errors"
+	"github.com/google/uuid"
 	"golang.org/x/text/language"
 )
 
@@ -41,7 +43,8 @@ type DriverRemoteConnectionSettings struct {
 
 // DriverRemoteConnection is a remote connection.
 type DriverRemoteConnection struct {
-	client *Client
+	client          *Client
+	spawnedSessions []*DriverRemoteConnection
 }
 
 // NewDriverRemoteConnection creates a new DriverRemoteConnection.
@@ -59,6 +62,7 @@ func NewDriverRemoteConnection(
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
+		Session:         uuid.Nil,
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -80,6 +84,8 @@ func NewDriverRemoteConnection(
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,
+		session:         settings.Session,
+		closed:          false,
 	}
 
 	return &DriverRemoteConnection{client: client}, nil
@@ -87,7 +93,29 @@ func NewDriverRemoteConnection(
 
 // Close closes the DriverRemoteConnection.
 func (driver *DriverRemoteConnection) Close() error {
-	return driver.client.Close()
+	// If DriverRemoteConnection has spawnedSessions then they must be closed as well.
+	if len(driver.spawnedSessions) > 0 {
+		driver.client.logHandler.logger.Logf(Info, "closing spawned sessions from DriverRemoteConnection with url '%s'", driver.client.url)
+		for _, session := range driver.spawnedSessions {
+			err := session.Close()
+			if err != nil {
+				return err
+			}
+		}
+		driver.spawnedSessions = []*DriverRemoteConnection{}
+	}
+
+	if driver.IsSessionBound() {
+		driver.client.logHandler.logger.Logf(Info, "closing DriverRemoteConnection with url '%s' with session '%s'", driver.client.url, driver.client.session)
+	} else {
+		driver.client.logHandler.logger.Logf(Info, "closing DriverRemoteConnection with url '%s'", driver.client.url)
+	}
+	err := driver.client.Close()
+	if err != nil {
+		return err
+	}
+	driver.client.closed = true
+	return nil
 }
 
 // Submit sends a string traversal to the server.
@@ -98,6 +126,41 @@ func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet,
 // submitBytecode sends a bytecode traversal to the server.
 func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	return driver.client.submitBytecode(bytecode)
+}
+
+// IsSessionBound returns True if a DriverRemoteConnection is a Session
+func (driver *DriverRemoteConnection) IsSessionBound() bool {
+	return driver.client.session != uuid.Nil
+}
+
+// CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a session with a specific UUID.
+func (driver *DriverRemoteConnection) CreateSession(sessionId ...uuid.UUID) (*DriverRemoteConnection, error) {
+	driver.client.logHandler.logger.Log(Info, "creating session based connection")
+	if driver.IsSessionBound() {
+		return nil, errors.New("connection is already bound to a session - child sessions are not allowed")
+	}
+	var sessionHandler func(settings *DriverRemoteConnectionSettings)
+	if len(sessionId) > 1 {
+		return nil, errors.New("more than one session ID specified. Cannot create Session with multiple UUIDs")
+	} else if len(sessionId) == 1 {
+		sessionHandler = func(settings *DriverRemoteConnectionSettings) {
+			settings.Session = sessionId[0]
+		}
+	} else {
+		sessionHandler = func(settings *DriverRemoteConnectionSettings) {
+			settings.Session = uuid.New()
+		}
+	}
+	connection, err := NewDriverRemoteConnection(driver.client.url, sessionHandler)
+	if err != nil {
+		return nil, err
+	}
+	driver.spawnedSessions = append(driver.spawnedSessions, connection)
+	return connection, nil
+}
+
+func (driver *DriverRemoteConnection) GetSessionId() uuid.UUID {
+	return driver.client.session
 }
 
 // TODO: Bytecode, OptionsStrategy, RequestOptions

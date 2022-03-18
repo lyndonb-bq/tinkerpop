@@ -75,3 +75,12 @@ func makeBasicAuthRequest(auth string) (req request) {
 		},
 	}
 }
+
+func makeRequest(op string, processor string, args map[string]interface{}) (req request) {
+	return request{
+		requestID: uuid.New(),
+		op:        op,
+		processor: processor,
+		args:      args,
+	}
+}
