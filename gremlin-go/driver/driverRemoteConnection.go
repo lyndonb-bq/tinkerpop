@@ -35,6 +35,7 @@ type DriverRemoteConnectionSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
+	Session         uuid.UUID
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
