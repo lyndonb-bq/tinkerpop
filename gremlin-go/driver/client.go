@@ -21,6 +21,7 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"errors"
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
 )
@@ -103,10 +104,35 @@ func (client *Client) IsClosed() bool {
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
-func (client *Client) Submit(traversalString string) (ResultSet, error) {
+func (client *Client) Submit(message interface{}) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
-	client.logHandler.logf(Debug, submitStartedString, traversalString)
-	request := makeStringRequest(traversalString, client.traversalSource)
+	client.logHandler.logf(Debug, submitStartedString, message)
+	args := map[string]interface{}{
+		"gremlin": message,
+		"aliases": map[string]interface{}{
+			"g": client.traversalSource,
+		},
+	}
+	processor := ""
+	op := "eval"
+	switch message.(type) {
+	case *bytecode:
+		op = "bytecode"
+		processor = "traversal"
+	case string:
+		// TODO: implement after bindings.
+		// args['bindings'] = bindings (Add Argument to func)
+	default:
+		return nil, errors.New("message must either be a string or bytecode, neither was passed")
+	}
+	// If session
+	if client.session != uuid.Nil {
+		args["session"] = client.session.String()
+		processor = "session"
+	}
+	// TODO: Get connection from pool after AN-982
+	client.logHandler.logf(Debug, "processor='%s', op='%s', args='%s'", processor, op, args)
+	request := makeRequest(op, processor, args)
 	return client.connection.write(&request)
 }
 
