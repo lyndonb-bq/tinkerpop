@@ -22,7 +22,6 @@ package gremlingo
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/google/uuid"
 	"golang.org/x/text/language"
 )
 
@@ -35,7 +34,7 @@ type ClientSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
-	session         uuid.UUID
+	session         string
 	closed          bool
 }
 
@@ -46,7 +45,7 @@ type Client struct {
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
-	session         uuid.UUID
+	session         string
 	closed          bool
 }
 
@@ -60,7 +59,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
-		session:         uuid.Nil,
+		session:         "",
 		closed:          false,
 	}
 	for _, configuration := range configurations {
@@ -89,7 +88,7 @@ func (client *Client) Close() error {
 		return nil
 	}
 	// If it is a Session, call closeSession
-	if client.session != uuid.Nil {
+	if client.session != "" {
 		_, err := client.closeSession()
 		if err != nil {
 			return err
@@ -106,28 +105,32 @@ func (client *Client) IsClosed() bool {
 // Submit submits a Gremlin script to the server and returns a ResultSet.
 func (client *Client) Submit(message interface{}) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
-	client.logHandler.logf(Debug, submitStartedString, message)
+	client.logHandler.logf(Debug, submitStarted, message)
 	args := map[string]interface{}{
 		"gremlin": message,
 		"aliases": map[string]interface{}{
 			"g": client.traversalSource,
 		},
 	}
-	processor := ""
-	op := "eval"
+	var processor string
+	var op string
 	switch message.(type) {
-	case *bytecode:
+	case bytecode:
+		client.logHandler.logf(Debug, bytecodeReceived, message)
 		op = "bytecode"
 		processor = "traversal"
 	case string:
-		// TODO: implement after bindings.
+		client.logHandler.logf(Debug, stringReceived, message)
+		// TODO: implement after bindings (AN-1018).
 		// args['bindings'] = bindings (Add Argument to func)
+		processor = ""
+		op = "eval"
 	default:
 		return nil, errors.New("message must either be a string or bytecode, neither was passed")
 	}
 	// If session
-	if client.session != uuid.Nil {
-		args["session"] = client.session.String()
+	if client.session != "" {
+		args["session"] = client.session
 		processor = "session"
 	}
 	// TODO: Get connection from pool after AN-982

@@ -322,14 +322,42 @@ func TestConnection(t *testing.T) {
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
+
 		resultSet, err := client.Submit("g.V().count()")
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
 		result, err := resultSet.one()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
+
+		t.Run("Test client.submit() on session", func(t *testing.T) {
+			client.session = "abc123"
+			resultSet, err = client.Submit("g.V().count()")
+			assert.Nil(t, err)
+			assert.NotNil(t, resultSet)
+			result, err := resultSet.one()
+			assert.Nil(t, err)
+			assert.NotNil(t, result)
+			client.session = ""
+		})
+
+		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
+		b := g.V().Count().bytecode
+		resultSet, err = client.Submit(*b)
+		assert.Nil(t, err)
+		assert.NotNil(t, resultSet)
+		result, err = resultSet.one()
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
+
 		err = client.Close()
 		assert.Nil(t, err)
+
+		t.Run("Test client.submit() failure", func(t *testing.T) {
+			resultSet, err = client.Submit(1)
+			assert.Nil(t, resultSet)
+			assert.NotNil(t, err)
+		})
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
@@ -551,12 +579,12 @@ func TestConnection(t *testing.T) {
 			remoteSession1, err := remote.CreateSession()
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession1)
-			assert.Equal(t, remote.client.session, uuid.Nil)
-			assert.NotEqual(t, remoteSession1.client.session, uuid.Nil)
+			assert.Equal(t, remote.client.session, "")
+			assert.NotEqual(t, remoteSession1.client.session, "")
 			assert.Equal(t, 1, len(remote.spawnedSessions))
 			assert.False(t, remote.client.IsClosed())
 			assert.False(t, remoteSession1.client.IsClosed())
-			fixedUUID := uuid.New()
+			fixedUUID := uuid.New().String()
 			remoteSession2, err := remote.CreateSession(fixedUUID)
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession2)
@@ -597,7 +625,7 @@ func TestConnection(t *testing.T) {
 
 		t.Run("Test Session failures", func(t *testing.T) {
 			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
-			t.Run("Test CreateSession on Session", func(t *testing.T) {
+			t.Run("Test CreateSession on Session failure", func(t *testing.T) {
 				remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 					func(settings *DriverRemoteConnectionSettings) {
 						settings.TlsConfig = testNoAuthWithAliasTlsConfig
@@ -612,14 +640,14 @@ func TestConnection(t *testing.T) {
 				assert.NotNil(t, err)
 			})
 
-			t.Run("Test CreateSession with multiple UUIDs", func(t *testing.T) {
+			t.Run("Test CreateSession with multiple UUIDs failure", func(t *testing.T) {
 				remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 					func(settings *DriverRemoteConnectionSettings) {
 						settings.TlsConfig = testNoAuthWithAliasTlsConfig
 						settings.AuthInfo = testNoAuthWithAliasAuthInfo
 						settings.TraversalSource = testServerGraphAlias
 					})
-				s1, err := remote.CreateSession(uuid.New(), uuid.New())
+				s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
 				assert.Nil(t, s1)
 				assert.NotNil(t, err)
 			})

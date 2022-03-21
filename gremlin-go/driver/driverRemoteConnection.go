@@ -35,7 +35,7 @@ type DriverRemoteConnectionSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
-	Session         uuid.UUID
+	Session         string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -63,7 +63,7 @@ func NewDriverRemoteConnection(
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
-		Session:         uuid.Nil,
+		Session:         "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -131,11 +131,11 @@ func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (Result
 
 // IsSessionBound returns True if a DriverRemoteConnection is a Session
 func (driver *DriverRemoteConnection) IsSessionBound() bool {
-	return driver.client.session != uuid.Nil
+	return driver.client.session != ""
 }
 
 // CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a session with a specific UUID.
-func (driver *DriverRemoteConnection) CreateSession(sessionId ...uuid.UUID) (*DriverRemoteConnection, error) {
+func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
 	driver.client.logHandler.logger.Log(Info, "creating session based connection")
 	if driver.IsSessionBound() {
 		return nil, errors.New("connection is already bound to a session - child sessions are not allowed")
@@ -149,7 +149,7 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...uuid.UUID) (*Dr
 		}
 	} else {
 		sessionHandler = func(settings *DriverRemoteConnectionSettings) {
-			settings.Session = uuid.New()
+			settings.Session = uuid.New().String()
 		}
 	}
 	connection, err := NewDriverRemoteConnection(driver.client.url, sessionHandler)
@@ -160,7 +160,7 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...uuid.UUID) (*Dr
 	return connection, nil
 }
 
-func (driver *DriverRemoteConnection) GetSessionId() uuid.UUID {
+func (driver *DriverRemoteConnection) GetSessionId() string {
 	return driver.client.session
 }
 

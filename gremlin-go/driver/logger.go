@@ -118,6 +118,9 @@ const (
 	errorCallback            errorKey = "ERROR_CALLBACK"
 	creatingRequest          errorKey = "CREATING_REQUEST"
 	readComplete             errorKey = "READ_COMPLETE"
+	submitStarted            errorKey = "SUBMIT_STARTED"
 	submitStartedString      errorKey = "SUBMIT_STARTED_STRING"
 	submitStartedBytecode    errorKey = "SUBMIT_STARTED_BYTECODE"
+	bytecodeReceived         errorKey = "BYTECODE_RECEIVED"
+	stringReceived           errorKey = "STRING_RECEIVED"
 )
