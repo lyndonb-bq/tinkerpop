@@ -78,7 +78,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		transporterType: settings.TransporterType,
 		connection:      conn,
 	}
-	// TODO: PoolSize must be 1 on session mode. Implement after AN-980
+	// TODO: PoolSize must be 1 on session mode
 	return client, nil
 }
 
@@ -104,7 +104,7 @@ func (client *Client) IsClosed() bool {
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
 func (client *Client) Submit(message interface{}) (ResultSet, error) {
-	// TODO AN-982: Obtain connection from pool of connections held by the client.
+	// TODO: Obtain a connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStarted, message)
 	args := map[string]interface{}{
 		"gremlin": message,
@@ -121,7 +121,7 @@ func (client *Client) Submit(message interface{}) (ResultSet, error) {
 		processor = "traversal"
 	case string:
 		client.logHandler.logf(Debug, stringReceived, message)
-		// TODO: implement after bindings (AN-1018).
+		// TODO: implement after bindings
 		// args['bindings'] = bindings (Add Argument to func)
 		processor = ""
 		op = "eval"
@@ -133,7 +133,7 @@ func (client *Client) Submit(message interface{}) (ResultSet, error) {
 		args["session"] = client.session
 		processor = "session"
 	}
-	// TODO: Get connection from pool after AN-982
+	// TODO: Get connection from pool
 	client.logHandler.logf(Debug, "processor='%s', op='%s', args='%s'", processor, op, args)
 	request := makeRequest(op, processor, args)
 	return client.connection.write(&request)
