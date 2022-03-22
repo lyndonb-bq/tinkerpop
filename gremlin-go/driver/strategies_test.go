@@ -39,30 +39,6 @@ func TestStrategy(t *testing.T) {
 		assert.Equal(t, int32(6), val)
 	})
 
-	t.Run("Test read with ElementIdStrategy", func(t *testing.T) {
-		return
-		g := initializeGraph(t, testNoAuthUrl, &AuthInfo{}, &tls.Config{})
-
-		count, err := g.WithStrategies(ElementIdStrategy()).V().Count().ToList()
-		assert.Nil(t, err)
-		assert.NotNil(t, count)
-		assert.Equal(t, 1, len(count))
-		val, err := count[0].GetInt32()
-		assert.Equal(t, int32(6), val)
-	})
-
-	t.Run("Test read with HaltedTraverserStrategy", func(t *testing.T) {
-		return
-		g := initializeGraph(t, testNoAuthUrl, &AuthInfo{}, &tls.Config{})
-
-		count, err := g.WithStrategies(HaltedTraverserStrategy("test")).V().Count().ToList()
-		assert.Nil(t, err)
-		assert.NotNil(t, count)
-		assert.Equal(t, 1, len(count))
-		val, err := count[0].GetInt32()
-		assert.Equal(t, int32(6), val)
-	})
-
 	t.Run("Test read with OptionsStrategy", func(t *testing.T) {
 		g := initializeGraph(t, testNoAuthUrl, &AuthInfo{}, &tls.Config{})
 
@@ -97,15 +73,14 @@ func TestStrategy(t *testing.T) {
 	})
 
 	t.Run("Test read with SubgraphStrategy", func(t *testing.T) {
-		return
 		g := initializeGraph(t, testNoAuthUrl, &AuthInfo{}, &tls.Config{})
 
-		count, err := g.WithStrategies(SubgraphStrategy(nil, nil, nil)).V().Count().ToList()
+		count, err := g.WithStrategies(SubgraphStrategy(T__.HasLabel(testLabel), nil, nil)).V().Count().ToList()
 		assert.Nil(t, err)
 		assert.NotNil(t, count)
 		assert.Equal(t, 1, len(count))
 		val, err := count[0].GetInt32()
-		assert.Equal(t, int32(6), val)
+		assert.Equal(t, int32(0), val)
 	})
 
 	t.Run("Test read with AdjacentToIncidentStrategy", func(t *testing.T) {

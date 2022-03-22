@@ -46,7 +46,7 @@ func ElementIdStrategy() *traversalStrategy {
 func HaltedTraverserStrategy(haltedTraverserFactoryName string) *traversalStrategy {
 	config := make(map[string]interface{})
 	if haltedTraverserFactoryName != "" {
-		config["haltedTraverserFactoryName"] = haltedTraverserFactoryName
+		config["haltedTraverserFactory"] = haltedTraverserFactoryName
 	}
 	return &traversalStrategy{name: decorationNamespace + "HaltedTraverserStrategy", configuration: config}
 }
