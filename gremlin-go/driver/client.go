@@ -84,7 +84,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 
 // Close closes the client via connection.
 func (client *Client) Close() error {
-	if client.IsClosed() {
+	if client.closed {
 		return nil
 	}
 	// If it is a Session, call closeSession
@@ -96,10 +96,6 @@ func (client *Client) Close() error {
 	}
 	client.logHandler.logger.Logf(Info, "Closing Client with url %s", client.url)
 	return client.connection.close()
-}
-
-func (client *Client) IsClosed() bool {
-	return client.closed
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
