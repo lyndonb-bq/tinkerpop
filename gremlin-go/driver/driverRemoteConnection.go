@@ -85,7 +85,7 @@ func NewDriverRemoteConnection(
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,
-		session:         settings.Session,
+		Session:         settings.Session,
 		closed:          false,
 	}
 
@@ -107,7 +107,7 @@ func (driver *DriverRemoteConnection) Close() error {
 	}
 
 	if driver.IsSessionBound() {
-		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.session)
+		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.Session)
 	} else {
 		driver.client.logHandler.logf(Info, closeDRC, driver.client.url)
 	}
@@ -131,18 +131,18 @@ func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (Result
 
 // IsSessionBound returns True if a DriverRemoteConnection is a Session
 func (driver *DriverRemoteConnection) IsSessionBound() bool {
-	return driver.client.session != ""
+	return driver.client.Session != ""
 }
 
-// CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a session with a specific UUID.
+// CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
-	driver.client.logHandler.logger.Log(Info, "creating session based connection")
+	driver.client.logHandler.logger.Log(Info, "creating Session based connection")
 	if driver.IsSessionBound() {
-		return nil, errors.New("connection is already bound to a session - child sessions are not allowed")
+		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
 	var sessionHandler func(settings *DriverRemoteConnectionSettings)
 	if len(sessionId) > 1 {
-		return nil, errors.New("more than one session ID specified. Cannot create Session with multiple UUIDs")
+		return nil, errors.New("more than one Session ID specified. Cannot create Session with multiple UUIDs")
 	} else if len(sessionId) == 1 {
 		sessionHandler = func(settings *DriverRemoteConnectionSettings) {
 			settings.Session = sessionId[0]
@@ -161,7 +161,7 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 }
 
 func (driver *DriverRemoteConnection) GetSessionId() string {
-	return driver.client.session
+	return driver.client.Session
 }
 
 // TODO: Bytecode, OptionsStrategy, RequestOptions

@@ -34,7 +34,7 @@ type ClientSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
-	session         string
+	Session         string
 	closed          bool
 }
 
@@ -45,7 +45,7 @@ type Client struct {
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
-	session         string
+	Session         string
 	closed          bool
 }
 
@@ -59,7 +59,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
-		session:         "",
+		Session:         "",
 		closed:          false,
 	}
 	for _, configuration := range configurations {
@@ -78,7 +78,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		transporterType: settings.TransporterType,
 		connection:      conn,
 	}
-	// TODO: PoolSize must be 1 on session mode
+	// TODO: PoolSize must be 1 on Session mode
 	return client, nil
 }
 
@@ -88,7 +88,7 @@ func (client *Client) Close() error {
 		return nil
 	}
 	// If it is a Session, call closeSession
-	if client.session != "" {
+	if client.Session != "" {
 		_, err := client.closeSession()
 		if err != nil {
 			return err
@@ -128,9 +128,9 @@ func (client *Client) Submit(message interface{}) (ResultSet, error) {
 	default:
 		return nil, errors.New("message must either be a string or bytecode, neither was passed")
 	}
-	// If session
-	if client.session != "" {
-		args["session"] = client.session
+	// If Session
+	if client.Session != "" {
+		args["session"] = client.Session
 		processor = "session"
 	}
 	// TODO: Get connection from pool
@@ -148,7 +148,7 @@ func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 
 func (client *Client) closeSession() (ResultSet, error) {
 	message := makeRequest("close", "session", map[string]interface{}{
-		"session": client.session,
+		"session": client.Session,
 	})
 	return client.connection.write(&message)
 }
