@@ -123,4 +123,6 @@ const (
 	submitStartedBytecode    errorKey = "SUBMIT_STARTED_BYTECODE"
 	bytecodeReceived         errorKey = "BYTECODE_RECEIVED"
 	stringReceived           errorKey = "STRING_RECEIVED"
+	closeDRCSession          errorKey = "CLOSE_DRC_SESSION"
+	closeDRC                 errorKey = "CLOSE_DRC"
 )

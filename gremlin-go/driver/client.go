@@ -105,7 +105,7 @@ func (client *Client) IsClosed() bool {
 // Submit submits a Gremlin script to the server and returns a ResultSet.
 func (client *Client) Submit(message interface{}) (ResultSet, error) {
 	// TODO: Obtain a connection from pool of connections held by the client.
-	client.logHandler.logf(Debug, submitStarted, message)
+	client.logHandler.logf(Debug, submitStarted)
 	args := map[string]interface{}{
 		"gremlin": message,
 		"aliases": map[string]interface{}{

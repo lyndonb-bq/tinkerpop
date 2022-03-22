@@ -107,9 +107,9 @@ func (driver *DriverRemoteConnection) Close() error {
 	}
 
 	if driver.IsSessionBound() {
-		driver.client.logHandler.logger.Logf(Info, "closing DriverRemoteConnection with url '%s' with session '%s'", driver.client.url, driver.client.session)
+		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.session)
 	} else {
-		driver.client.logHandler.logger.Logf(Info, "closing DriverRemoteConnection with url '%s'", driver.client.url)
+		driver.client.logHandler.logf(Info, closeDRC, driver.client.url)
 	}
 	err := driver.client.Close()
 	if err != nil {
