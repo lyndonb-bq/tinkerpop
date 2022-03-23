@@ -20,6 +20,8 @@
   "READ_COMPLETE": "Read complete for response with id '%s'",
   "SUBMIT_STARTED_STRING": "Client invoked Submit with string argument: %s",
   "SUBMIT_STARTED_BYTECODE": "Client invoked Submit with bytecode argument: %+v\n",
+  "CLOSING_SPAWNED_SESSIONS": "Closing spawned sessions from DriverRemoteConnection with url '%s'",
   "CLOSE_DRC_SESSION": "Closing DriverRemoteConnection with url '%s' with session '%s'",
-  "CLOSE_DRC": "Closing DriverRemoteConnection with url '%s'"
+  "CLOSE_DRC": "Closing DriverRemoteConnection with url '%s'",
+  "CLOSE_SESSION_ERROR": "Error while closing Session: '%s'"
 }

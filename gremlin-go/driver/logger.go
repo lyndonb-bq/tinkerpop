@@ -55,12 +55,12 @@ type defaultLogger struct {
 }
 
 // Log writes a message to the defaultLogger.
-func (logger *defaultLogger) Log(verbosity LogVerbosity, v ...interface{}) {
+func (logger *defaultLogger) Log(_ LogVerbosity, v ...interface{}) {
 	log.Print(v...)
 }
 
 // Logf writes a formatted message to the defaultLogger.
-func (logger *defaultLogger) Logf(verbosity LogVerbosity, format string, v ...interface{}) {
+func (logger *defaultLogger) Logf(_ LogVerbosity, format string, v ...interface{}) {
 	log.Printf(format, v...)
 }
 
@@ -122,4 +122,6 @@ const (
 	submitStartedBytecode    errorKey = "SUBMIT_STARTED_BYTECODE"
 	closeDRCSession          errorKey = "CLOSE_DRC_SESSION"
 	closeDRC                 errorKey = "CLOSE_DRC"
+	closingSpawnedSessions   errorKey = "CLOSING_SPAWNED_SESSIONS"
+	closeSessionError        errorKey = "CLOSE_SESSION_ERROR"
 )
