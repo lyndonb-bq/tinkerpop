@@ -126,7 +126,7 @@ func newLoadBalancingPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config,
 	if err != nil {
 		return nil, err
 	}
-	pool[0] = initialConnection
+	pool = append(pool, initialConnection)
 	return &loadBalancingPool{
 		url:         url,
 		authInfo:    authInfo,
