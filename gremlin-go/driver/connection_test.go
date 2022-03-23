@@ -611,7 +611,6 @@ func TestConnection(t *testing.T) {
 			assert.False(t, session3.client.closed)
 			err = remote.Close()
 			assert.Nil(t, err)
-			assert.Equal(t, 0, len(remote.spawnedSessions))
 			assert.True(t, session2.client.closed)
 			assert.True(t, session3.client.closed)
 			assert.True(t, remote.client.closed)

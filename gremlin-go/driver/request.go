@@ -76,11 +76,13 @@ func makeBasicAuthRequest(auth string) (req request) {
 	}
 }
 
-func makeRequest(op string, processor string, args map[string]interface{}) (req request) {
+func makeCloseSessionRequest(client *Client) request {
 	return request{
 		requestID: uuid.New(),
-		op:        op,
-		processor: processor,
-		args:      args,
+		op:        "close",
+		processor: "session",
+		args: map[string]interface{}{
+			"session": client.Session,
+		},
 	}
 }

@@ -125,8 +125,6 @@ func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 }
 
 func (client *Client) closeSession() (ResultSet, error) {
-	message := makeRequest("close", "session", map[string]interface{}{
-		"session": client.Session,
-	})
+	message := makeCloseSessionRequest(client)
 	return client.connection.write(&message)
 }
