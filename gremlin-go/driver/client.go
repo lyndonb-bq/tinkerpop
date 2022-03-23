@@ -34,7 +34,6 @@ type ClientSettings struct {
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
 	Session         string
-	closed          bool
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -58,7 +57,6 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
 		Session:         "",
-		closed:          false,
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
