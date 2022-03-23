@@ -63,8 +63,13 @@ func (connection *connection) write(request *request) (ResultSet, error) {
 	connection.logHandler.log(Info, writeRequest)
 	requestID := request.requestID.String()
 	connection.logHandler.logf(Info, creatingRequest, requestID)
-	connection.results[requestID] = newChannelResultSet(requestID)
-	return connection.results[requestID], connection.protocol.write(request)
+	resultSet := newChannelResultSet(requestID, connection.results)
+	connection.results[requestID] = resultSet
+	return resultSet, connection.protocol.write(request)
+}
+
+func (connection *connection) activeResults() int {
+	return len(connection.results)
 }
 
 func createConnection(url string, authInfo *AuthInfo, tlsConfig *tls.Config, logHandler *logHandler) (*connection, error) {

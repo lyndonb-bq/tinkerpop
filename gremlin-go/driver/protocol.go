@@ -48,20 +48,20 @@ type gremlinServerWSProtocol struct {
 	serializer       serializer
 	logHandler       *logHandler
 	maxContentLength int
-	closed           bool
-	mux              sync.Mutex
+	closed bool
+	mutex  sync.Mutex
 }
 
 func (protocol *gremlinServerWSProtocol) readLoop(resultSets map[string]ResultSet, errorCallback func(), log *logHandler) {
 	for {
 		// Read from transport layer. If the channel is closed, this will error out and exit.
 		msg, err := protocol.transporter.Read()
-		protocol.mux.Lock()
+		protocol.mutex.Lock()
 		if protocol.closed {
-			protocol.mux.Unlock()
+			protocol.mutex.Unlock()
 			return
 		}
-		protocol.mux.Unlock()
+		protocol.mutex.Unlock()
 		if err != nil {
 			// Ignore error here, we already got an error on read, cannot do anything with this.
 			_ = protocol.transporter.Close()
@@ -164,12 +164,12 @@ func (protocol *gremlinServerWSProtocol) write(request *request) error {
 }
 
 func (protocol *gremlinServerWSProtocol) close() (err error) {
-	protocol.mux.Lock()
+	protocol.mutex.Lock()
 	if !protocol.closed {
 		err = protocol.transporter.Close()
 		protocol.closed = true
 	}
-	protocol.mux.Unlock()
+	protocol.mutex.Unlock()
 	return
 }
 
@@ -185,7 +185,7 @@ func newGremlinServerWSProtocol(handler *logHandler, transporterType Transporter
 		logHandler:       handler,
 		maxContentLength: 1,
 		closed:           false,
-		mux:              sync.Mutex{},
+		mutex:            sync.Mutex{},
 	}
 	err = gremlinProtocol.transporter.Connect()
 	if err != nil {

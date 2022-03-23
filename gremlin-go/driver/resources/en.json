@@ -27,5 +27,8 @@
   "CLOSE_SESSION_ERROR": "Error while closing Session: '%s'",
   "CLOSE_DRIVER_REMOTE_CONNECTION": "Closing DriverRemoteConnection with url '%s'",
   "CLOSE_CLIENT": "Closing Client with url '%s'",
-  "CLOSE_CLIENT_ERROR": "Error while closing Client: '%s'"
+  "CLOSE_CLIENT_ERROR": "Error while closing Client: '%s'",
+  "ERROR_CLOSING_CONNECTION": "Ignoring error closing connection: %s",
+  "CLOSE_UNUSED_POOL_CONNECTION": "Closing and removing unused connection from connection pool.",
+  "PURGING_DEAD_CONNECTION": "Removing dead connection from connection pool."
 }

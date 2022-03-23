@@ -35,6 +35,8 @@ type DriverRemoteConnectionSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
+	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
+	NewConnectionThreshold int
 	Session         string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
@@ -63,6 +65,7 @@ func NewDriverRemoteConnection(
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
+		NewConnectionThreshold: 4,
 		Session:         "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
@@ -74,7 +77,7 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	connection, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold, logHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +87,7 @@ func NewDriverRemoteConnection(
 		traversalSource: settings.TraversalSource,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
-		connection:      connection,
+		connections:      pool,
 		session:         settings.Session,
 	}
 

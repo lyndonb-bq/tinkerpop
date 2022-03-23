@@ -33,6 +33,8 @@ type ClientSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
+	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
+	NewConnectionThreshold int
 	Session         string
 }
 
@@ -42,7 +44,7 @@ type Client struct {
 	traversalSource string
 	logHandler      *logHandler
 	transporterType TransporterType
-	connection      *connection
+	connections     connectionPool
 	session         string
 }
 
@@ -56,22 +58,24 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		Language:        language.English,
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
+		NewConnectionThreshold: 4,
 		Session:         "",
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
 	}
+
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	conn, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold, logHandler)
 	if err != nil {
 		return nil, err
 	}
 	client := &Client{
 		url:             url,
-		traversalSource: "g",
+		traversalSource: settings.TraversalSource,
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
-		connection:      conn,
+		connections:      pool,
 	}
 	// TODO: PoolSize must be 1 on Session mode
 	return client, nil
@@ -88,10 +92,7 @@ func (client *Client) Close() {
 		client.session = ""
 	}
 	client.logHandler.logf(Info, closeClient, client.url)
-	err := client.connection.close()
-	if err != nil {
-		client.logHandler.logf(Warning, closeClientError, err.Error())
-	}
+        client.connections.close()
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
@@ -99,18 +100,18 @@ func (client *Client) Submit(traversalString string, bindings ...map[string]inte
 	// TODO: Obtain connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
 	request := makeStringRequest(traversalString, client.traversalSource, client.session, bindings...)
-	return client.connection.write(&request)
+	return client.connections.write(&request)
 }
 
 // submitBytecode submits bytecode to the server to execute and returns a ResultSet.
 func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode, client.traversalSource, client.session)
-	return client.connection.write(&request)
+	return client.connections.write(&request)
 }
 
 func (client *Client) closeSession() error {
 	message := makeCloseSessionRequest(client.session)
-	_, err := client.connection.write(&message)
+	_, err := client.connections.write(&message)
 	return err
 }
