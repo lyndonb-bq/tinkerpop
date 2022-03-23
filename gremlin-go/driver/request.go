@@ -82,7 +82,7 @@ func makeCloseSessionRequest(client *Client) request {
 		op:        "close",
 		processor: "session",
 		args: map[string]interface{}{
-			"session": client.Session,
+			"session": client.session,
 		},
 	}
 }

@@ -43,7 +43,7 @@ type Client struct {
 	logHandler      *logHandler
 	transporterType TransporterType
 	connection      *connection
-	Session         string
+	session         string
 }
 
 // NewClient creates a Client and configures it with the given parameters.
@@ -80,7 +80,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 // Close closes the client via connection.
 func (client *Client) Close() error {
 	// If it is a Session, call closeSession
-	if client.Session != "" {
+	if client.session != "" {
 		_, err := client.closeSession()
 		if err != nil {
 			return err
@@ -96,11 +96,12 @@ func (client *Client) Close() error {
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
 func (client *Client) Submit(traversalString string) (ResultSet, error) {
+	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
 	request := makeStringRequest(traversalString, client.traversalSource)
 	// TODO: Add bindings to request. request.args['bindings'] = bindings
-	if client.Session != "" {
-		request.args["session"] = client.Session
+	if client.session != "" {
+		request.args["session"] = client.session
 		request.processor = "session"
 	}
 	return client.connection.write(&request)
@@ -110,8 +111,8 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode, client.traversalSource)
-	if client.Session != "" {
-		request.args["session"] = client.Session
+	if client.session != "" {
+		request.args["session"] = client.session
 		request.processor = "session"
 	}
 	return client.connection.write(&request)

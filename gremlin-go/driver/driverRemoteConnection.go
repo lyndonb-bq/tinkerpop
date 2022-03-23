@@ -85,7 +85,7 @@ func NewDriverRemoteConnection(
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
 		connection:      connection,
-		Session:         settings.Session,
+		session:         settings.Session,
 	}
 
 	return &DriverRemoteConnection{client: client}, nil
@@ -111,7 +111,7 @@ func (driver *DriverRemoteConnection) Close() error {
 	}
 
 	if driver.isSessionBound() {
-		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.Session)
+		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.session)
 	} else {
 		driver.client.logHandler.logf(Info, closeDRC, driver.client.url)
 	}
@@ -130,7 +130,7 @@ func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (Result
 
 // isSessionBound returns True if a DriverRemoteConnection is a Session
 func (driver *DriverRemoteConnection) isSessionBound() bool {
-	return driver.client.Session != ""
+	return driver.client.session != ""
 }
 
 // CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
@@ -158,7 +158,7 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 }
 
 func (driver *DriverRemoteConnection) GetSessionId() string {
-	return driver.client.Session
+	return driver.client.session
 }
 
 // TODO: Bytecode, OptionsStrategy, RequestOptions

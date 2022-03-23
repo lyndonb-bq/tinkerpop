@@ -331,14 +331,14 @@ func TestConnection(t *testing.T) {
 		assert.NotNil(t, result)
 
 		t.Run("Test client.submit() on Session", func(t *testing.T) {
-			client.Session = "abc123"
+			client.session = "abc123"
 			resultSet, err = client.Submit("g.V().count()")
 			assert.Nil(t, err)
 			assert.NotNil(t, resultSet)
 			result, err := resultSet.one()
 			assert.Nil(t, err)
 			assert.NotNil(t, result)
-			client.Session = ""
+			client.session = ""
 		})
 
 		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
@@ -573,14 +573,14 @@ func TestConnection(t *testing.T) {
 			remoteSession1, err := remote.CreateSession()
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession1)
-			assert.Equal(t, remote.client.Session, "")
-			assert.NotEqual(t, remoteSession1.client.Session, "")
+			assert.Equal(t, remote.client.session, "")
+			assert.NotEqual(t, remoteSession1.client.session, "")
 			assert.Equal(t, 1, len(remote.spawnedSessions))
 			fixedUUID := uuid.New().String()
 			remoteSession2, err := remote.CreateSession(fixedUUID)
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession2)
-			assert.Equal(t, remoteSession2.client.Session, fixedUUID)
+			assert.Equal(t, remoteSession2.client.session, fixedUUID)
 			assert.Equal(t, 2, len(remote.spawnedSessions))
 		})
 
@@ -593,15 +593,15 @@ func TestConnection(t *testing.T) {
 					settings.TraversalSource = testServerGraphAlias
 				})
 			session1, _ := remote.CreateSession()
-			assert.NotNil(t, session1.client.Session)
+			assert.NotNil(t, session1.client.session)
 			err := session1.Close()
 			assert.Nil(t, err)
 			assert.Equal(t, 1, len(remote.spawnedSessions))
 			sId := session1.GetSessionId()
 			session2, _ := remote.CreateSession(sId)
-			assert.NotNil(t, session2.client.Session)
+			assert.NotNil(t, session2.client.session)
 			session3, _ := remote.CreateSession()
-			assert.NotNil(t, session3.client.Session)
+			assert.NotNil(t, session3.client.session)
 			assert.Equal(t, 3, len(remote.spawnedSessions))
 			err = remote.Close()
 			assert.Nil(t, err)
