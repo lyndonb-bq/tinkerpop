@@ -553,7 +553,7 @@ func TestConnection(t *testing.T) {
 		assert.NotNil(t, remote)
 		g := Traversal_().WithRemote(remote)
 
-		r, err := g.V().Count().ToList()
+		r, _ := g.V().Count().ToList()
 		for _, res := range r {
 			assert.Equal(t, int64(6), res.GetInterface())
 		}
@@ -576,15 +576,12 @@ func TestConnection(t *testing.T) {
 			assert.Equal(t, remote.client.Session, "")
 			assert.NotEqual(t, remoteSession1.client.Session, "")
 			assert.Equal(t, 1, len(remote.spawnedSessions))
-			assert.False(t, remote.client.closed)
-			assert.False(t, remoteSession1.client.closed)
 			fixedUUID := uuid.New().String()
 			remoteSession2, err := remote.CreateSession(fixedUUID)
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession2)
 			assert.Equal(t, remoteSession2.client.Session, fixedUUID)
 			assert.Equal(t, 2, len(remote.spawnedSessions))
-			assert.False(t, remoteSession2.client.closed)
 		})
 
 		t.Run("Test Session close", func(t *testing.T) {
@@ -599,7 +596,6 @@ func TestConnection(t *testing.T) {
 			assert.NotNil(t, session1.client.Session)
 			err := session1.Close()
 			assert.Nil(t, err)
-			assert.True(t, session1.client.closed)
 			assert.Equal(t, 1, len(remote.spawnedSessions))
 			sId := session1.GetSessionId()
 			session2, _ := remote.CreateSession(sId)
@@ -607,13 +603,8 @@ func TestConnection(t *testing.T) {
 			session3, _ := remote.CreateSession()
 			assert.NotNil(t, session3.client.Session)
 			assert.Equal(t, 3, len(remote.spawnedSessions))
-			assert.False(t, session2.client.closed)
-			assert.False(t, session3.client.closed)
 			err = remote.Close()
 			assert.Nil(t, err)
-			assert.True(t, session2.client.closed)
-			assert.True(t, session3.client.closed)
-			assert.True(t, remote.client.closed)
 		})
 
 		t.Run("Test Session failures", func(t *testing.T) {

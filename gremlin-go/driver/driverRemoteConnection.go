@@ -86,7 +86,6 @@ func NewDriverRemoteConnection(
 		logHandler:      logHandler,
 		connection:      connection,
 		Session:         settings.Session,
-		closed:          false,
 	}
 
 	return &DriverRemoteConnection{client: client}, nil
@@ -141,16 +140,16 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 	} else if driver.isSessionBound() {
 		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
-	
+
 	driver.client.logHandler.logger.Log(Info, "creating Session based connection")
 	sid := uuid.New().String()
 	// If there is a sessionId provided, overwrite uuid.
-         if len(sessionId) == 1 {
-        	sid =  sessionId[0]
+	if len(sessionId) == 1 {
+		sid = sessionId[0]
 	}
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
-			settings.Session = sid
-		})
+		settings.Session = sid
+	})
 	if err != nil {
 		return nil, err
 	}

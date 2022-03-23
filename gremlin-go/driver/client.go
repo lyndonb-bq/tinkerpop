@@ -45,7 +45,6 @@ type Client struct {
 	transporterType TransporterType
 	connection      *connection
 	Session         string
-	closed          bool
 }
 
 // NewClient creates a Client and configures it with the given parameters.
@@ -82,9 +81,6 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 
 // Close closes the client via connection.
 func (client *Client) Close() error {
-	if client.closed {
-		return nil
-	}
 	// If it is a Session, call closeSession
 	if client.Session != "" {
 		_, err := client.closeSession()
@@ -92,12 +88,11 @@ func (client *Client) Close() error {
 			return err
 		}
 	}
-	client.logHandler.logger.Logf(Info, "Closing Client with url %s", client.url)
+	client.logHandler.logf(Info, "Closing Client with url %s", client.url)
 	err := client.connection.close()
 	if err != nil {
 		return err
 	}
-	client.closed = true
 	return nil
 }
 
