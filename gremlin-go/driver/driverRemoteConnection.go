@@ -130,28 +130,26 @@ func (driver *DriverRemoteConnection) isSessionBound() bool {
 
 // CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
-	driver.client.logHandler.logger.Log(Info, "creating Session based connection")
-	if driver.isSessionBound() {
-		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
-	}
-	var sessionHandler func(settings *DriverRemoteConnectionSettings)
 	if len(sessionId) > 1 {
 		return nil, errors.New("more than one Session ID specified. Cannot create Session with multiple UUIDs")
-	} else if len(sessionId) == 1 {
-		sessionHandler = func(settings *DriverRemoteConnectionSettings) {
-			settings.Session = sessionId[0]
-		}
-	} else {
-		sessionHandler = func(settings *DriverRemoteConnectionSettings) {
-			settings.Session = uuid.New().String()
-		}
+	} else if driver.isSessionBound() {
+		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
-	connection, err := NewDriverRemoteConnection(driver.client.url, sessionHandler)
+	
+	driver.client.logHandler.logger.Log(Info, "creating Session based connection")
+	sid := uuid.New().String()
+	// If there is a sessionId provided, overwrite uuid.
+         if len(sessionId) == 1 {
+        	sid =  sessionId[0]
+	}
+	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
+			settings.Session = sid
+		})
 	if err != nil {
 		return nil, err
 	}
-	driver.spawnedSessions = append(driver.spawnedSessions, connection)
-	return connection, nil
+	driver.spawnedSessions = append(driver.spawnedSessions, drc)
+	return drc, nil
 }
 
 func (driver *DriverRemoteConnection) GetSessionId() string {
