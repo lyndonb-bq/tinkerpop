@@ -20,11 +20,12 @@ under the License.
 package gremlingo
 
 const (
-	baseNamespace         = "org.apache.tinkerpop.gremlin.process.traversal.strategy."
-	decorationNamespace   = baseNamespace + "decoration."
-	finalizationNamespace = baseNamespace + "finalization."
-	optimizationNamespace = baseNamespace + "optimization."
-	verificationNamespace = baseNamespace + "verification."
+	baseNamespace               = "org.apache.tinkerpop.gremlin.process.traversal.strategy."
+	decorationNamespace         = baseNamespace + "decoration."
+	finalizationNamespace       = baseNamespace + "finalization."
+	optimizationNamespace       = baseNamespace + "optimization."
+	verificationNamespace       = baseNamespace + "verification."
+	computerDecorationNamespace = "org.apache.tinkerpop.gremlin.process.computer.traversal.strategy.decoration."
 )
 
 // Decoration strategies
@@ -131,7 +132,7 @@ func VertexProgramStrategy(graphComputer, persist, result string, workers int,
 			config[k] = v
 		}
 	}
-	return &traversalStrategy{name: decorationNamespace + "VertexProgramStrategy", configuration: config}
+	return &traversalStrategy{name: computerDecorationNamespace + "VertexProgramStrategy", configuration: config}
 }
 
 // Verification strategies
