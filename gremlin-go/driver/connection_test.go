@@ -343,7 +343,7 @@ func TestConnection(t *testing.T) {
 
 		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
 		b := g.V().Count().bytecode
-		resultSet, err = client.Submit(*b)
+		resultSet, err = client.submitBytecode(b)
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
 		result, err = resultSet.one()
@@ -352,12 +352,6 @@ func TestConnection(t *testing.T) {
 
 		err = client.Close()
 		assert.Nil(t, err)
-
-		t.Run("Test client.submit() failure", func(t *testing.T) {
-			resultSet, err = client.Submit(1)
-			assert.Nil(t, resultSet)
-			assert.NotNil(t, err)
-		})
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {

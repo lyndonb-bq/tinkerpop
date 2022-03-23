@@ -103,20 +103,14 @@ func (driver *DriverRemoteConnection) Close() error {
 				return err
 			}
 		}
-		driver.spawnedSessions = []*DriverRemoteConnection{}
 	}
 
-	if driver.IsSessionBound() {
+	if driver.isSessionBound() {
 		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.Session)
 	} else {
 		driver.client.logHandler.logf(Info, closeDRC, driver.client.url)
 	}
-	err := driver.client.Close()
-	if err != nil {
-		return err
-	}
-	driver.client.closed = true
-	return nil
+	return driver.client.Close()
 }
 
 // Submit sends a string traversal to the server.
@@ -129,15 +123,15 @@ func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (Result
 	return driver.client.submitBytecode(bytecode)
 }
 
-// IsSessionBound returns True if a DriverRemoteConnection is a Session
-func (driver *DriverRemoteConnection) IsSessionBound() bool {
+// isSessionBound returns True if a DriverRemoteConnection is a Session
+func (driver *DriverRemoteConnection) isSessionBound() bool {
 	return driver.client.Session != ""
 }
 
 // CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
 	driver.client.logHandler.logger.Log(Info, "creating Session based connection")
-	if driver.IsSessionBound() {
+	if driver.isSessionBound() {
 		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
 	var sessionHandler func(settings *DriverRemoteConnectionSettings)

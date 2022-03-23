@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"errors"
 	"golang.org/x/text/language"
 )
 
@@ -65,7 +64,6 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	for _, configuration := range configurations {
 		configuration(settings)
 	}
-
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
 	conn, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
 	if err != nil {
@@ -95,43 +93,23 @@ func (client *Client) Close() error {
 		}
 	}
 	client.logHandler.logger.Logf(Info, "Closing Client with url %s", client.url)
-	return client.connection.close()
+	err := client.connection.close()
+	if err != nil {
+		return err
+	}
+	client.closed = true
+	return nil
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
-func (client *Client) Submit(message interface{}) (ResultSet, error) {
-	// TODO: Obtain a connection from pool of connections held by the client.
-	client.logHandler.logf(Debug, submitStarted)
-	args := map[string]interface{}{
-		"gremlin": message,
-		"aliases": map[string]interface{}{
-			"g": client.traversalSource,
-		},
-	}
-	var processor string
-	var op string
-	switch message.(type) {
-	case bytecode:
-		client.logHandler.logf(Debug, bytecodeReceived, message)
-		op = "bytecode"
-		processor = "traversal"
-	case string:
-		client.logHandler.logf(Debug, stringReceived, message)
-		// TODO: implement after bindings
-		// args['bindings'] = bindings (Add Argument to func)
-		processor = ""
-		op = "eval"
-	default:
-		return nil, errors.New("message must either be a string or bytecode, neither was passed")
-	}
-	// If Session
+func (client *Client) Submit(traversalString string) (ResultSet, error) {
+	client.logHandler.logf(Debug, submitStartedString, traversalString)
+	request := makeStringRequest(traversalString, client.traversalSource)
+	// TODO: Add bindings to request. request.args['bindings'] = bindings
 	if client.Session != "" {
-		args["session"] = client.Session
-		processor = "session"
+		request.args["session"] = client.Session
+		request.processor = "session"
 	}
-	// TODO: Get connection from pool
-	client.logHandler.logf(Debug, "processor='%s', op='%s', args='%s'", processor, op, args)
-	request := makeRequest(op, processor, args)
 	return client.connection.write(&request)
 }
 
@@ -139,6 +117,10 @@ func (client *Client) Submit(message interface{}) (ResultSet, error) {
 func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode, client.traversalSource)
+	if client.Session != "" {
+		request.args["session"] = client.Session
+		request.processor = "session"
+	}
 	return client.connection.write(&request)
 }
 
