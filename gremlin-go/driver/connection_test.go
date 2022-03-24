@@ -559,7 +559,7 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test Sessions", func(t *testing.T) {
 		t.Run("Test CreateSessions", func(t *testing.T) {
-			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 				func(settings *DriverRemoteConnectionSettings) {
 					settings.TlsConfig = testNoAuthWithAliasTlsConfig
