@@ -86,3 +86,10 @@ func makeCloseSessionRequest(client *Client) request {
 		},
 	}
 }
+
+func addSessionArgsToRequest(client *Client, request request) {
+	if client.session != "" {
+		request.args["session"] = client.session
+		request.processor = "session"
+	}
+}

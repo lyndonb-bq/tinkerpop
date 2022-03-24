@@ -96,10 +96,7 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
 	request := makeStringRequest(traversalString, client.traversalSource)
 	// TODO: Add bindings to request. request.args['bindings'] = bindings
-	if client.session != "" {
-		request.args["session"] = client.session
-		request.processor = "session"
-	}
+	addSessionArgsToRequest(client, request)
 	return client.connection.write(&request)
 }
 
@@ -107,10 +104,7 @@ func (client *Client) Submit(traversalString string) (ResultSet, error) {
 func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
 	request := makeBytecodeRequest(bytecode, client.traversalSource)
-	if client.session != "" {
-		request.args["session"] = client.session
-		request.processor = "session"
-	}
+	addSessionArgsToRequest(client, request)
 	return client.connection.write(&request)
 }
 
