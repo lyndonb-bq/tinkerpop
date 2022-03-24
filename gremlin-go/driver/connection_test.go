@@ -350,8 +350,7 @@ func TestConnection(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 
-		err = client.Close()
-		assert.Nil(t, err)
+		client.Close()
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
@@ -520,8 +519,7 @@ func TestConnection(t *testing.T) {
 		assert.Equal(t, int32(0), val)
 
 		// Close remote connection.
-		err = remote.Close()
-		assert.Nil(t, err)
+		remote.Close()
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
@@ -594,8 +592,7 @@ func TestConnection(t *testing.T) {
 				})
 			session1, _ := remote.CreateSession()
 			assert.NotNil(t, session1.client.session)
-			err := session1.Close()
-			assert.Nil(t, err)
+			session1.Close()
 			assert.Equal(t, 1, len(remote.spawnedSessions))
 			sId := session1.GetSessionId()
 			session2, _ := remote.CreateSession(sId)
@@ -603,8 +600,7 @@ func TestConnection(t *testing.T) {
 			session3, _ := remote.CreateSession()
 			assert.NotNil(t, session3.client.session)
 			assert.Equal(t, 3, len(remote.spawnedSessions))
-			err = remote.Close()
-			assert.Nil(t, err)
+			remote.Close()
 		})
 
 		t.Run("Test Session failures", func(t *testing.T) {

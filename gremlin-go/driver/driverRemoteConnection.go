@@ -92,7 +92,8 @@ func NewDriverRemoteConnection(
 }
 
 // Close closes the DriverRemoteConnection.
-func (driver *DriverRemoteConnection) Close() error {
+// Errors if any will be logged
+func (driver *DriverRemoteConnection) Close() {
 	// If DriverRemoteConnection has spawnedSessions then they must be closed as well.
 	if len(driver.spawnedSessions) > 0 {
 		driver.client.logHandler.logf(Info, closingSpawnedSessions, driver.client.url)
@@ -107,7 +108,6 @@ func (driver *DriverRemoteConnection) Close() error {
 		driver.client.logHandler.logf(Info, closeDriverRemoteConnection, driver.client.url)
 	}
 	driver.client.Close()
-	return nil
 }
 
 // Submit sends a string traversal to the server.
