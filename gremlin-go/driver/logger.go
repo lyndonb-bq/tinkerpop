@@ -124,4 +124,5 @@ const (
 	closeDRC                 errorKey = "CLOSE_DRC"
 	closingSpawnedSessions   errorKey = "CLOSING_SPAWNED_SESSIONS"
 	closeSessionError        errorKey = "CLOSE_SESSION_ERROR"
+	closeClient              errorKey = "CLOSE_CLIENT"
 )

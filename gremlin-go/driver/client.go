@@ -86,7 +86,7 @@ func (client *Client) Close() error {
 			return err
 		}
 	}
-	client.logHandler.logf(Info, "Closing Client with url %s", client.url)
+	client.logHandler.logf(Info, closeClient, client.url)
 	err := client.connection.close()
 	if err != nil {
 		return err
