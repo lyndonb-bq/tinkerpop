@@ -19,6 +19,12 @@ under the License.
 
 package gremlingo
 
+type traversalStrategy struct {
+	name          string
+	configuration map[string]interface{}
+	apply         func(g GraphTraversal)
+}
+
 type Lambda struct {
 	Script   string
 	Language string

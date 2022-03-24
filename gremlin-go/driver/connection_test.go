@@ -49,7 +49,7 @@ func dropGraph(t *testing.T, g *GraphTraversalSource) {
 	_, promise, err := g.V().Drop().Iterate()
 	assert.Nil(t, err)
 	assert.NotNil(t, promise)
-	<-promise
+	assert.Nil(t, <-promise)
 }
 
 func addTestData(t *testing.T, g *GraphTraversalSource) {
@@ -66,7 +66,7 @@ func addTestData(t *testing.T, g *GraphTraversalSource) {
 	// Commit traversal.
 	_, promise, err := traversal.Iterate()
 	assert.Nil(t, err)
-	<-promise
+	assert.Nil(t, <-promise)
 }
 
 func initializeGraph(t *testing.T, url string, auth *AuthInfo, tls *tls.Config) *GraphTraversalSource {
@@ -400,7 +400,7 @@ func TestConnection(t *testing.T) {
 			AddE("IS_IN").From("gs").To("tp").
 			AddE("LIKES").From("bq").To("tp").Iterate()
 		assert.Nil(t, err)
-		<-i
+		assert.Nil(t, <-i)
 
 		results, errs := g.V().OutE().InV().Path().By("name").By(Label).ToList()
 		assert.Nil(t, errs)
