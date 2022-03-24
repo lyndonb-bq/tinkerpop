@@ -128,7 +128,6 @@ func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (Result
 	return driver.client.submitBytecode(bytecode)
 }
 
-// isSessionBound returns True if a DriverRemoteConnection is a Session
 func (driver *DriverRemoteConnection) isSession() bool {
 	return driver.client.session != ""
 }
