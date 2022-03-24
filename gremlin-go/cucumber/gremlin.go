@@ -1260,16 +1260,16 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V().Out("created").Order().By("name").Coalesce(gremlingo.T__.Values("name"), gremlingo.T__.Constant("x"))
 	}},
 	"g_V_connectedComponent_hasXcomponentX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().ConnectedComponent().Has("gremlin.connectedComponentVertexProgram.component")
 	}},
 	"g_V_dedup_connectedComponent_hasXcomponentX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Dedup().ConnectedComponent().Has("gremlin.connectedComponentVertexProgram.component")
 	}},
 	"g_V_hasLabelXsoftwareX_connectedComponent_project_byXnameX_byXcomponentX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().HasLabel("software").ConnectedComponent().Project("name", "component").By("name").By("gremlin.connectedComponentVertexProgram.component")
 	}},
 	"g_V_connectedComponent_withXEDGES_bothEXknowsXX_withXPROPERTY_NAME_clusterX_project_byXnameX_byXclusterX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().HasLabel("person").ConnectedComponent().With("~tinkerpop.connectedComponent.edges", gremlingo.T__.BothE("knows")).With("~tinkerpop.connectedComponent.propertyName", "cluster").Project("name", "cluster").By("name").By("cluster")
 	}},
 	"g_V_constantX123X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Constant(int32(123))
@@ -1714,33 +1714,33 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.V(p["vid1"]).ElementMap().Order(gremlingo.Local).By(gremlingo.Keys, gremlingo.Desc).Unfold()
 	}},
 	"g_V_pageRank_hasXpageRankX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PageRank().Has("gremlin.pageRankVertexProgram.pageRank")
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PageRank().Has("gremlin.pageRankVertexProgram.pageRank")
 	}},
 	"g_V_outXcreatedX_pageRank_withXedges_bothEX_withXpropertyName_projectRankX_withXtimes_0X_valueMapXname_projectRankX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Out("created").PageRank().With("~tinkerpop.pageRank.edges", gremlingo.T__.BothE()).With("~tinkerpop.pageRank.propertyName", "projectRank").With("~tinkerpop.pageRank.times", int32(0)).ValueMap("name", "projectRank")
 	}},
 	"g_V_pageRank_order_byXpageRank_descX_byXnameX_name": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PageRank().Order().By("gremlin.pageRankVertexProgram.pageRank", gremlingo.Desc).By("name").Values("name")
 	}},
 	"g_V_pageRank_order_byXpageRank_descX_name_limitX2X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PageRank().Order().By("gremlin.pageRankVertexProgram.pageRank", gremlingo.Desc).Values("name").Limit(2)
 	}},
 	"g_V_pageRank_withXedges_outEXknowsXX_withXpropertyName_friendRankX_project_byXnameX_byXvaluesXfriendRankX_mathX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PageRank().With("~tinkerpop.pageRank.edges", gremlingo.T__.OutE("knows")).With("~tinkerpop.pageRank.propertyName", "friendRank").Project("name", "friendRank").By("name").By(gremlingo.T__.Values("friendRank").Math("ceil(_ * 100)"))
 	}},
 	"g_V_hasLabelXpersonX_pageRank_withXpropertyName_kpageRankX_project_byXnameX_byXvaluesXpageRankX_mathX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().HasLabel("person").PageRank().With("~tinkerpop.pageRank.propertyName", "pageRank").Project("name", "pageRank").By("name").By(gremlingo.T__.Values("pageRank").Math("ceil(_ * 100)"))
 	}},
 	"g_V_pageRank_withXpropertyName_pageRankX_asXaX_outXknowsX_pageRank_asXbX_selectXa_bX_by_byXmathX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PageRank().With("~tinkerpop.pageRank.propertyName", "pageRank").As("a").Out("knows").Values("pageRank").As("b").Select("a", "b").By().By(gremlingo.T__.Math("ceil(_ * 100)"))
 	}},
 	"g_V_hasLabelXsoftwareX_hasXname_rippleX_pageRankX1X_withXedges_inEXcreatedX_withXtimes_1X_withXpropertyName_priorsX_inXcreatedX_unionXboth__identityX_valueMapXname_priorsX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().HasLabel("software").Has("name", "ripple").PageRank(1.0).With("~tinkerpop.pageRank.edges", gremlingo.T__.InE("created")).With("~tinkerpop.pageRank.times", int32(1)).With("~tinkerpop.pageRank.propertyName", "priors").In("created").Union(gremlingo.T__.Both(), gremlingo.T__.Identity()).ValueMap("name", "priors")
 	}},
 	"g_V_outXcreatedX_groupXmX_byXlabelX_pageRankX1X_withXpropertyName_pageRankX_withXedges_inEX_withXtimes_1X_inXcreatedX_groupXmX_byXpageRankX_capXmX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Out("created").Group("m").By(gremlingo.Label).PageRank(1.0).With("~tinkerpop.pageRank.propertyName", "pageRank").With("~tinkerpop.pageRank.edges", gremlingo.T__.InE()).With("~tinkerpop.pageRank.times", int32(1)).In("created").Group("m").By("pageRank").Cap("m")
 	}},
 	"g_VX1X_name_path": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V(p["vid1"]).Values("name").Path()
@@ -1773,15 +1773,15 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.Inject(int32(1), nil, nil).Path().Dedup()
 	}},
 	"g_V_peerPressure_hasXclusterX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PeerPressure().Has("gremlin.peerPressureVertexProgram.cluster")
 	}, func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PeerPressure().Has("gremlin.peerPressureVertexProgram.cluster")
 	}},
 	"g_V_peerPressure_withXpropertyName_clusterX_withXedges_outEXknowsXX_pageRankX1X_byXrankX_withXedges_outEXknowsX_withXtimes_2X_group_byXclusterX_byXrank_sumX_limitX100X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().PeerPressure().With("~tinkerpop.peerPressure.propertyName", "cluster").With("~tinkerpop.peerPressure.edges", gremlingo.T__.OutE("knows")).PageRank(1.0).With("~tinkerpop.pageRank.propertyName", "rank").With("~tinkerpop.pageRank.edges", gremlingo.T__.OutE("knows")).With("~tinkerpop.pageRank.times", int32(1)).Group().By("cluster").By(gremlingo.T__.Values("rank").Sum()).Limit(100)
 	}},
 	"g_V_hasXname_rippleX_inXcreatedX_peerPressure_withXedges_outEX_withyXpropertyName_clusterX_repeatXunionXidentity__bothX_timesX2X_dedup_valueMapXname_clusterX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "ripple").In("created").PeerPressure().With("~tinkerpop.peerPressure.edges", gremlingo.T__.OutE()).With("~tinkerpop.peerPressure.propertyName", "cluster").Repeat(gremlingo.T__.Union(gremlingo.T__.Identity(), gremlingo.T__.Both())).Times(int32(2)).Dedup().ValueMap("name", "cluster")
 	}},
 	"g_V_hasLabelXpersonX_projectXa_bX_byXoutE_countX_byXageX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().HasLabel("person").Project("a", "b").By(gremlingo.T__.OutE().Count()).By("age")
@@ -2005,49 +2005,49 @@ var translationMap = map[string][]func(g *gremlingo.GraphTraversalSource, p map[
 		return g.WithSideEffect("k", nil).Inject("x").Select("k")
 	}},
 	"g_V_shortestPath": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath()
 	}},
 	"g_V_both_dedup_shortestPath": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Both().Dedup().ShortestPath()
 	}},
 	"g_V_shortestPath_edgesIncluded": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath().With("~tinkerpop.shortestPath.includeEdges")
 	}},
 	"g_V_shortestPath_directionXINX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath().With("~tinkerpop.shortestPath.edges", gremlingo.In)
 	}},
 	"g_V_shortestPath_edgesXoutEX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath().With("~tinkerpop.shortestPath.edges", gremlingo.T__.OutE())
 	}},
 	"g_V_shortestPath_edgesIncluded_edgesXoutEX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath().With("~tinkerpop.shortestPath.includeEdges").With("~tinkerpop.shortestPath.edges", gremlingo.T__.OutE())
 	}},
 	"g_V_hasXname_markoX_shortestPath": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "marko").ShortestPath()
 	}},
 	"g_V_shortestPath_targetXhasXname_markoXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath().With("~tinkerpop.shortestPath.target", gremlingo.T__.Has("name", "marko"))
 	}},
 	"g_V_shortestPath_targetXvaluesXnameX_isXmarkoXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Identity().ShortestPath().With("~tinkerpop.shortestPath.target", gremlingo.T__.Values("name").Is("marko"))
 	}},
 	"g_V_hasXname_markoX_shortestPath_targetXhasLabelXsoftwareXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "marko").ShortestPath().With("~tinkerpop.shortestPath.target", gremlingo.T__.HasLabel("software"))
 	}},
 	"g_V_hasXname_markoX_shortestPath_targetXhasXname_joshXX_distanceXweightX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "marko").ShortestPath().With("~tinkerpop.shortestPath.target", gremlingo.T__.Has("name", "josh")).With("~tinkerpop.shortestPath.distance", "weight")
 	}},
 	"g_V_hasXname_danielX_shortestPath_targetXhasXname_stephenXX_edgesXbothEXusesXX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "daniel").ShortestPath().With("~tinkerpop.shortestPath.target", gremlingo.T__.Has("name", "stephen")).With("~tinkerpop.shortestPath.edges", gremlingo.T__.BothE("uses"))
 	}},
 	"g_V_hasXsong_name_MIGHT_AS_WELLX_shortestPath_targetXhasXsong_name_MAYBE_YOU_KNOW_HOW_I_FEELXX_edgesXoutEXfollowedByXX_distanceXweightX": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("song", "name", "MIGHT AS WELL").ShortestPath().With("~tinkerpop.shortestPath.target", gremlingo.T__.Has("song", "name", "MAYBE YOU KNOW HOW I FEEL")).With("~tinkerpop.shortestPath.edges", gremlingo.T__.OutE("followedBy")).With("~tinkerpop.shortestPath.distance", "weight")
 	}},
 	"g_V_hasXname_markoX_shortestPath_maxDistanceX1X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "marko").ShortestPath().With("~tinkerpop.shortestPath.maxDistance", int32(1))
 	}},
 	"g_V_hasXname_vadasX_shortestPath_distanceXweightX_maxDistanceX1_3X": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
-		return nil
+		return g.WithStrategies(strategyFactory("VertexProgramStrategy", map[string]interface{}{"graphComputer": "org.apache.tinkerpop.gremlin.process.computer.GraphComputer"})).V().Has("name", "vadas").ShortestPath().With("~tinkerpop.shortestPath.distance", "weight").With("~tinkerpop.shortestPath.maxDistance", 1.3)
 	}},
 	"g_V_age_sum": {func(g *gremlingo.GraphTraversalSource, p map[string]interface{}) *gremlingo.GraphTraversal {
 		return g.V().Values("age").Sum()
