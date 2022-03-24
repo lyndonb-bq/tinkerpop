@@ -110,7 +110,7 @@ func (driver *DriverRemoteConnection) Close() error {
 		return nil
 	}
 
-	if driver.isSessionBound() {
+	if driver.isSession() {
 		driver.client.logHandler.logf(Info, closeSession, driver.client.url, driver.client.session)
 	} else {
 		driver.client.logHandler.logf(Info, closeDriverRemoteConnection, driver.client.url)
@@ -129,7 +129,7 @@ func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (Result
 }
 
 // isSessionBound returns True if a DriverRemoteConnection is a Session
-func (driver *DriverRemoteConnection) isSessionBound() bool {
+func (driver *DriverRemoteConnection) isSession() bool {
 	return driver.client.session != ""
 }
 
@@ -137,7 +137,7 @@ func (driver *DriverRemoteConnection) isSessionBound() bool {
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
 	if len(sessionId) > 1 {
 		return nil, errors.New("more than one Session ID specified. Cannot create Session with multiple UUIDs")
-	} else if driver.isSessionBound() {
+	} else if driver.isSession() {
 		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
 
