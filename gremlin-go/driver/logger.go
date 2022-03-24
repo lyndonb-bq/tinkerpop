@@ -120,6 +120,7 @@ const (
 	readComplete                errorKey = "READ_COMPLETE"
 	submitStartedString         errorKey = "SUBMIT_STARTED_STRING"
 	submitStartedBytecode       errorKey = "SUBMIT_STARTED_BYTECODE"
+	creatingSessionConnection   errorKey = "CREATING_SESSION_CONNECTION"
 	closeSession                errorKey = "CLOSE_SESSION"
 	closeDriverRemoteConnection errorKey = "CLOSE_DRIVER_REMOTE_CONNECTION"
 	closingSpawnedSessions      errorKey = "CLOSING_SPAWNED_SESSIONS"

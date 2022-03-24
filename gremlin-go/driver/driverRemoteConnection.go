@@ -140,7 +140,7 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
 
-	driver.client.logHandler.logger.Log(Info, "creating Session based connection")
+	driver.client.logHandler.log(Info, creatingSessionConnection)
 	sid := uuid.New().String()
 	// If there is a sessionId provided, overwrite uuid.
 	if len(sessionId) == 1 {
