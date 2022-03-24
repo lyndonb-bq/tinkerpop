@@ -83,11 +83,15 @@ func (client *Client) Close() error {
 	if client.session != "" {
 		err := client.closeSession()
 		if err != nil {
-			return err
+			client.logHandler.logf(Error, closeSessionRequestError, client.url, client.session, err.Error())
 		}
 	}
 	client.logHandler.logf(Info, closeClient, client.url)
-	return client.connection.close()
+	err := client.connection.close()
+	if err != nil {
+		client.logHandler.logf(Error, closeClientError, err.Error())
+	}
+	return nil
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.

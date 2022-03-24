@@ -122,8 +122,10 @@ const (
 	submitStartedBytecode       errorKey = "SUBMIT_STARTED_BYTECODE"
 	creatingSessionConnection   errorKey = "CREATING_SESSION_CONNECTION"
 	closeSession                errorKey = "CLOSE_SESSION"
+	closeSessionRequestError    errorKey = "CLOSE_SESSION_REQUEST_ERROR"
+	closeSessionError           errorKey = "CLOSE_SESSION_ERROR"
 	closeDriverRemoteConnection errorKey = "CLOSE_DRIVER_REMOTE_CONNECTION"
 	closingSpawnedSessions      errorKey = "CLOSING_SPAWNED_SESSIONS"
-	closeSessionError           errorKey = "CLOSE_SESSION_ERROR"
 	closeClient                 errorKey = "CLOSE_CLIENT"
+	closeClientError            errorKey = "CLOSE_CLIENT_ERROR"
 )

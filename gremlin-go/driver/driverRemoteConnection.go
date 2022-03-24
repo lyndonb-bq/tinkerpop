@@ -96,18 +96,9 @@ func (driver *DriverRemoteConnection) Close() error {
 	// If DriverRemoteConnection has spawnedSessions then they must be closed as well.
 	if len(driver.spawnedSessions) > 0 {
 		driver.client.logHandler.logf(Info, closingSpawnedSessions, driver.client.url)
-		flag := false
 		for _, session := range driver.spawnedSessions {
-			err := session.Close()
-			if err != nil {
-				driver.client.logHandler.logf(Error, closeSessionError, err)
-				flag = true
-			}
+			session.Close()
 		}
-		if flag {
-			return errors.New("there was at least one error while closing spawned sessions. Check error log for more info")
-		}
-		return nil
 	}
 
 	if driver.isSession() {
@@ -115,7 +106,8 @@ func (driver *DriverRemoteConnection) Close() error {
 	} else {
 		driver.client.logHandler.logf(Info, closeDriverRemoteConnection, driver.client.url)
 	}
-	return driver.client.Close()
+	driver.client.Close()
+	return nil
 }
 
 // Submit sends a string traversal to the server.
