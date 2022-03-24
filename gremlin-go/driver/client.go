@@ -85,6 +85,7 @@ func (client *Client) Close() {
 		if err != nil {
 			client.logHandler.logf(Error, closeSessionRequestError, client.url, client.session, err.Error())
 		}
+		client.session = ""
 	}
 	client.logHandler.logf(Info, closeClient, client.url)
 	err := client.connection.close()

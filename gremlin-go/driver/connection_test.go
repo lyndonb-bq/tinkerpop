@@ -233,7 +233,7 @@ func TestConnection(t *testing.T) {
 
 	// No authentication integration test with graphs loaded and alias configured server
 	testNoAuthWithAliasUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
-	testNoAuthWithAliasEnable := getEnvOrDefaultBool("RUN_INTEGRATION_WITH_ALIAS_ TESTS", false)
+	testNoAuthWithAliasEnable := getEnvOrDefaultBool("RUN_INTEGRATION_WITH_ALIAS_TESTS", false)
 	testNoAuthWithAliasAuthInfo := &AuthInfo{}
 	testNoAuthWithAliasTlsConfig := &tls.Config{}
 
@@ -562,9 +562,8 @@ func TestConnection(t *testing.T) {
 			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 				func(settings *DriverRemoteConnectionSettings) {
-					settings.TlsConfig = testNoAuthWithAliasTlsConfig
-					settings.AuthInfo = testNoAuthWithAliasAuthInfo
-					settings.TraversalSource = testServerGraphAlias
+					settings.TlsConfig = testNoAuthTlsConfig
+					settings.AuthInfo = testNoAuthAuthInfo
 				})
 			assert.Nil(t, err)
 			assert.NotNil(t, remote)
@@ -583,13 +582,14 @@ func TestConnection(t *testing.T) {
 		})
 
 		t.Run("Test Session close", func(t *testing.T) {
-			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
-			remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 				func(settings *DriverRemoteConnectionSettings) {
-					settings.TlsConfig = testNoAuthWithAliasTlsConfig
-					settings.AuthInfo = testNoAuthWithAliasAuthInfo
-					settings.TraversalSource = testServerGraphAlias
+					settings.TlsConfig = testNoAuthTlsConfig
+					settings.AuthInfo = testNoAuthAuthInfo
 				})
+			assert.Nil(t, err)
+			assert.NotNil(t, remote)
 			session1, _ := remote.CreateSession()
 			assert.NotNil(t, session1.client.session)
 			session1.Close()
@@ -604,33 +604,30 @@ func TestConnection(t *testing.T) {
 		})
 
 		t.Run("Test Session failures", func(t *testing.T) {
-			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthWithAliasEnable)
-			t.Run("Test CreateSession on Session failure", func(t *testing.T) {
-				remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
-					func(settings *DriverRemoteConnectionSettings) {
-						settings.TlsConfig = testNoAuthWithAliasTlsConfig
-						settings.AuthInfo = testNoAuthWithAliasAuthInfo
-						settings.TraversalSource = testServerGraphAlias
-					})
-				s1, err := remote.CreateSession()
-				assert.Nil(t, err)
-				assert.NotNil(t, s1)
-				s2, err := s1.CreateSession()
-				assert.Nil(t, s2)
-				assert.NotNil(t, err)
-			})
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+				func(settings *DriverRemoteConnectionSettings) {
+					settings.TlsConfig = testNoAuthTlsConfig
+					settings.AuthInfo = testNoAuthAuthInfo
+				})
+			s1, err := remote.CreateSession()
+			assert.Nil(t, err)
+			assert.NotNil(t, s1)
+			s2, err := s1.CreateSession()
+			assert.Nil(t, s2)
+			assert.NotNil(t, err)
+		})
 
-			t.Run("Test CreateSession with multiple UUIDs failure", func(t *testing.T) {
-				remote, _ := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
-					func(settings *DriverRemoteConnectionSettings) {
-						settings.TlsConfig = testNoAuthWithAliasTlsConfig
-						settings.AuthInfo = testNoAuthWithAliasAuthInfo
-						settings.TraversalSource = testServerGraphAlias
-					})
-				s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
-				assert.Nil(t, s1)
-				assert.NotNil(t, err)
-			})
+		t.Run("Test CreateSession with multiple UUIDs failure", func(t *testing.T) {
+			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+				func(settings *DriverRemoteConnectionSettings) {
+					settings.TlsConfig = testNoAuthTlsConfig
+					settings.AuthInfo = testNoAuthAuthInfo
+				})
+			s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
+			assert.Nil(t, s1)
+			assert.NotNil(t, err)
 		})
 	})
 }
