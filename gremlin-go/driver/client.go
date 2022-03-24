@@ -81,17 +81,13 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 func (client *Client) Close() error {
 	// If it is a Session, call closeSession
 	if client.session != "" {
-		_, err := client.closeSession()
+		err := client.closeSession()
 		if err != nil {
 			return err
 		}
 	}
 	client.logHandler.logf(Info, closeClient, client.url)
-	err := client.connection.close()
-	if err != nil {
-		return err
-	}
-	return nil
+	return client.connection.close()
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
@@ -118,7 +114,8 @@ func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	return client.connection.write(&request)
 }
 
-func (client *Client) closeSession() (ResultSet, error) {
+func (client *Client) closeSession() error {
 	message := makeCloseSessionRequest(client)
-	return client.connection.write(&message)
+	_, err := client.connection.write(&message)
+	return err
 }
