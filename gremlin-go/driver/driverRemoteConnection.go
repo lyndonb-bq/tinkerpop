@@ -141,13 +141,12 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 	}
 
 	driver.client.logHandler.log(Info, creatingSessionConnection)
-	sid := uuid.New().String()
-	// If there is a sessionId provided, overwrite uuid.
-	if len(sessionId) == 1 {
-		sid = sessionId[0]
-	}
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
-		settings.Session = sid
+		if len(sessionId) == 1 {
+			settings.Session = sessionId[0]
+			return
+		}
+		settings.Session = uuid.New().String()
 	})
 	if err != nil {
 		return nil, err
