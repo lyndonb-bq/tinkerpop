@@ -111,9 +111,9 @@ func (driver *DriverRemoteConnection) Close() error {
 	}
 
 	if driver.isSessionBound() {
-		driver.client.logHandler.logf(Info, closeDRCSession, driver.client.url, driver.client.session)
+		driver.client.logHandler.logf(Info, closeSession, driver.client.url, driver.client.session)
 	} else {
-		driver.client.logHandler.logf(Info, closeDRC, driver.client.url)
+		driver.client.logHandler.logf(Info, closeDriverRemoteConnection, driver.client.url)
 	}
 	return driver.client.Close()
 }
