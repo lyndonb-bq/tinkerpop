@@ -136,7 +136,6 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
 		if len(sessionId) == 1 {
 			settings.Session = sessionId[0]
-			return
 		} else {
 			settings.Session = uuid.New().String()
 		}
