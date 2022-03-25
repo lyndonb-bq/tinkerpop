@@ -20,7 +20,11 @@ under the License.
 package gremlingo
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
+	"fmt"
+	"hash/fnv"
 	"reflect"
 )
 
@@ -122,16 +126,24 @@ func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) 
 		return newSlice, nil
 	default:
 		switch v := arg.(type) {
-		case binding:
-			convertedValue, err := bytecode.convertArgument(v.value)
+		case *Binding:
+			convertedValue, err := bytecode.convertArgument(v.Value)
 			if err != nil {
 				return nil, err
 			}
-			bytecode.bindings[v.key] = v.value
-			return binding{
-				key:   v.key,
-				value: convertedValue,
+			bytecode.bindings[v.Key] = v.Value
+			return &Binding{
+				Key:   v.Key,
+				Value: convertedValue,
 			}, nil
+		case *GraphTraversal:
+			if v.graph != nil {
+				return nil, errors.New("the child traversal was not spawned anonymously - use the T__ class rather than a TraversalSource to construct the child traversal")
+			}
+			for k, val := range v.bytecode.bindings {
+				bytecode.bindings[k] = val
+			}
+			return v.bytecode, nil
 		case Traversal:
 			if v.graph != nil {
 				return nil, errors.New("the child traversal was not spawned anonymously - use the T__ class rather than a TraversalSource to construct the child traversal")
@@ -152,8 +164,67 @@ type instruction struct {
 	arguments []interface{}
 }
 
-// TODO: AN-1018 Export this
-type binding struct {
-	key   string
-	value interface{}
+// Binding associates a string variable with a value
+type Binding struct {
+	Key   string
+	Value interface{}
+}
+
+func newBinding(key string, value interface{}) *Binding {
+	return &Binding{Key: key, Value: value}
+}
+
+// String returns the key value binding in string format
+func (b *Binding) String() string {
+	return fmt.Sprintf("binding[%v=%v]", b.Key, b.Value)
+}
+
+// Equals check for equality of current binding object to another
+func (b *Binding) Equals(item interface{}) bool {
+	if reflect.DeepEqual(b, item) {
+		return true
+	}
+	if (item == nil) || fmt.Sprintf("%T", b) != fmt.Sprintf("%T", item) {
+		return false
+	}
+	val, ok := item.(*Binding)
+	if ok {
+		return b.Key == val.Key && reflect.DeepEqual(b.Value, val.Value)
+	} else {
+		return false
+	}
+}
+
+// Hash returns the hashcode of the binding in int
+func (b *Binding) Hash() int {
+	h := fnv.New64a()
+	keyHash, err := h.Write([]byte(b.Key))
+	if err != nil {
+		return 0
+	}
+	var buff bytes.Buffer
+	enc := gob.NewEncoder(&buff)
+	err = enc.Encode(b.Value)
+	if err != nil {
+		return 0
+	}
+	valHash, err := h.Write(buff.Bytes())
+	if err != nil {
+		return 0
+	}
+	return keyHash + valHash
+}
+
+// Bindings are used to associate a variable with a value. They enable the creation of Binding, usually used with
+// Lambda scripts to avoid continued recompilation costs. Bindings allow a remote engine to cache traversals that
+// will be reused over and over again save that some parameterization may change.
+// Used as g.V().Out(&Bindings{}.Of("key", value))
+type Bindings struct{}
+
+// Of creates a Binding
+func (*Bindings) Of(key string, value interface{}) *Binding {
+	return &Binding{
+		Key:   key,
+		Value: value,
+	}
 }

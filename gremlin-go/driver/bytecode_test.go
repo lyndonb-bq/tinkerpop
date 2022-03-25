@@ -108,14 +108,46 @@ func TestBytecode(t *testing.T) {
 		t.Run("binding", func(t *testing.T) {
 			testKey := "testKey"
 			testValue := "testValue"
-			testBinding := binding{
-				key:   testKey,
-				value: testValue,
+			testBinding := &Binding{
+				Key:   testKey,
+				Value: testValue,
 			}
 			converted, err := bc.convertArgument(testBinding)
 			assert.Nil(t, err)
 			assert.Equal(t, testBinding, converted)
 			assert.Equal(t, testValue, bc.bindings[testKey])
+		})
+
+		t.Run("binding assert false", func(t *testing.T) {
+			testKey := "testKey"
+			testValue := 1
+			testBinding := &Binding{
+				Key:   testKey,
+				Value: testValue,
+			}
+			converted, err := bc.convertArgument(testBinding)
+			assert.Nil(t, err)
+			assert.Equal(t, testBinding, converted)
+			assert.Equal(t, testValue, bc.bindings[testKey])
+			assert.False(t, converted.(*Binding).Equals(&Binding{
+				Key:   "t",
+				Value: "v",
+			}))
+		})
+
+		t.Run("binding hash", func(t *testing.T) {
+			testKey := "testKey"
+			// due to strict typing, we are converting all values of slice/map arguments into interface{}
+			testValue := []interface{}{1}
+			testBinding := &Binding{
+				Key:   testKey,
+				Value: testValue,
+			}
+			converted, err := bc.convertArgument(testBinding)
+			assert.Nil(t, err)
+			assert.Equal(t, testBinding, converted)
+			assert.Equal(t, testValue, bc.bindings[testKey])
+			assert.Equal(t, testBinding.Hash(), converted.(*Binding).Hash())
 		})
 	})
 
