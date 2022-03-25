@@ -147,10 +147,10 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets map[string]R
 			return fmt.Errorf("failed to authenticate %v : %v", response.responseStatus, response.responseResult)
 		}
 	} else {
-		errorMessage := fmt.Sprint("Error in read loop, error message '", response.responseStatus, "'. statusCode: ", statusCode)
-		resultSets[responseIDString].setError(errors.New(errorMessage))
+		err := fmt.Errorf("error in read loop, error message '%s'. statusCode: %d", response.responseStatus, statusCode)
+		resultSets[responseIDString].setError(err)
 		resultSets[responseIDString].Close()
-		log.logger.Log(Info, errorMessage)
+		log.logger.Log(Info, err)
 	}
 	return nil
 }
