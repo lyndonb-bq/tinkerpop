@@ -289,7 +289,7 @@ func TestConnection(t *testing.T) {
 		connection, err := createConnection(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newLogHandler(&defaultLogger{}, Info, language.English))
 		assert.Nil(t, err)
 		assert.NotNil(t, connection)
-		request := makeStringRequest("g.V().count()", "g")
+		request := makeStringRequest("g.V().count()", "g", "")
 		resultSet, err := connection.write(&request)
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)

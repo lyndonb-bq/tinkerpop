@@ -83,14 +83,14 @@ func (client *Client) Close() {
 	if client.session != "" {
 		err := client.closeSession()
 		if err != nil {
-			client.logHandler.logf(Error, closeSessionRequestError, client.url, client.session, err.Error())
+			client.logHandler.logf(Warning, closeSessionRequestError, client.url, client.session, err.Error())
 		}
 		client.session = ""
 	}
 	client.logHandler.logf(Info, closeClient, client.url)
 	err := client.connection.close()
 	if err != nil {
-		client.logHandler.logf(Error, closeClientError, err.Error())
+		client.logHandler.logf(Warning, closeClientError, err.Error())
 	}
 }
 
@@ -98,26 +98,20 @@ func (client *Client) Close() {
 func (client *Client) Submit(traversalString string) (ResultSet, error) {
 	// TODO AN-982: Obtain connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
-	request := makeStringRequest(traversalString, client.traversalSource)
+	request := makeStringRequest(traversalString, client.traversalSource, client.session)
 	// TODO: Add bindings to request. request.args['bindings'] = bindings
-	if client.session != "" {
-		addSessionArgsToRequest(&request, client.session)
-	}
 	return client.connection.write(&request)
 }
 
 // submitBytecode submits bytecode to the server to execute and returns a ResultSet.
 func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 	client.logHandler.logf(Debug, submitStartedBytecode, *bytecode)
-	request := makeBytecodeRequest(bytecode, client.traversalSource)
-	if client.session != "" {
-		addSessionArgsToRequest(&request, client.session)
-	}
+	request := makeBytecodeRequest(bytecode, client.traversalSource, client.session)
 	return client.connection.write(&request)
 }
 
 func (client *Client) closeSession() error {
-	message := makeCloseSessionRequest(client)
+	message := makeCloseSessionRequest(client.session)
 	_, err := client.connection.write(&message)
 	return err
 }
