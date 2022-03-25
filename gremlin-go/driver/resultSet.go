@@ -47,7 +47,7 @@ type ResultSet interface {
 type channelResultSet struct {
 	channel          chan *Result
 	requestID        string
-	container		map[string]ResultSet
+	container        map[string]ResultSet
 	aggregateTo      string
 	statusAttributes map[string]interface{}
 	closed           bool

@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"crypto/tls"
 	"golang.org/x/text/language"
+	"runtime"
 )
 
 // ClientSettings is used to modify a Client's settings on initialization.
@@ -35,6 +36,8 @@ type ClientSettings struct {
 	TlsConfig       *tls.Config
 	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
 	NewConnectionThreshold int
+	// Maximum number of concurrent connections. Default: number of runtime processors
+	MaximumConcurrentConnections int
 	Session         string
 }
 
@@ -59,6 +62,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
 		NewConnectionThreshold: 4,
+		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:         "",
 	}
 	for _, configuration := range configurations {
@@ -66,7 +70,8 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold, logHandler)
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+		settings.MaximumConcurrentConnections, logHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +80,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		traversalSource: settings.TraversalSource,
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
-		connections:      pool,
+		connections:     pool,
 	}
 	// TODO: PoolSize must be 1 on Session mode
 	return client, nil

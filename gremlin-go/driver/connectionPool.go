@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"runtime"
 	"sync"
 )
 
@@ -31,14 +30,14 @@ type connectionPool interface {
 }
 
 type loadBalancingPool struct {
-	url string
-	authInfo *AuthInfo
-	tlsConfig *tls.Config
+	url        string
+	authInfo   *AuthInfo
+	tlsConfig  *tls.Config
 	logHandler *logHandler
 
 	newConnectionThreshold int
-	connections     []*connection
-	loadBalanceLock sync.Mutex
+	connections            []*connection
+	loadBalanceLock        sync.Mutex
 }
 
 func (pool *loadBalancingPool) close() {
@@ -73,7 +72,7 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 				if leastUsed != nil && (leastUsed.activeResults() == 0 && connection.activeResults() == 0) {
 					// Close the connection asynchronously since it is a high-latency method
 					go func() {
-						pool.logHandler.log(Debug, closeUnusedPoolConnection)
+						pool.logHandler.log(Info, closeUnusedPoolConnection)
 						err := connection.close()
 						pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
 					}()
@@ -90,7 +89,7 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 					leastUsed = connection
 				}
 			} else {
-				pool.logHandler.log(Warning, purgingDeadConnection)
+				pool.logHandler.log(Info, purgingDeadConnection)
 			}
 		}
 
@@ -120,19 +119,20 @@ func (pool *loadBalancingPool) newConnection() (*connection, error) {
 	return connection, nil
 }
 
-func newLoadBalancingPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config, newConnectionThreshold int, logHandler *logHandler) (connectionPool, error) {
-	pool := make([]*connection, 0, runtime.NumCPU())
+func newLoadBalancingPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config, newConnectionThreshold int,
+	maximumConcurrentConnections int, logHandler *logHandler) (connectionPool, error) {
+	pool := make([]*connection, 0, maximumConcurrentConnections)
 	initialConnection, err := createConnection(url, authInfo, tlsConfig, logHandler)
 	if err != nil {
 		return nil, err
 	}
 	pool = append(pool, initialConnection)
 	return &loadBalancingPool{
-		url:         url,
-		authInfo:    authInfo,
-		tlsConfig:   tlsConfig,
-		logHandler:  logHandler,
+		url:                    url,
+		authInfo:               authInfo,
+		tlsConfig:              tlsConfig,
+		logHandler:             logHandler,
 		newConnectionThreshold: newConnectionThreshold,
-		connections: pool,
+		connections:            pool,
 	}, nil
 }

@@ -312,6 +312,106 @@ func TestConnection(t *testing.T) {
 		assert.NotNil(t, err)
 	})
 
+	t.Run("Test newLoadBalancingPool", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, 4, 4,
+			newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		assert.Len(t, pool.(*loadBalancingPool).connections, 1)
+		pool.close()
+	})
+
+	t.Run("Test loadBalancingPool.newConnection", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, 4, 4,
+			newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		lhp := pool.(*loadBalancingPool)
+		newConn, err := lhp.newConnection()
+		assert.Nil(t, err)
+		assert.Len(t, lhp.connections, 2)
+		assert.Contains(t, lhp.connections, newConn)
+		pool.close()
+	})
+
+	t.Run("Test loadBalancingPool.getLeaseUsedConnection", func(t *testing.T) {
+		newConnectionThreshold := 2
+		maximumConcurrentConnections := 2
+		logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newConnectionThreshold,
+			maximumConcurrentConnections, logHandler)
+		assert.Nil(t, err)
+		lbp := pool.(*loadBalancingPool)
+
+		t.Run("pool is empty", func(t *testing.T) {
+			emptyPool := make([]*connection, 0, maximumConcurrentConnections)
+			lbp.connections = emptyPool
+			conn, err := lbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.Len(t, lbp.connections, 1)
+		})
+
+		t.Run("newConcurrentThreshold reached with capacity remaining", func(t *testing.T) {
+			fullResults := make(map[string]ResultSet)
+			fullResults["1"] = nil
+			fullResults["2"] = nil
+			fullConnection := &connection{
+				logHandler: logHandler,
+				protocol:   nil,
+				results:    fullResults,
+				state:      established,
+			}
+			capacityAvailablePool := make([]*connection, 0, maximumConcurrentConnections)
+			capacityAvailablePool = append(capacityAvailablePool, fullConnection)
+			lbp.connections = capacityAvailablePool
+			conn, err := lbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.NotEqual(t, fullConnection, conn)
+			assert.Len(t, lbp.connections, 2)
+		})
+
+		t.Run("newConcurrentThreshold reached with no capacity remaining", func(t *testing.T) {
+			capacityFullConnectionPool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo,
+				testNoAuthTlsConfig, 1, 1, logHandler)
+			assert.Nil(t, err)
+			assert.NotNil(t, capacityFullConnectionPool)
+			capacityFullLbp := capacityFullConnectionPool.(*loadBalancingPool)
+			capacityFullLbp.connections[0].results["mockFillCapacity"] = nil
+			conn, err := capacityFullLbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.Len(t, capacityFullLbp.connections, 1)
+		})
+
+		t.Run("all connections in pool invalid", func(t *testing.T) {
+			invalidConnection1 := &connection{
+				logHandler: logHandler,
+				protocol:   nil,
+				results:    nil,
+				state:      closed,
+			}
+			invalidConnection2 := &connection{
+				logHandler: logHandler,
+				protocol:   nil,
+				results:    nil,
+				state:      closedDueToError,
+			}
+			invalidPool := []*connection{invalidConnection1, invalidConnection2}
+			lbp.connections = invalidPool
+			conn, err := lbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.NotEqual(t, invalidConnection1, conn)
+			assert.NotEqual(t, invalidConnection2, conn)
+			assert.Len(t, lbp.connections, 1)
+			assert.NotContains(t, lbp.connections, invalidConnection1)
+			assert.NotContains(t, lbp.connections, invalidConnection2)
+		})
+	})
+
 	t.Run("Test client.submit()", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 

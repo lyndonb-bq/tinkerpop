@@ -48,8 +48,8 @@ type gremlinServerWSProtocol struct {
 	serializer       serializer
 	logHandler       *logHandler
 	maxContentLength int
-	closed bool
-	mutex  sync.Mutex
+	closed           bool
+	mutex            sync.Mutex
 }
 
 func (protocol *gremlinServerWSProtocol) readLoop(resultSets map[string]ResultSet, errorCallback func(), log *logHandler) {

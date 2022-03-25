@@ -24,6 +24,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
+	"runtime"
 )
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
@@ -37,6 +38,8 @@ type DriverRemoteConnectionSettings struct {
 	TlsConfig       *tls.Config
 	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
 	NewConnectionThreshold int
+	// Maximum number of concurrent connections. Default: number of runtime processors
+	MaximumConcurrentConnections int
 	Session         string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
@@ -66,6 +69,7 @@ func NewDriverRemoteConnection(
 		AuthInfo:        &AuthInfo{},
 		TlsConfig:       &tls.Config{},
 		NewConnectionThreshold: 4,
+		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:         "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
@@ -77,7 +81,8 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold, logHandler)
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+		settings.MaximumConcurrentConnections, logHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +92,7 @@ func NewDriverRemoteConnection(
 		traversalSource: settings.TraversalSource,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
-		connections:      pool,
+		connections:     pool,
 		session:         settings.Session,
 	}
 
