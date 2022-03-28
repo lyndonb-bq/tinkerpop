@@ -153,7 +153,7 @@ func TestBytecode(t *testing.T) {
 
 	t.Run("Test bytecode traversal argument conversion without Graph", func(t *testing.T) {
 		bc := bytecode{}
-		traversal := Traversal{}
+		traversal := &Traversal{}
 		traversal.graph = nil
 		traversal.bytecode = &bytecode{}
 		traversalBytecode, err := bc.convertArgument(traversal)
@@ -164,7 +164,7 @@ func TestBytecode(t *testing.T) {
 	t.Run("Test bytecode traversal argument conversion with Graph", func(t *testing.T) {
 		// This should fail.
 		bc := bytecode{}
-		traversal := Traversal{}
+		traversal := &Traversal{}
 		traversal.graph = &Graph{}
 		traversal.bytecode = &bytecode{}
 		traversalBytecode, err := bc.convertArgument(traversal)
@@ -175,7 +175,7 @@ func TestBytecode(t *testing.T) {
 	t.Run("Test bytecode traversal argument multiple bindings", func(t *testing.T) {
 		bc := bytecode{}
 		bc.bindings = map[string]interface{}{}
-		testTraversal := Traversal{}
+		testTraversal := &Traversal{}
 		testTraversal.bytecode = &bytecode{}
 		testTraversal.bytecode.bindings = map[string]interface{}{"mock": "123"}
 		traversalBytecode, err := bc.convertArgument(testTraversal)

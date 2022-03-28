@@ -144,7 +144,7 @@ func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) 
 				bytecode.bindings[k] = val
 			}
 			return v.bytecode, nil
-		case Traversal:
+		case *Traversal:
 			if v.graph != nil {
 				return nil, errors.New("the child traversal was not spawned anonymously - use the T__ class rather than a TraversalSource to construct the child traversal")
 			}
@@ -170,10 +170,6 @@ type Binding struct {
 	Value interface{}
 }
 
-func newBinding(key string, value interface{}) *Binding {
-	return &Binding{Key: key, Value: value}
-}
-
 // String returns the key value binding in string format
 func (b *Binding) String() string {
 	return fmt.Sprintf("binding[%v=%v]", b.Key, b.Value)
@@ -188,11 +184,7 @@ func (b *Binding) Equals(item interface{}) bool {
 		return false
 	}
 	val, ok := item.(*Binding)
-	if ok {
-		return b.Key == val.Key && reflect.DeepEqual(b.Value, val.Value)
-	} else {
-		return false
-	}
+	return ok && (b.Key == val.Key && reflect.DeepEqual(b.Value, val.Value))
 }
 
 // Hash returns the hashcode of the binding in int
