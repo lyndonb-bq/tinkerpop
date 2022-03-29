@@ -29,6 +29,16 @@ type connectionPool interface {
 	close()
 }
 
+const defaultNewConnectionThreshold = 4
+
+// loadBalancingPool has two configurations: maximumConcurrentConnections/cap(connections) and newConnectionThreshold.
+// maximumConcurrentConnections denotes the maximum amount of active connections at any given time.
+// newConnectionThreshold specifies the minimum amount of concurrent active traversals on the least used connection
+// which will trigger creation of a new connection if maximumConcurrentConnections has not bee reached.
+// loadBalancingPool will use the least-used connection, and as a part of the process, getLeastUsedConnection(), will
+// remove any unusable connections from the pool and ensure that the returned connection is usable. If there are
+// multiple active connections with no active traversals on them, one will be used and the others will be closed and
+// removed from the pool.
 type loadBalancingPool struct {
 	url        string
 	authInfo   *AuthInfo
@@ -136,33 +146,5 @@ func newLoadBalancingPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config,
 		logHandler:             logHandler,
 		newConnectionThreshold: newConnectionThreshold,
 		connections:            pool,
-	}, nil
-}
-
-type singletonPool struct {
-	logHandler *logHandler
-	connection *connection
-}
-
-func (pool *singletonPool) close() {
-	err := pool.connection.close()
-	if err != nil {
-		pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
-	}
-}
-
-func (pool *singletonPool) write(request *request) (ResultSet, error) {
-	return pool.connection.write(request)
-}
-
-func newSingletonPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config,
-	logHandler *logHandler) (connectionPool, error) {
-	connection, err := createConnection(url, authInfo, tlsConfig, logHandler)
-	if err != nil {
-		return nil, err
-	}
-	return &singletonPool{
-		logHandler: logHandler,
-		connection: connection,
 	}, nil
 }

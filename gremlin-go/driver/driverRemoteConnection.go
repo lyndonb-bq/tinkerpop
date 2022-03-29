@@ -68,7 +68,7 @@ func NewDriverRemoteConnection(
 		Language:                     language.English,
 		AuthInfo:                     &AuthInfo{},
 		TlsConfig:                    &tls.Config{},
-		NewConnectionThreshold:       4,
+		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
 
@@ -81,14 +81,13 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	var pool connectionPool
-	var err error
 	if settings.Session != "" {
-		pool, err = newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-			settings.MaximumConcurrentConnections, logHandler)
-	} else {
-		pool, err = newSingletonPool(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+		logHandler.log(Info, sessionDetected)
+		settings.MaximumConcurrentConnections = 1
 	}
+
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+		settings.MaximumConcurrentConnections, logHandler)
 	if err != nil {
 		return nil, err
 	}

@@ -34,11 +34,13 @@ type ClientSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
+
 	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-	Session                      string
+
+	Session string
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -61,7 +63,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		Language:                     language.English,
 		AuthInfo:                     &AuthInfo{},
 		TlsConfig:                    &tls.Config{},
-		NewConnectionThreshold:       4,
+		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
 	}
@@ -70,13 +72,15 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	var pool connectionPool
-	var err error
 	if settings.Session != "" {
-		pool, err = newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-			settings.MaximumConcurrentConnections, logHandler)
-	} else {
-		pool, err = newSingletonPool(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+		logHandler.log(Info, sessionDetected)
+		settings.MaximumConcurrentConnections = 1
+	}
+
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+		settings.MaximumConcurrentConnections, logHandler)
+	if err != nil {
+		return nil, err
 	}
 	if err != nil {
 		return nil, err
