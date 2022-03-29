@@ -34,7 +34,7 @@ const sessionProcessor = "session"
 const stringOp = "eval"
 const stringProcessor = ""
 
-// bindings should be a string key : object map (different from Binding class in bytecode)
+// Bindings should be a key-object map (different from Binding class in bytecode).
 func makeStringRequest(stringGremlin string, traversalSource string, sessionId string, bindings ...map[string]interface{}) (req request) {
 	newProcessor := stringProcessor
 	newArgs := map[string]interface{}{
