@@ -19,6 +19,15 @@ under the License.
 
 package gremlingo
 
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
+	"path/filepath"
+	"runtime"
+)
+
 type errorCode string
 
 var count int = 34
@@ -39,12 +48,12 @@ const (
 	// graphBinary.go errors
 	err0401WriteTypeValueUnexpectedNullError    errorCode = "E0401_GRAPH_BINARY_WRITETYPEVALUE_UNEXPECTED_NULL_ERROR"
 	err0402BytecodeWriterError                  errorCode = "E0402_GRAPH_BINARY_WRITER_BYTECODE_ERROR"
-	err0403WriteTypeUnexpectedNullError         errorCode = "E0403_GRAPH_BINARY_WRITETYPE_UNEXPECTED_NULL_ERROR"
+	err0403WriteValueUnexpectedNullError        errorCode = "E0403_GRAPH_BINARY_WRITEVALUE_UNEXPECTED_NULL_ERROR"
 	err0404ReadNullTypeError                    errorCode = "E0404_GRAPH_BINARY_READ_NULLTYPE_ERROR"
-	err0405ReadValueInvalidNullInputError       errorCode = "E0405_GRAPH_BINARY_READ_NULLTYPE_ERROR"
-	err0406EnumReaderInvalidTypeError           errorCode = "E0406_GRAPH_BINARY_INVALID_TYPE_ERROR"
+	err0405ReadValueInvalidNullInputError       errorCode = "E0405_GRAPH_BINARY_READVALUE_NULL_INPUT_ERROR"
+	err0406EnumReaderInvalidTypeError           errorCode = "E0406_GRAPH_BINARY_ENUMREADER_INVALID_TYPE_ERROR"
 	err0407GetSerializerToWriteUnknownTypeError errorCode = "E0407_GRAPH_BINARY_GETSERIALIZERTOWRITE_UNKNOWN_TYPE_ERROR"
-	err0407GetSerializerToReadUnknownTypeError  errorCode = "E0408_GRAPH_BINARY_GETSERIALIZERTOREAD_UNKNOWN_TYPE_ERROR"
+	err0408GetSerializerToReadUnknownTypeError  errorCode = "E0408_GRAPH_BINARY_GETSERIALIZERTOREAD_UNKNOWN_TYPE_ERROR"
 
 	// protocol.go errors
 	err0501ResponseHandlerResultSetNotCreatedError errorCode = "E0501_PROTOCOL_RESPONSEHANDLER_NO_RESULTSET_ON_DATA_RECEIVE"
@@ -75,3 +84,23 @@ const (
 	err0902IterateAnonTraversalError errorCode = "E0902_TRAVERSAL_ITERATE_ANON_TRAVERSAL_ERROR"
 	err0903NextNoResultsLeftError    errorCode = "E0903_TRAVERSAL_NEXT_NO_RESULTS_LEFT_ERROR"
 )
+
+func NewError(errorCode errorCode, args ...interface{}) error {
+	localizer := getLocalizer(language.English)
+	config := i18n.LocalizeConfig{
+		MessageID: string(errorCode),
+	}
+	localizedMessage, _ := localizer.Localize(&config)
+	return fmt.Errorf(localizedMessage, args...)
+}
+
+func getLocalizer(locale language.Tag) *i18n.Localizer {
+	bundle := i18n.NewBundle(language.English)
+	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
+
+	// Register resource package here for additional languages.
+	_, path, _, _ := runtime.Caller(0)
+	path = filepath.Join(filepath.Dir(path), "resources/error-messages/en.json")
+	bundle.LoadMessageFile(path)
+	return i18n.NewLocalizer(bundle, locale.String())
+}
