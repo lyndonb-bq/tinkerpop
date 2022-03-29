@@ -1027,7 +1027,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 		return &graphBinaryTypeSerializer{dataType: PType, writer: pWriter, logHandler: serializer.logHandler}, nil
 	case textP, TextPredicate:
 		return &graphBinaryTypeSerializer{dataType: TextPType, writer: textPWriter, logHandler: serializer.logHandler}, nil
-	case *Binding:
+	case *Binding, Binding:
 		return &graphBinaryTypeSerializer{dataType: BindingType, writer: bindingWriter, logHandler: serializer.logHandler}, nil
 	default:
 		switch reflect.TypeOf(val).Kind() {

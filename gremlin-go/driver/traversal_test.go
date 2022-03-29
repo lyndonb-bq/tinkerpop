@@ -60,10 +60,6 @@ func TestTraversal(t *testing.T) {
 			Key:   "b",
 			Value: "created",
 		}, bytecode.stepInstructions[1].arguments[0])
-		assert.True(t, bytecode.stepInstructions[1].arguments[0].(*Binding).Equals(&Binding{
-			Key:   "b",
-			Value: "created",
-		}))
 		assert.Equal(t, "binding[b=created]", bytecode.stepInstructions[1].arguments[0].(*Binding).String())
 	})
 }
