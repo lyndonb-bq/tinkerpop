@@ -58,7 +58,7 @@ const (
 	// protocol.go errors
 	err0501ResponseHandlerResultSetNotCreatedError errorCode = "E0501_PROTOCOL_RESPONSEHANDLER_NO_RESULTSET_ON_DATA_RECEIVE"
 	err0502ResponseHandlerReadLoopError            errorCode = "E0502_PROTOCOL_RESPONSEHANDLER_READ_LOOP_ERROR"
-	err0502ResponseHandlerAuthError                errorCode = "E0503_PROTOCOL_RESPONSEHANDLER_AUTH_ERROR"
+	err0503ResponseHandlerAuthError                errorCode = "E0503_PROTOCOL_RESPONSEHANDLER_AUTH_ERROR"
 
 	// result.go errors
 	err0601ResultNotVertexError         errorCode = "E0601_RESULT_NOT_VERTEX_ERROR"
@@ -72,7 +72,6 @@ const (
 
 	// serializer.go errors
 	err0701ReadMapNullKeyError          errorCode = "E0701_SERIALIZER_READMAP_NULL_KEY_ERROR"
-	err0702ReadMapNullKeyError          errorCode = "E0702_SERIALIZER_READMAP_NULL_KEY_ERROR"
 	err0703ReadMapNonStringKeyError     errorCode = "E0703_SERIALIZER_READMAP_NON_STRING_KEY_ERROR"
 	err0704ConvertArgsNoSerializerError errorCode = "E0704_SERIALIZER_CONVERTARGS_NO_SERIALIZER_ERROR"
 
