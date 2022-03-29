@@ -38,7 +38,7 @@ type ClientSettings struct {
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-	Session         string
+	Session                      string
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -54,24 +54,30 @@ type Client struct {
 // NewClient creates a Client and configures it with the given parameters.
 func NewClient(url string, configurations ...func(settings *ClientSettings)) (*Client, error) {
 	settings := &ClientSettings{
-		TraversalSource: "g",
-		TransporterType: Gorilla,
-		LogVerbosity:    Info,
-		Logger:          &defaultLogger{},
-		Language:        language.English,
-		AuthInfo:        &AuthInfo{},
-		TlsConfig:       &tls.Config{},
-		NewConnectionThreshold: 4,
+		TraversalSource:              "g",
+		TransporterType:              Gorilla,
+		LogVerbosity:                 Info,
+		Logger:                       &defaultLogger{},
+		Language:                     language.English,
+		AuthInfo:                     &AuthInfo{},
+		TlsConfig:                    &tls.Config{},
+		NewConnectionThreshold:       4,
 		MaximumConcurrentConnections: runtime.NumCPU(),
-		Session:         "",
+		Session:                      "",
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-		settings.MaximumConcurrentConnections, logHandler)
+	var pool connectionPool
+	var err error
+	if settings.Session != "" {
+		pool, err = newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+			settings.MaximumConcurrentConnections, logHandler)
+	} else {
+		pool, err = newSingletonPool(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +88,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		transporterType: settings.TransporterType,
 		connections:     pool,
 	}
-	// TODO: PoolSize must be 1 on Session mode
+
 	return client, nil
 }
 
@@ -97,7 +103,7 @@ func (client *Client) Close() {
 		client.session = ""
 	}
 	client.logHandler.logf(Info, closeClient, client.url)
-        client.connections.close()
+	client.connections.close()
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.

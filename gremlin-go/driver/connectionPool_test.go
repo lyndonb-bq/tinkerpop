@@ -30,6 +30,18 @@ import (
 // Arbitrarily high value to use to not trigger creation of new connections
 const newConnectionThreshold = 100
 
+func getPoolForTesting() *loadBalancingPool {
+	return &loadBalancingPool{
+		url:                    "",
+		authInfo:               nil,
+		tlsConfig:              nil,
+		logHandler:             newLogHandler(&defaultLogger{}, Info, language.English),
+		newConnectionThreshold: newConnectionThreshold,
+		connections:            nil,
+		loadBalanceLock:        sync.Mutex{},
+	}
+}
+
 func TestConnectionPool(t *testing.T) {
 	t.Run("loadBalancingPool", func(t *testing.T) {
 		logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
@@ -64,18 +76,9 @@ func TestConnectionPool(t *testing.T) {
 		mockConnection2.results = smallMap
 		mockConnection3.results = bigMap
 
-		pool := &loadBalancingPool{
-			url:                    "",
-			authInfo:               nil,
-			tlsConfig:              nil,
-			logHandler:             logHandler,
-			newConnectionThreshold: newConnectionThreshold,
-			connections:            nil,
-			loadBalanceLock:        sync.Mutex{},
-		}
-
 		t.Run("getLeastUsedConnection", func(t *testing.T) {
 			t.Run("getting the least used connection", func(t *testing.T) {
+				pool := getPoolForTesting()
 				connections := []*connection{mockConnection1, mockConnection2, mockConnection3}
 				pool.connections = connections
 
@@ -85,6 +88,7 @@ func TestConnectionPool(t *testing.T) {
 			})
 
 			t.Run("purge non-established connections", func(t *testing.T) {
+				pool := getPoolForTesting()
 				nonEstablished := &connection{
 					logHandler: logHandler,
 					protocol:   nil,
@@ -101,6 +105,7 @@ func TestConnectionPool(t *testing.T) {
 			})
 
 			t.Run("purge non-used connections", func(t *testing.T) {
+				pool := getPoolForTesting()
 				empty := make(map[string]ResultSet)
 				emptyConn1 := &connection{
 					logHandler: logHandler,
@@ -125,6 +130,7 @@ func TestConnectionPool(t *testing.T) {
 		})
 
 		t.Run("close", func(t *testing.T) {
+			pool := getPoolForTesting()
 			empty := make(map[string]ResultSet)
 			openConn1 := &connection{
 				logHandler: logHandler,

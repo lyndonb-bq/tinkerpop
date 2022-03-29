@@ -40,7 +40,7 @@ type DriverRemoteConnectionSettings struct {
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-	Session         string
+	Session                      string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -61,16 +61,16 @@ func NewDriverRemoteConnection(
 	url string,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
-		TraversalSource: "g",
-		TransporterType: Gorilla,
-		LogVerbosity:    Info,
-		Logger:          &defaultLogger{},
-		Language:        language.English,
-		AuthInfo:        &AuthInfo{},
-		TlsConfig:       &tls.Config{},
-		NewConnectionThreshold: 4,
+		TraversalSource:              "g",
+		TransporterType:              Gorilla,
+		LogVerbosity:                 Info,
+		Logger:                       &defaultLogger{},
+		Language:                     language.English,
+		AuthInfo:                     &AuthInfo{},
+		TlsConfig:                    &tls.Config{},
+		NewConnectionThreshold:       4,
 		MaximumConcurrentConnections: runtime.NumCPU(),
-		Session:         "",
+		Session:                      "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -81,8 +81,14 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-		settings.MaximumConcurrentConnections, logHandler)
+	var pool connectionPool
+	var err error
+	if settings.Session != "" {
+		pool, err = newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+			settings.MaximumConcurrentConnections, logHandler)
+	} else {
+		pool, err = newSingletonPool(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+	}
 	if err != nil {
 		return nil, err
 	}

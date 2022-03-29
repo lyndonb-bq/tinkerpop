@@ -44,7 +44,7 @@ func (pool *loadBalancingPool) close() {
 	for _, connection := range pool.connections {
 		err := connection.close()
 		if err != nil {
-			connection.logHandler.logf(Warning, errorClosingConnection, err.Error())
+			pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
 		}
 	}
 }
@@ -74,7 +74,9 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 					go func() {
 						pool.logHandler.log(Info, closeUnusedPoolConnection)
 						err := connection.close()
-						pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
+						if err != nil {
+							pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
+						}
 					}()
 
 					continue
@@ -134,5 +136,33 @@ func newLoadBalancingPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config,
 		logHandler:             logHandler,
 		newConnectionThreshold: newConnectionThreshold,
 		connections:            pool,
+	}, nil
+}
+
+type singletonPool struct {
+	logHandler *logHandler
+	connection *connection
+}
+
+func (pool *singletonPool) close() {
+	err := pool.connection.close()
+	if err != nil {
+		pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
+	}
+}
+
+func (pool *singletonPool) write(request *request) (ResultSet, error) {
+	return pool.connection.write(request)
+}
+
+func newSingletonPool(url string, authInfo *AuthInfo, tlsConfig *tls.Config,
+	logHandler *logHandler) (connectionPool, error) {
+	connection, err := createConnection(url, authInfo, tlsConfig, logHandler)
+	if err != nil {
+		return nil, err
+	}
+	return &singletonPool{
+		logHandler: logHandler,
+		connection: connection,
 	}, nil
 }

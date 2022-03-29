@@ -128,7 +128,7 @@ const (
 	closingSpawnedSessions      errorKey = "CLOSING_SPAWNED_SESSIONS"
 	closeClient                 errorKey = "CLOSE_CLIENT"
 	closeClientError            errorKey = "CLOSE_CLIENT_ERROR"
-	errorClosingConnection    errorKey = "ERROR_CLOSING_CONNECTION"
-	closeUnusedPoolConnection errorKey = "CLOSE_UNUSED_POOL_CONNECTION"
-	purgingDeadConnection     errorKey = "PURGING_DEAD_CONNECTION"
+	errorClosingConnection      errorKey = "ERROR_CLOSING_CONNECTION"
+	closeUnusedPoolConnection   errorKey = "CLOSE_UNUSED_POOL_CONNECTION"
+	purgingDeadConnection       errorKey = "PURGING_DEAD_CONNECTION"
 )
