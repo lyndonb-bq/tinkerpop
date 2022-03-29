@@ -233,7 +233,7 @@ func TestConnection(t *testing.T) {
 
 	// No authentication integration test with graphs loaded and alias configured server
 	testNoAuthWithAliasUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
-	testNoAuthWithAliasEnable := getEnvOrDefaultBool("RUN_INTEGRATION_WITH_ALIAS_TESTS", true)
+	testNoAuthWithAliasEnable := getEnvOrDefaultBool("RUN_INTEGRATION_WITH_ALIAS_TESTS", false)
 	testNoAuthWithAliasAuthInfo := &AuthInfo{}
 	testNoAuthWithAliasTlsConfig := &tls.Config{}
 
