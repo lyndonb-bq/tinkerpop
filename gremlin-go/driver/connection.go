@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"errors"
 )
 
 type connectionState int
@@ -48,7 +47,7 @@ func (connection *connection) errorCallback() {
 
 func (connection *connection) close() error {
 	if connection.state != established {
-		return errors.New("cannot close connection that has already been closed or has not been connected")
+		return NewError(err0101ConnectionCloseError)
 	}
 	connection.logHandler.log(Info, closeConnection)
 	var err error
