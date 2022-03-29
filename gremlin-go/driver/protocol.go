@@ -22,8 +22,6 @@ package gremlingo
 import (
 	"crypto/tls"
 	"encoding/base64"
-	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 )
@@ -100,7 +98,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets map[string]R
 		response.responseResult.meta, response.responseResult.data
 	responseIDString := responseID.String()
 	if resultSets[responseIDString] == nil {
-		return errors.New("resultSet was not created before data was received")
+		return NewError(err0501ResponseHandlerResultSetNotCreatedError)
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSets[responseIDString].setAggregateTo(aggregateTo.(string))
@@ -144,10 +142,10 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets map[string]R
 			}
 		} else {
 			resultSets[responseIDString].Close()
-			return fmt.Errorf("failed to authenticate %v : %v", response.responseStatus, response.responseResult)
+			return NewError(err0503ResponseHandlerAuthError)
 		}
 	} else {
-		err := fmt.Errorf("error in read loop, error message '%+v'. statusCode: %d", response.responseStatus, statusCode)
+		err := NewError(err0502ResponseHandlerReadLoopError)
 		resultSets[responseIDString].setError(err)
 		resultSets[responseIDString].Close()
 		log.logger.Log(Info, err)

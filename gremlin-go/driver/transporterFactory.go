@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"errors"
 )
 
 // TransporterType is an alias for valid transport protocols.
@@ -38,7 +37,7 @@ func getTransportLayer(transporterType TransporterType, url string, authInfo *Au
 	case Gorilla:
 		transporter = &gorillaTransporter{url: url, authInfo: authInfo, tlsConfig: tlsConfig}
 	default:
-		return nil, errors.New("transport layer type was not specified and cannot be initialized")
+		return nil, NewError(err0801GetTransportLayerNoTypeError)
 	}
 	err := transporter.Connect()
 	if err != nil {
