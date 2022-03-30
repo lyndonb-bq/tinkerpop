@@ -95,11 +95,10 @@ func (client *Client) Close() {
 }
 
 // Submit submits a Gremlin script to the server and returns a ResultSet.
-func (client *Client) Submit(traversalString string) (ResultSet, error) {
-	// TODO AN-982: Obtain connection from pool of connections held by the client.
+func (client *Client) Submit(traversalString string, bindings ...map[string]interface{}) (ResultSet, error) {
+	// TODO: Obtain connection from pool of connections held by the client.
 	client.logHandler.logf(Debug, submitStartedString, traversalString)
-	request := makeStringRequest(traversalString, client.traversalSource, client.session)
-	// TODO: Add bindings to request. request.args['bindings'] = bindings
+	request := makeStringRequest(traversalString, client.traversalSource, client.session, bindings...)
 	return client.connection.write(&request)
 }
 
