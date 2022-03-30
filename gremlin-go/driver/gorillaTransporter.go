@@ -90,6 +90,7 @@ func (transporter *gorillaTransporter) Read() ([]byte, error) {
 	}
 
 	for {
+		// this error is not used, should we return the error if we encounter one?
 		err := transporter.connection.SetReadDeadline(time.Now().Add(5 * time.Second))
 		_, bytes, err := transporter.connection.ReadMessage()
 		return bytes, err
