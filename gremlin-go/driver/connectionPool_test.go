@@ -48,8 +48,11 @@ func getMockConnection() *connection {
 	return &connection{
 		logHandler: logger,
 		protocol:   nil,
-		results:    nil,
-		state:      established,
+		results: &synchronizedMap{
+			internalMap: make(map[string]ResultSet),
+			syncLock:    sync.Mutex{},
+		},
+		state: established,
 	}
 }
 
@@ -71,9 +74,9 @@ func TestConnectionPool(t *testing.T) {
 				mockConnection1 := getMockConnection()
 				mockConnection2 := getMockConnection()
 				mockConnection3 := getMockConnection()
-				mockConnection1.results = bigMap
-				mockConnection2.results = smallMap
-				mockConnection3.results = bigMap
+				mockConnection1.results.internalMap = bigMap
+				mockConnection2.results.internalMap = smallMap
+				mockConnection3.results.internalMap = bigMap
 				connections := []*connection{mockConnection1, mockConnection2, mockConnection3}
 				pool.connections = connections
 
@@ -86,7 +89,7 @@ func TestConnectionPool(t *testing.T) {
 				pool := getPoolForTesting()
 				defer pool.close()
 				mockConnection := getMockConnection()
-				mockConnection.results = smallMap
+				mockConnection.results.internalMap = smallMap
 				nonEstablished := &connection{
 					logHandler: logger,
 					protocol:   nil,
@@ -105,7 +108,10 @@ func TestConnectionPool(t *testing.T) {
 			t.Run("purge non-used connections", func(t *testing.T) {
 				pool := getPoolForTesting()
 				defer pool.close()
-				empty := make(map[string]ResultSet)
+				empty := &synchronizedMap{
+					internalMap: make(map[string]ResultSet),
+					syncLock:    sync.Mutex{},
+				}
 				emptyConn1 := &connection{
 					logHandler: logger,
 					protocol:   nil,
@@ -130,7 +136,10 @@ func TestConnectionPool(t *testing.T) {
 
 		t.Run("close", func(t *testing.T) {
 			pool := getPoolForTesting()
-			empty := make(map[string]ResultSet)
+			empty := &synchronizedMap{
+				internalMap: make(map[string]ResultSet),
+				syncLock:    sync.Mutex{},
+			}
 			openConn1 := &connection{
 				logHandler: logger,
 				protocol:   nil,

@@ -29,6 +29,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -368,13 +369,16 @@ func TestConnection(t *testing.T) {
 			assert.Nil(t, err)
 			lbp := pool.(*loadBalancingPool)
 			defer lbp.close()
-			fullResults := make(map[string]ResultSet)
-			fullResults["1"] = nil
-			fullResults["2"] = nil
+			thresholdReachedResults := &synchronizedMap{
+				internalMap: map[string]ResultSet{},
+				syncLock:    sync.Mutex{},
+			}
+			thresholdReachedResults.store("1", nil)
+			thresholdReachedResults.store("2", nil)
 			fullConnection := &connection{
 				logHandler: logHandler,
 				protocol:   nil,
-				results:    fullResults,
+				results:    thresholdReachedResults,
 				state:      established,
 			}
 			capacityAvailablePool := make([]*connection, 0, maximumConcurrentConnections)
@@ -394,8 +398,8 @@ func TestConnection(t *testing.T) {
 			assert.NotNil(t, capacityFullConnectionPool)
 			capacityFullLbp := capacityFullConnectionPool.(*loadBalancingPool)
 			defer capacityFullLbp.close()
-			capacityFullLbp.connections[0].results["mockFillCapacity"] =
-				newChannelResultSet("mockFillCapacity", capacityFullLbp.connections[0].results)
+			capacityFullLbp.connections[0].results.store("mockFillCapacity",
+				newChannelResultSet("mockFillCapacity", capacityFullLbp.connections[0].results))
 			conn, err := capacityFullLbp.getLeastUsedConnection()
 			assert.Nil(t, err)
 			assert.NotNil(t, conn)

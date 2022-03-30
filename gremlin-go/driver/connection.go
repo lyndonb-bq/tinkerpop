@@ -22,6 +22,7 @@ package gremlingo
 import (
 	"crypto/tls"
 	"errors"
+	"sync"
 )
 
 type connectionState int
@@ -36,7 +37,7 @@ const (
 type connection struct {
 	logHandler *logHandler
 	protocol   protocol
-	results    map[string]ResultSet
+	results    *synchronizedMap
 	state      connectionState
 }
 
@@ -64,16 +65,21 @@ func (connection *connection) write(request *request) (ResultSet, error) {
 	requestID := request.requestID.String()
 	connection.logHandler.logf(Info, creatingRequest, requestID)
 	resultSet := newChannelResultSet(requestID, connection.results)
-	connection.results[requestID] = resultSet
+	connection.results.store(requestID, resultSet)
 	return resultSet, connection.protocol.write(request)
 }
 
 func (connection *connection) activeResults() int {
-	return len(connection.results)
+	return connection.results.size()
 }
 
 func createConnection(url string, authInfo *AuthInfo, tlsConfig *tls.Config, logHandler *logHandler) (*connection, error) {
-	conn := &connection{logHandler, nil, map[string]ResultSet{}, initialized}
+	conn := &connection{
+		logHandler,
+		nil,
+		&synchronizedMap{map[string]ResultSet{}, sync.Mutex{}},
+		initialized,
+	}
 	logHandler.log(Info, connectConnection)
 	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, authInfo, tlsConfig, conn.results, conn.errorCallback)
 	if err != nil {
@@ -84,4 +90,41 @@ func createConnection(url string, authInfo *AuthInfo, tlsConfig *tls.Config, log
 	conn.protocol = protocol
 	conn.state = established
 	return conn, err
+}
+
+type synchronizedMap struct {
+	internalMap map[string]ResultSet
+	syncLock    sync.Mutex
+}
+
+func (s *synchronizedMap) store(key string, value ResultSet) {
+	s.syncLock.Lock()
+	defer s.syncLock.Unlock()
+	s.internalMap[key] = value
+}
+
+func (s *synchronizedMap) load(key string) ResultSet {
+	s.syncLock.Lock()
+	defer s.syncLock.Unlock()
+	return s.internalMap[key]
+}
+
+func (s *synchronizedMap) delete(key string) {
+	s.syncLock.Lock()
+	defer s.syncLock.Unlock()
+	delete(s.internalMap, key)
+}
+
+func (s *synchronizedMap) size() int {
+	s.syncLock.Lock()
+	defer s.syncLock.Unlock()
+	return len(s.internalMap)
+}
+
+func (s *synchronizedMap) synchronizedRange(f func(key string, value ResultSet)) {
+	s.syncLock.Lock()
+	defer s.syncLock.Unlock()
+	for k, v := range s.internalMap {
+		f(k, v)
+	}
 }
