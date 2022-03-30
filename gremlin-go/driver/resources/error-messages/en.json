@@ -38,5 +38,7 @@
 
   "E0901_TRAVERSAL_TOLIST_ANON_TRAVERSAL_ERROR":"cannot invoke this method from an anonymous traversal",
   "E0902_TRAVERSAL_ITERATE_ANON_TRAVERSAL_ERROR": "cannot invoke this method from an anonymous traversal",
-  "E0903_TRAVERSAL_NEXT_NO_RESULTS_LEFT_ERROR":"there are no results left"
+  "E0903_TRAVERSAL_NEXT_NO_RESULTS_LEFT_ERROR":"there are no results left",
+
+  "E1001_BYTECODE_CHILD_T_NOT_ANON_ERROR": "the child traversal was not spawned anonymously - use the T__ class rather than a TraversalSource to construct the child traversal"
 }
