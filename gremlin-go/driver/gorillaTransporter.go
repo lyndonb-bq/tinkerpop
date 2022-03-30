@@ -27,8 +27,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const maxFailCount = 3
-
 // Transport layer that uses gorilla/websocket: https://github.com/gorilla/websocket
 // Gorilla WebSocket is a widely used and stable Go implementation of the WebSocket protocol.
 type gorillaTransporter struct {
