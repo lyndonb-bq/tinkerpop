@@ -20,7 +20,6 @@ under the License.
 package gremlingo
 
 import (
-	"errors"
 	"reflect"
 )
 
@@ -134,7 +133,7 @@ func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) 
 			}, nil
 		case Traversal:
 			if v.graph != nil {
-				return nil, errors.New("the child traversal was not spawned anonymously - use the T__ class rather than a TraversalSource to construct the child traversal")
+				return nil, NewError(err1001ConvertArgumentChildTraversalNotFromAnonError)
 			}
 			for k, val := range v.bytecode.bindings {
 				bytecode.bindings[k] = val

@@ -30,8 +30,6 @@ import (
 
 type errorCode string
 
-var count int = 34
-
 const (
 	// connection.go errors
 	err0101ConnectionCloseError errorCode = "E0101_CONNECTION_CLOSE_ERROR"
@@ -82,6 +80,9 @@ const (
 	err0901ToListAnonTraversalError  errorCode = "E0901_TRAVERSAL_TOLIST_ANON_TRAVERSAL_ERROR"
 	err0902IterateAnonTraversalError errorCode = "E0902_TRAVERSAL_ITERATE_ANON_TRAVERSAL_ERROR"
 	err0903NextNoResultsLeftError    errorCode = "E0903_TRAVERSAL_NEXT_NO_RESULTS_LEFT_ERROR"
+
+	// bytecode.go errors
+	err1001ConvertArgumentChildTraversalNotFromAnonError errorCode = "E1001_BYTECODE_CHILD_T_NOT_ANON_ERROR"
 )
 
 func NewError(errorCode errorCode, args ...interface{}) error {
