@@ -76,6 +76,7 @@ func TestSerializerFailures(t *testing.T) {
 		resp, err := serializer.serializeMessage(&testRequest)
 		assert.Nil(t, resp)
 		assert.NotNil(t, err)
+		// assert.Equal(t, NewError(err0704ConvertArgsNoSerializerError), err)
 	})
 
 	t.Run("test map key not string failure", func(t *testing.T) {
@@ -85,7 +86,7 @@ func TestSerializerFailures(t *testing.T) {
 		gs := serializer.(graphBinarySerializer)
 		m, err := readMap(&buff, &gs)
 		assert.Nil(t, m)
-		assert.NotNil(t, err)
+		assert.Equal(t, NewError(err0703ReadMapNonStringKeyError), err)
 	})
 
 	t.Run("test map key null failure", func(t *testing.T) {
@@ -95,6 +96,6 @@ func TestSerializerFailures(t *testing.T) {
 		gs := serializer.(graphBinarySerializer)
 		m, err := readMap(&buff, &gs)
 		assert.Nil(t, m)
-		assert.NotNil(t, err)
+		assert.Equal(t, NewError(err0701ReadMapNullKeyError), err)
 	})
 }

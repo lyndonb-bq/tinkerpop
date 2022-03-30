@@ -189,7 +189,7 @@ func readWithNextAndHasNext(t *testing.T, g *GraphTraversalSource) {
 	// Check for Next error when no more elements left
 	res, err := traversal.Next()
 	assert.Nil(t, res)
-	assert.NotNil(t, err)
+	assert.Equal(t, NewError(err0903NextNoResultsLeftError), err)
 	assert.True(t, sortAndCompareTwoStringSlices(names, testNames))
 }
 
@@ -307,9 +307,9 @@ func TestConnection(t *testing.T) {
 		err = connection.close()
 		assert.Nil(t, err)
 		err = connection.close()
-		assert.NotNil(t, err)
+		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
 		err = connection.close()
-		assert.NotNil(t, err)
+		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
 	})
 
 	t.Run("Test client.submit()", func(t *testing.T) {
@@ -484,7 +484,7 @@ func TestConnection(t *testing.T) {
 		anonTrav := T__.Unfold().HasLabel(testLabel)
 		slice, err := anonTrav.ToList()
 		assert.Nil(t, slice)
-		assert.NotNil(t, err)
+		assert.Equal(t, NewError(err0901ToListAnonTraversalError), err)
 	})
 
 	t.Run("Test Traversal.Iterate fail", func(t *testing.T) {
@@ -492,7 +492,7 @@ func TestConnection(t *testing.T) {
 		traversal, channel, err := anonTrav.Iterate()
 		assert.Nil(t, traversal)
 		assert.Nil(t, channel)
-		assert.NotNil(t, err)
+		assert.Equal(t, NewError(err0902IterateAnonTraversalError), err)
 	})
 
 	t.Run("Test DriverRemoteConnection with basic authentication", func(t *testing.T) {
@@ -610,12 +610,13 @@ func TestConnection(t *testing.T) {
 					settings.TlsConfig = testNoAuthTlsConfig
 					settings.AuthInfo = testNoAuthAuthInfo
 				})
+			assert.Nil(t, err)
 			s1, err := remote.CreateSession()
 			assert.Nil(t, err)
 			assert.NotNil(t, s1)
 			s2, err := s1.CreateSession()
 			assert.Nil(t, s2)
-			assert.NotNil(t, err)
+			assert.Equal(t, NewError(err0202CreateSessionFromSessionError), err)
 		})
 
 		t.Run("Test CreateSession with multiple UUIDs failure", func(t *testing.T) {
@@ -625,9 +626,10 @@ func TestConnection(t *testing.T) {
 					settings.TlsConfig = testNoAuthTlsConfig
 					settings.AuthInfo = testNoAuthAuthInfo
 				})
+			assert.Nil(t, err)
 			s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
 			assert.Nil(t, s1)
-			assert.NotNil(t, err)
+			assert.Equal(t, NewError(err0201CreateSessionMultipleIdsError), err)
 		})
 	})
 }
