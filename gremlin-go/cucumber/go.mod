@@ -20,7 +20,7 @@ module gremlin-godog-tests
 go 1.17
 
 require (
-	github.com/cucumber/godog v0.12.4
+	github.com/cucumber/godog v0.12.5
 	github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
 )
 

@@ -72,9 +72,7 @@ Please review the [staticcheck documentation][scheck docs] for more details on i
 
 To install the Gremlin-Go as a dependency for your project, run the following in the root directory of your project that contains your `go.mod` file:
 
-`go get github.com/lyndonb-bq/tinkerpop/gremlin-go@gremlin-go-ms5`
-
-Note: Currently as of Milestone #5, Gremlin-Go exists in the `lyndonb-bq` fork on the `gremlin-go-ms5` branch. Expect this to change in the future when the project is closer to a completed state.
+`go get github.com/apache/tinkerpop/gremlin-go@3.5-dev`
 
 After running the `go get` command, your `go.mod` file should contain something similar to the following:
 
@@ -83,7 +81,7 @@ module gremlin-go-example
 
 go 1.17
 
-require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
+require github.com/apache/tinkerpop/gremlin-go v3.5
 ```
 
 If it does, then this means Gremlin-Go was successfully installed as a dependency of your project.
@@ -93,7 +91,7 @@ Here is a simple example of using Gremlin-Go as an import in a sample project's 
 package main
 
 import (
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
@@ -108,7 +106,7 @@ module gremlin-go-example
 
 go 1.17
 
-require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
+require github.com/apache/tinkerpop/gremlin-go v3.5
 
 require (
 	github.com/google/uuid v1.3.0 // indirect
@@ -126,7 +124,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
@@ -181,7 +179,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
@@ -202,7 +200,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
@@ -229,7 +227,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {

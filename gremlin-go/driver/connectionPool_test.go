@@ -30,6 +30,8 @@ import (
 // Arbitrarily high value to use to not trigger creation of new connections
 const newConnectionThreshold = 100
 
+var logger = newLogHandler(&defaultLogger{}, Info, language.English)
+
 func getPoolForTesting() *loadBalancingPool {
 	return &loadBalancingPool{
 		url:                    "",
@@ -42,28 +44,17 @@ func getPoolForTesting() *loadBalancingPool {
 	}
 }
 
+func getMockConnection() *connection {
+	return &connection{
+		logHandler: logger,
+		protocol:   nil,
+		results:    nil,
+		state:      established,
+	}
+}
+
 func TestConnectionPool(t *testing.T) {
 	t.Run("loadBalancingPool", func(t *testing.T) {
-		logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
-		mockConnection1 := &connection{
-			logHandler: logHandler,
-			protocol:   nil,
-			results:    nil,
-			state:      established,
-		}
-		mockConnection2 := &connection{
-			logHandler: logHandler,
-			protocol:   nil,
-			results:    nil,
-			state:      established,
-		}
-		mockConnection3 := &connection{
-			logHandler: logHandler,
-			protocol:   nil,
-			results:    nil,
-			state:      established,
-		}
-
 		smallMap := make(map[string]ResultSet)
 		bigMap := make(map[string]ResultSet)
 		for i := 1; i < 4; i++ {
@@ -72,13 +63,17 @@ func TestConnectionPool(t *testing.T) {
 				smallMap[strconv.Itoa(i)] = nil
 			}
 		}
-		mockConnection1.results = bigMap
-		mockConnection2.results = smallMap
-		mockConnection3.results = bigMap
 
 		t.Run("getLeastUsedConnection", func(t *testing.T) {
 			t.Run("getting the least used connection", func(t *testing.T) {
 				pool := getPoolForTesting()
+				defer pool.close()
+				mockConnection1 := getMockConnection()
+				mockConnection2 := getMockConnection()
+				mockConnection3 := getMockConnection()
+				mockConnection1.results = bigMap
+				mockConnection2.results = smallMap
+				mockConnection3.results = bigMap
 				connections := []*connection{mockConnection1, mockConnection2, mockConnection3}
 				pool.connections = connections
 
@@ -89,32 +84,36 @@ func TestConnectionPool(t *testing.T) {
 
 			t.Run("purge non-established connections", func(t *testing.T) {
 				pool := getPoolForTesting()
+				defer pool.close()
+				mockConnection := getMockConnection()
+				mockConnection.results = smallMap
 				nonEstablished := &connection{
-					logHandler: logHandler,
+					logHandler: logger,
 					protocol:   nil,
 					results:    nil,
 					state:      closed,
 				}
-				connections := []*connection{nonEstablished, mockConnection2}
+				connections := []*connection{nonEstablished, mockConnection}
 				pool.connections = connections
 
 				connection, err := pool.getLeastUsedConnection()
 				assert.Nil(t, err)
-				assert.Equal(t, mockConnection2, connection)
+				assert.Equal(t, mockConnection, connection)
 				assert.Len(t, pool.connections, 1)
 			})
 
 			t.Run("purge non-used connections", func(t *testing.T) {
 				pool := getPoolForTesting()
+				defer pool.close()
 				empty := make(map[string]ResultSet)
 				emptyConn1 := &connection{
-					logHandler: logHandler,
+					logHandler: logger,
 					protocol:   nil,
 					results:    empty,
 					state:      established,
 				}
 				emptyConn2 := &connection{
-					logHandler: logHandler,
+					logHandler: logger,
 					protocol:   nil,
 					results:    empty,
 					state:      established,
@@ -133,13 +132,13 @@ func TestConnectionPool(t *testing.T) {
 			pool := getPoolForTesting()
 			empty := make(map[string]ResultSet)
 			openConn1 := &connection{
-				logHandler: logHandler,
+				logHandler: logger,
 				protocol:   nil,
 				results:    empty,
 				state:      established,
 			}
 			openConn2 := &connection{
-				logHandler: logHandler,
+				logHandler: logger,
 				protocol:   nil,
 				results:    empty,
 				state:      established,
