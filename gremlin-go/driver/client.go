@@ -82,15 +82,14 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	client := &Client{
 		url:             url,
 		traversalSource: settings.TraversalSource,
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connections:     pool,
+		session:         settings.Session,
 	}
 
 	return client, nil

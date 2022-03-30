@@ -122,5 +122,5 @@ const (
 	errorClosingConnection      errorKey = "ERROR_CLOSING_CONNECTION"
 	closeUnusedPoolConnection   errorKey = "CLOSE_UNUSED_POOL_CONNECTION"
 	purgingDeadConnection       errorKey = "PURGING_DEAD_CONNECTION"
-	sessionDetected				errorKey = "SESSION_DETECTED"
+	sessionDetected             errorKey = "SESSION_DETECTED"
 )
