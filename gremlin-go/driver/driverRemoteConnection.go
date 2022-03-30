@@ -151,6 +151,18 @@ func (driver *DriverRemoteConnection) GetSessionId() string {
 	return driver.client.session
 }
 
+func (driver *DriverRemoteConnection) commit() (ResultSet, error) {
+	bc := &bytecode{}
+	bc.addSource("tx", "commit")
+	return driver.submitBytecode(bc)
+}
+
+func (driver *DriverRemoteConnection) rollback() (ResultSet, error) {
+	bc := &bytecode{}
+	bc.addSource("tx", "rollback")
+	return driver.submitBytecode(bc)
+}
+
 // TODO: Bytecode, OptionsStrategy, RequestOptions
 //func extractRequestOptions(bytecode Bytecode) RequestOptions {
 //	var optionsStrategy OptionsStrategy = nil

@@ -19,6 +19,11 @@ under the License.
 
 package gremlingo
 
+import (
+	"errors"
+	"sync"
+)
+
 type traversalStrategy struct {
 	name          string
 	configuration map[string]interface{}
@@ -669,4 +674,86 @@ func (g *GraphTraversal) With(args ...interface{}) *GraphTraversal {
 func (g *GraphTraversal) Write(args ...interface{}) *GraphTraversal {
 	g.bytecode.addStep("write", args...)
 	return g
+}
+
+type transaction struct {
+	g                      *GraphTraversalSource
+	sessionBasedConnection *DriverRemoteConnection
+	remoteConnection       *DriverRemoteConnection
+	isOpen                 bool
+	mutex                  sync.Mutex
+}
+
+func (t *transaction) Begin() (*GraphTraversalSource, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	if err := t.verifyTransactionState(false, "Transaction already started on this object"); err != nil {
+		return nil, err
+	}
+
+	sc, err := t.sessionBasedConnection.CreateSession()
+	if err != nil {
+		return nil, err
+	}
+	t.sessionBasedConnection = sc
+	t.isOpen = true
+
+	gts := &GraphTraversalSource{
+		graph:               t.g.graph,
+		traversalStrategies: t.g.traversalStrategies,
+		bytecode:            t.g.bytecode,
+		remoteConnection:    t.sessionBasedConnection}
+	return gts, nil
+}
+
+func (t *transaction) Rollback() (ResultSet, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
+		return nil, err
+	}
+
+	return t.closeSession(t.sessionBasedConnection.rollback())
+}
+
+func (t *transaction) Commit() (ResultSet, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
+		return nil, err
+	}
+
+	return t.closeSession(t.sessionBasedConnection.commit())
+}
+
+func (t *transaction) Close() (ResultSet, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+
+	err := t.verifyTransactionState(true, "Cannot close a transaction that has previously been closed.")
+	if err != nil {
+		return nil, err
+	}
+
+	return t.closeSession(nil, nil)
+}
+
+func (t *transaction) IsOpen() bool {
+	return t.isOpen
+}
+
+func (t *transaction) verifyTransactionState(state bool, error string) error {
+	if t.isOpen != state {
+		return errors.New(error)
+	}
+	return nil
+}
+
+func (t *transaction) closeSession(rs ResultSet, err error) (ResultSet, error) {
+	t.sessionBasedConnection.Close()
+	t.isOpen = false
+	return rs, err
 }
