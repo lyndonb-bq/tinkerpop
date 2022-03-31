@@ -53,7 +53,7 @@ type Client struct {
 	transporterType   TransporterType
 	connections       connectionPool
 	session           string
-	ConnectionTimeout time.Duration
+	connectionTimeout time.Duration
 }
 
 // NewClient creates a Client and configures it with the given parameters.
@@ -94,7 +94,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		transporterType:   settings.TransporterType,
 		connections:       pool,
 		session:           settings.Session,
-		ConnectionTimeout: settings.ConnectionTimout,
+		connectionTimeout: settings.ConnectionTimout,
 	}
 
 	return client, nil

@@ -103,7 +103,7 @@ func NewDriverRemoteConnection(
 		logHandler:        logHandler,
 		connections:       pool,
 		session:           settings.Session,
-		ConnectionTimeout: settings.ConnectionTimeout,
+		connectionTimeout: settings.ConnectionTimeout,
 	}
 
 	return &DriverRemoteConnection{client: client}, nil
