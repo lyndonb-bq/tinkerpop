@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 )
 
 // protocol handles invoking serialization and deserialization, as well as handling the lifecycle of raw data passed to
@@ -173,8 +174,8 @@ func (protocol *gremlinServerWSProtocol) close() (err error) {
 	return
 }
 
-func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, url string, authInfo *AuthInfo, tlsConfig *tls.Config, results *synchronizedMap, errorCallback func()) (protocol, error) {
-	transport, err := getTransportLayer(transporterType, url, authInfo, tlsConfig)
+func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, url string, authInfo *AuthInfo, tlsConfig *tls.Config, connectionTimeout time.Duration, results *synchronizedMap, errorCallback func()) (protocol, error) {
+	transport, err := getTransportLayer(transporterType, url, authInfo, tlsConfig, connectionTimeout)
 	if err != nil {
 		return nil, err
 	}

@@ -23,6 +23,7 @@ import (
 	"crypto/tls"
 	"golang.org/x/text/language"
 	"runtime"
+	"time"
 )
 
 // ClientSettings is used to modify a Client's settings on initialization.
@@ -40,17 +41,19 @@ type ClientSettings struct {
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
 
-	Session string
+	Session          string
+	ConnectionTimout time.Duration
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
-	url             string
-	traversalSource string
-	logHandler      *logHandler
-	transporterType TransporterType
-	connections     connectionPool
-	session         string
+	url               string
+	traversalSource   string
+	logHandler        *logHandler
+	transporterType   TransporterType
+	connections       connectionPool
+	session           string
+	ConnectionTimeout time.Duration
 }
 
 // NewClient creates a Client and configures it with the given parameters.
@@ -66,6 +69,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
+		ConnectionTimout:             45 * time.Second,
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
@@ -78,18 +82,19 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	}
 
 	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-		settings.MaximumConcurrentConnections, logHandler)
+		settings.MaximumConcurrentConnections, settings.ConnectionTimout, logHandler)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
-		url:             url,
-		traversalSource: settings.TraversalSource,
-		logHandler:      logHandler,
-		transporterType: settings.TransporterType,
-		connections:     pool,
-		session:         settings.Session,
+		url:               url,
+		traversalSource:   settings.TraversalSource,
+		logHandler:        logHandler,
+		transporterType:   settings.TransporterType,
+		connections:       pool,
+		session:           settings.Session,
+		ConnectionTimeout: settings.ConnectionTimout,
 	}
 
 	return client, nil

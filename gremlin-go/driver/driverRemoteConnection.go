@@ -25,6 +25,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
 	"runtime"
+	"time"
 )
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
@@ -41,6 +42,8 @@ type DriverRemoteConnectionSettings struct {
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
 	Session                      string
+	// Connection Timout. Default: 45 Seconds
+	ConnectionTimeout time.Duration
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -71,6 +74,7 @@ func NewDriverRemoteConnection(
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
+		ConnectionTimeout:            45 * time.Second,
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -87,18 +91,19 @@ func NewDriverRemoteConnection(
 	}
 
 	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-		settings.MaximumConcurrentConnections, logHandler)
+		settings.MaximumConcurrentConnections, settings.ConnectionTimeout, logHandler)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &Client{
-		url:             url,
-		traversalSource: settings.TraversalSource,
-		transporterType: settings.TransporterType,
-		logHandler:      logHandler,
-		connections:     pool,
-		session:         settings.Session,
+		url:               url,
+		traversalSource:   settings.TraversalSource,
+		transporterType:   settings.TransporterType,
+		logHandler:        logHandler,
+		connections:       pool,
+		session:           settings.Session,
+		ConnectionTimeout: settings.ConnectionTimeout,
 	}
 
 	return &DriverRemoteConnection{client: client}, nil

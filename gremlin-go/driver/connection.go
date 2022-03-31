@@ -23,6 +23,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"sync"
+	"time"
 )
 
 type connectionState int
@@ -73,7 +74,7 @@ func (connection *connection) activeResults() int {
 	return connection.results.size()
 }
 
-func createConnection(url string, authInfo *AuthInfo, tlsConfig *tls.Config, logHandler *logHandler) (*connection, error) {
+func createConnection(url string, authInfo *AuthInfo, tlsConfig *tls.Config, connectionTimeout time.Duration, logHandler *logHandler) (*connection, error) {
 	conn := &connection{
 		logHandler,
 		nil,
@@ -81,7 +82,7 @@ func createConnection(url string, authInfo *AuthInfo, tlsConfig *tls.Config, log
 		initialized,
 	}
 	logHandler.log(Info, connectConnection)
-	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, authInfo, tlsConfig, conn.results, conn.errorCallback)
+	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, authInfo, tlsConfig, connectionTimeout, conn.results, conn.errorCallback)
 	if err != nil {
 		logHandler.logf(Error, failedConnection)
 		conn.state = closedDueToError

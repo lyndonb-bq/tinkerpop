@@ -20,15 +20,15 @@ under the License.
 package gremlingo
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
+	"testing"
+	"time"
 )
 
 func Test(t *testing.T) {
 	t.Run("Test protocol connect error.", func(t *testing.T) {
-		protocol, err := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English), Gorilla, "ws://localhost:9000/gremlin", nil, nil, nil, nil)
+		protocol, err := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English), Gorilla, "ws://localhost:9000/gremlin", nil, nil, 45*time.Second, nil, nil)
 		assert.NotNil(t, err)
 		assert.Nil(t, protocol)
 	})
