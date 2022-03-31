@@ -99,17 +99,10 @@ func (logHandler *logHandler) logf(verbosity LogVerbosity, errorKey errorKey, v 
 type errorKey string
 
 const (
-	readFailed                  errorKey = "READ_FAILED"
-	writeFailed                 errorKey = "WRITE_FAILED"
 	serializeDataTypeError      errorKey = "UNKNOWN_SER_DATATYPE"
 	deserializeDataTypeError    errorKey = "UNKNOWN_DESER_DATATYPE"
 	nullInput                   errorKey = "NULL_INPUT"
-	unmatchedDataType           errorKey = "UNMATCHED_DATATYPE"
 	unexpectedNull              errorKey = "UNEXPECTED_NULL_VALUE"
-	notMap                      errorKey = "NOT_MAP_TYPE"
-	malformedURL                errorKey = "MALFORMED_URL"
-	transportCloseFailed        errorKey = "TRANSPORT_CLOSE_FAILED"
-	notSlice                    errorKey = "NOT_SLICE_TYPE"
 	closeConnection             errorKey = "CLOSING_CONNECTION"
 	connectConnection           errorKey = "OPENING_CONNECTION"
 	failedConnection            errorKey = "FAILED_CONNECTION"
@@ -123,9 +116,11 @@ const (
 	creatingSessionConnection   errorKey = "CREATING_SESSION_CONNECTION"
 	closeSession                errorKey = "CLOSE_SESSION"
 	closeSessionRequestError    errorKey = "CLOSE_SESSION_REQUEST_ERROR"
-	closeSessionError           errorKey = "CLOSE_SESSION_ERROR"
 	closeDriverRemoteConnection errorKey = "CLOSE_DRIVER_REMOTE_CONNECTION"
 	closingSpawnedSessions      errorKey = "CLOSING_SPAWNED_SESSIONS"
 	closeClient                 errorKey = "CLOSE_CLIENT"
-	closeClientError            errorKey = "CLOSE_CLIENT_ERROR"
+	errorClosingConnection      errorKey = "ERROR_CLOSING_CONNECTION"
+	closeUnusedPoolConnection   errorKey = "CLOSE_UNUSED_POOL_CONNECTION"
+	purgingDeadConnection       errorKey = "PURGING_DEAD_CONNECTION"
+	sessionDetected             errorKey = "SESSION_DETECTED"
 )
