@@ -97,7 +97,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 	responseID, statusCode, metadata, data := response.responseID, response.responseStatus.code,
 		response.responseResult.meta, response.responseResult.data
 	responseIDString := responseID.String()
-  if resultSets.load(responseIDString) == nil {
+	if resultSets.load(responseIDString) == nil {
 		return NewError(err0501ResponseHandlerResultSetNotCreatedError)
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
@@ -142,13 +142,13 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 			}
 		} else {
 			resultSets.load(responseIDString).Close()
-			return fmt.Errorf("failed to authenticate %v : %v", response.responseStatus, response.responseResult)
+			return NewError(err0503ResponseHandlerAuthError, response.responseStatus, response.responseResult)
 		}
 	} else {
-		errorMessage := fmt.Sprint("Error in read loop, error message '", response.responseStatus, "'. statusCode: ", statusCode)
-		resultSets.load(responseIDString).setError(errors.New(errorMessage))
+		newError := NewError(err0502ResponseHandlerReadLoopError, response.responseStatus, statusCode)
+		resultSets.load(responseIDString).setError(newError)
 		resultSets.load(responseIDString).Close()
-		log.logger.Log(Info, errorMessage)
+		log.logger.Log(Info, newError.Error())
 	}
 	return nil
 }
