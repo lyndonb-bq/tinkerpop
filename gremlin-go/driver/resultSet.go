@@ -47,6 +47,7 @@ type ResultSet interface {
 type channelResultSet struct {
 	channel          chan *Result
 	requestID        string
+	container        *synchronizedMap
 	aggregateTo      string
 	statusAttributes map[string]interface{}
 	closed           bool
@@ -112,6 +113,7 @@ func (channelResultSet *channelResultSet) Close() {
 	if !channelResultSet.closed {
 		channelResultSet.channelMutex.Lock()
 		channelResultSet.closed = true
+		channelResultSet.container.delete(channelResultSet.requestID)
 		close(channelResultSet.channel)
 		channelResultSet.channelMutex.Unlock()
 		channelResultSet.sendSignal()
@@ -181,10 +183,10 @@ func (channelResultSet *channelResultSet) addResult(r *Result) {
 	channelResultSet.sendSignal()
 }
 
-func newChannelResultSetCapacity(requestID string, channelSize int) ResultSet {
-	return &channelResultSet{make(chan *Result, channelSize), requestID, "", nil, false, nil, nil, sync.Mutex{}, sync.Mutex{}}
+func newChannelResultSetCapacity(requestID string, container *synchronizedMap, channelSize int) ResultSet {
+	return &channelResultSet{make(chan *Result, channelSize), requestID, container, "", nil, false, nil, nil, sync.Mutex{}, sync.Mutex{}}
 }
 
-func newChannelResultSet(requestID string) ResultSet {
-	return newChannelResultSetCapacity(requestID, defaultCapacity)
+func newChannelResultSet(requestID string, container *synchronizedMap) ResultSet {
+	return newChannelResultSetCapacity(requestID, container, defaultCapacity)
 }

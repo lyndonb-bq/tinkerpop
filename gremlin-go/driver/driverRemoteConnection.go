@@ -23,6 +23,7 @@ import (
 	"crypto/tls"
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
+	"runtime"
 )
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
@@ -34,7 +35,11 @@ type DriverRemoteConnectionSettings struct {
 	Language        language.Tag
 	AuthInfo        *AuthInfo
 	TlsConfig       *tls.Config
-	Session         string
+	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
+	NewConnectionThreshold int
+	// Maximum number of concurrent connections. Default: number of runtime processors
+	MaximumConcurrentConnections int
+	Session                      string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -55,14 +60,16 @@ func NewDriverRemoteConnection(
 	url string,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
-		TraversalSource: "g",
-		TransporterType: Gorilla,
-		LogVerbosity:    Info,
-		Logger:          &defaultLogger{},
-		Language:        language.English,
-		AuthInfo:        &AuthInfo{},
-		TlsConfig:       &tls.Config{},
-		Session:         "",
+		TraversalSource:              "g",
+		TransporterType:              Gorilla,
+		LogVerbosity:                 Info,
+		Logger:                       &defaultLogger{},
+		Language:                     language.English,
+		AuthInfo:                     &AuthInfo{},
+		TlsConfig:                    &tls.Config{},
+		NewConnectionThreshold:       defaultNewConnectionThreshold,
+		MaximumConcurrentConnections: runtime.NumCPU(),
+		Session:                      "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -73,7 +80,13 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	connection, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+	if settings.Session != "" {
+		logHandler.log(Info, sessionDetected)
+		settings.MaximumConcurrentConnections = 1
+	}
+
+	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
+		settings.MaximumConcurrentConnections, logHandler)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +96,7 @@ func NewDriverRemoteConnection(
 		traversalSource: settings.TraversalSource,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
-		connection:      connection,
+		connections:     pool,
 		session:         settings.Session,
 	}
 

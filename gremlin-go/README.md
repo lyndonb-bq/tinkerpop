@@ -32,7 +32,7 @@ If you would like to build and/or test the source code, you can do so with docke
 
 Docker allows you to test the driver without installing any dependencies. The following command can be used to run docker:
 
-`docker-compose up --exit-code-from integration-tests integration-tests`
+`docker-compose up --exit-code-from gremlin-go-integration-tests gremlin-go-integration-tests`
 
 ### Building Directly
 
@@ -72,9 +72,7 @@ Please review the [staticcheck documentation][scheck docs] for more details on i
 
 To install the Gremlin-Go as a dependency for your project, run the following in the root directory of your project that contains your `go.mod` file:
 
-`go get github.com/lyndonb-bq/tinkerpop/gremlin-go@gremlin-go-ms2`
-
-Note: Currently as of Milestone #2, Gremlin-Go exists in the `lyndonb-bq` fork on the `gremlin-go-ms2` branch. Expect this to change in the future when the project is closer to a completed state.
+`go get github.com/apache/tinkerpop/gremlin-go@3.5-dev`
 
 After running the `go get` command, your `go.mod` file should contain something similar to the following:
 
@@ -83,7 +81,7 @@ module gremlin-go-example
 
 go 1.17
 
-require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
+require github.com/apache/tinkerpop/gremlin-go v3.5
 ```
 
 If it does, then this means Gremlin-Go was successfully installed as a dependency of your project.
@@ -93,12 +91,12 @@ Here is a simple example of using Gremlin-Go as an import in a sample project's 
 package main
 
 import (
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
 	// Simple stub to use the import. See subsequent section for actual usage. 
-	_, _ = gremlingo.NewDriverRemoteConnection("localhost", 8182)
+    _, _ = gremlingo.NewDriverRemoteConnection("ws://localhost:8182")
 }
 ```
 You will need to run `go mod tidy` to import the remaining dependencies of the `gremlin-go` driver (if your IDE does not do so automatically), after which you should see an updated `go.mod` file:
@@ -108,7 +106,7 @@ module gremlin-go-example
 
 go 1.17
 
-require github.com/lyndonb-bq/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
+require github.com/apache/tinkerpop/gremlin-go v3.5
 
 require (
 	github.com/google/uuid v1.3.0 // indirect
@@ -126,12 +124,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
 	// Creating the connection to the server.
-	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("ws://localhost:8182")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -181,12 +179,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
 	// Creating the connection to the server with default settings.
-	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("ws://localhost:8182")
 	// Handle error
 	if err != nil {
 		fmt.Println(err)
@@ -196,19 +194,21 @@ func main() {
 	g := gremlingo.Traversal_().WithRemote(driverRemoteConnection)
 }
 ```
-We can also customize the remote connection settings. (See code documentation for additional parameters and their usage).
+We can also customize the remote connection settings. (See code documentation for additional parameters and their usage). In this case we are modifying the connection pool settings. We are setting the maximum concurrent connections and the connection usage threshold at which new connections are created to balance the load.
 ```go
 package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
-	// Creating the connection to the server, changing the log verbosity to Debug.
-	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182, func(settings *gremlingo.DriverRemoteConnectionSettings) {
+	// Creating the connection to the server, changing the log verbosity to Debug and setting connection pool properties.
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("ws://localhost:8182", func(settings *gremlingo.DriverRemoteConnectionSettings) {
 		settings.LogVerbosity = gremlingo.Debug
+        settings.NewConnectionThreshold = 2
+        settings.MaximumConcurrentConnections = 4
 	})
 	// Handle error
 	if err != nil {
@@ -227,12 +227,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver"
+	"github.com/apache/tinkerpop/gremlin-go/driver"
 )
 
 func main() {
 	// Creating the connection to the server.
-	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("localhost", 8182)
+	driverRemoteConnection, err := gremlingo.NewDriverRemoteConnection("ws://localhost:8182")
 	// Handle error
 	if err != nil {
 		fmt.Println(err)

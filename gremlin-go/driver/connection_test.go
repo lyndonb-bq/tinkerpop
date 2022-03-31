@@ -29,6 +29,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -266,6 +267,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		// Read test data out of the graph and check that it is correct.
 		readTestDataVertexProperties(t, g)
@@ -312,6 +314,129 @@ func TestConnection(t *testing.T) {
 		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
 	})
 
+	t.Run("Test newLoadBalancingPool", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, 4, 4,
+			newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		defer pool.close()
+		assert.Len(t, pool.(*loadBalancingPool).connections, 1)
+	})
+
+	t.Run("Test loadBalancingPool.newConnection", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, 4, 4,
+			newLogHandler(&defaultLogger{}, Info, language.English))
+		assert.Nil(t, err)
+		defer pool.close()
+		lhp := pool.(*loadBalancingPool)
+		newConn, err := lhp.newConnection()
+		assert.Nil(t, err)
+		assert.Len(t, lhp.connections, 2)
+		// Workaround for false positive in race condition check
+		found := false
+		for _, conn := range lhp.connections {
+			if conn == newConn {
+				found = true
+			}
+		}
+		assert.True(t, found)
+	})
+
+	t.Run("Test loadBalancingPool.getLeastUsedConnection", func(t *testing.T) {
+		newConnectionThreshold := 2
+		maximumConcurrentConnections := 2
+		logHandler := newLogHandler(&defaultLogger{}, Info, language.English)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		t.Run("pool is empty", func(t *testing.T) {
+			pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newConnectionThreshold,
+				maximumConcurrentConnections, logHandler)
+			assert.Nil(t, err)
+			lbp := pool.(*loadBalancingPool)
+			defer lbp.close()
+			emptyPool := make([]*connection, 0, maximumConcurrentConnections)
+			lbp.connections = emptyPool
+			conn, err := lbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.Len(t, lbp.connections, 1)
+		})
+
+		t.Run("newConcurrentThreshold reached with capacity remaining", func(t *testing.T) {
+			pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newConnectionThreshold,
+				maximumConcurrentConnections, logHandler)
+			assert.Nil(t, err)
+			lbp := pool.(*loadBalancingPool)
+			defer lbp.close()
+			thresholdReachedResults := &synchronizedMap{
+				internalMap: map[string]ResultSet{},
+				syncLock:    sync.Mutex{},
+			}
+			thresholdReachedResults.store("1", nil)
+			thresholdReachedResults.store("2", nil)
+			fullConnection := &connection{
+				logHandler: logHandler,
+				protocol:   nil,
+				results:    thresholdReachedResults,
+				state:      established,
+			}
+			capacityAvailablePool := make([]*connection, 0, maximumConcurrentConnections)
+			capacityAvailablePool = append(capacityAvailablePool, fullConnection)
+			lbp.connections = capacityAvailablePool
+			conn, err := lbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.NotEqual(t, fullConnection, conn)
+			assert.Len(t, lbp.connections, 2)
+		})
+
+		t.Run("newConcurrentThreshold reached with no capacity remaining", func(t *testing.T) {
+			capacityFullConnectionPool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo,
+				testNoAuthTlsConfig, 1, 1, logHandler)
+			assert.Nil(t, err)
+			assert.NotNil(t, capacityFullConnectionPool)
+			capacityFullLbp := capacityFullConnectionPool.(*loadBalancingPool)
+			defer capacityFullLbp.close()
+			capacityFullLbp.connections[0].results.store("mockFillCapacity",
+				newChannelResultSet("mockFillCapacity", capacityFullLbp.connections[0].results))
+			conn, err := capacityFullLbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.Len(t, capacityFullLbp.connections, 1)
+		})
+
+		t.Run("all connections in pool invalid", func(t *testing.T) {
+			pool, err := newLoadBalancingPool(testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig, newConnectionThreshold,
+				maximumConcurrentConnections, logHandler)
+			assert.Nil(t, err)
+			lbp := pool.(*loadBalancingPool)
+			defer lbp.close()
+			invalidConnection1 := &connection{
+				logHandler: logHandler,
+				protocol:   nil,
+				results:    nil,
+				state:      closed,
+			}
+			invalidConnection2 := &connection{
+				logHandler: logHandler,
+				protocol:   nil,
+				results:    nil,
+				state:      closedDueToError,
+			}
+			invalidPool := []*connection{invalidConnection1, invalidConnection2}
+			lbp.connections = invalidPool
+			conn, err := lbp.getLeastUsedConnection()
+			assert.Nil(t, err)
+			assert.NotNil(t, conn)
+			assert.NotEqual(t, invalidConnection1, conn)
+			assert.NotEqual(t, invalidConnection2, conn)
+			assert.Len(t, lbp.connections, 1)
+			assert.NotContains(t, lbp.connections, invalidConnection1)
+			assert.NotContains(t, lbp.connections, invalidConnection2)
+		})
+	})
+
 	t.Run("Test client.submit()", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
@@ -322,6 +447,7 @@ func TestConnection(t *testing.T) {
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
+		defer client.Close()
 
 		resultSet, err := client.Submit("g.V().count()")
 		assert.Nil(t, err)
@@ -329,17 +455,6 @@ func TestConnection(t *testing.T) {
 		result, err := resultSet.one()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
-
-		t.Run("Test client.submit() on Session", func(t *testing.T) {
-			client.session = "abc123"
-			resultSet, err = client.Submit("g.V().count()")
-			assert.Nil(t, err)
-			assert.NotNil(t, resultSet)
-			result, err := resultSet.one()
-			assert.Nil(t, err)
-			assert.NotNil(t, result)
-			client.session = ""
-		})
 
 		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
 		b := g.V().Count().bytecode
@@ -349,8 +464,27 @@ func TestConnection(t *testing.T) {
 		result, err = resultSet.one()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
+	})
 
-		client.Close()
+	t.Run("Test client.submit() on Session", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+
+		client, err := NewClient(testNoAuthUrl,
+			func(settings *ClientSettings) {
+				settings.TlsConfig = testNoAuthTlsConfig
+				settings.AuthInfo = testNoAuthAuthInfo
+				settings.Session = "abc123"
+			})
+		assert.Nil(t, err)
+		assert.NotNil(t, client)
+		defer client.Close()
+
+		resultSet, err := client.Submit("g.V().count()")
+		assert.Nil(t, err)
+		assert.NotNil(t, resultSet)
+		result, err := resultSet.one()
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
@@ -358,6 +492,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		// Read test data out of the graph and check that it is correct.
 		readTestDataVertexProperties(t, g)
@@ -375,6 +510,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		readWithNextAndHasNext(t, g)
 		resetGraph(t, g)
@@ -385,6 +521,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		// Drop the graph.
 		dropGraph(t, g)
@@ -430,6 +567,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		// Read test data out of the graph and check that it is correct.
 		results, err := g.V().Has("name", P.Eq("Lyndon")).ValueMap("name").ToList()
@@ -445,6 +583,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		// Run traversal and test Next/HasNext calls
 		traversal := g.V().HasLabel(personLabel).Properties(nameKey)
@@ -470,6 +609,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		readUsingAnonymousTraversal(t, g)
 
@@ -504,6 +644,9 @@ func TestConnection(t *testing.T) {
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
+		// Close remote connection.
+		defer remote.Close()
+
 		g := Traversal_().WithRemote(remote)
 
 		// Drop the graph and check that it is empty.
@@ -517,9 +660,6 @@ func TestConnection(t *testing.T) {
 		val, err := count[0].GetInt32()
 		assert.Nil(t, err)
 		assert.Equal(t, int32(0), val)
-
-		// Close remote connection.
-		remote.Close()
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
@@ -527,6 +667,7 @@ func TestConnection(t *testing.T) {
 
 		// Initialize graph
 		g := initializeGraph(t, testNoAuthUrl, testNoAuthAuthInfo, testNoAuthTlsConfig)
+		defer g.remoteConnection.Close()
 
 		r, err := g.WithSack(1).V().Has("name", "Lyndon").Values("foo").Sack(Sum).Sack().ToList()
 		assert.Nil(t, err)
@@ -549,6 +690,8 @@ func TestConnection(t *testing.T) {
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
+		defer remote.Close()
+
 		g := Traversal_().WithRemote(remote)
 
 		r, err := g.V().Count().ToList()
@@ -568,16 +711,21 @@ func TestConnection(t *testing.T) {
 				})
 			assert.Nil(t, err)
 			assert.NotNil(t, remote)
+			defer remote.Close()
+
 			remoteSession1, err := remote.CreateSession()
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession1)
+			defer remoteSession1.Close()
 			assert.Equal(t, remote.client.session, "")
 			assert.NotEqual(t, remoteSession1.client.session, "")
 			assert.Equal(t, 1, len(remote.spawnedSessions))
 			fixedUUID := uuid.New().String()
+
 			remoteSession2, err := remote.CreateSession(fixedUUID)
 			assert.Nil(t, err)
 			assert.NotNil(t, remoteSession2)
+			defer remoteSession2.Close()
 			assert.Equal(t, remoteSession2.client.session, fixedUUID)
 			assert.Equal(t, 2, len(remote.spawnedSessions))
 		})
@@ -591,6 +739,8 @@ func TestConnection(t *testing.T) {
 				})
 			assert.Nil(t, err)
 			assert.NotNil(t, remote)
+			defer remote.Close()
+
 			session1, _ := remote.CreateSession()
 			assert.NotNil(t, session1.client.session)
 			session1.Close()
@@ -601,7 +751,6 @@ func TestConnection(t *testing.T) {
 			session3, _ := remote.CreateSession()
 			assert.NotNil(t, session3.client.session)
 			assert.Equal(t, 3, len(remote.spawnedSessions))
-			remote.Close()
 		})
 
 		t.Run("Test Session failures", func(t *testing.T) {
@@ -612,9 +761,12 @@ func TestConnection(t *testing.T) {
 					settings.AuthInfo = testNoAuthAuthInfo
 				})
 			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			defer remote.Close()
 			s1, err := remote.CreateSession()
 			assert.Nil(t, err)
 			assert.NotNil(t, s1)
+			defer s1.Close()
 			s2, err := s1.CreateSession()
 			assert.Nil(t, s2)
 			assert.Equal(t, NewError(err0202CreateSessionFromSessionError), err)
@@ -628,6 +780,8 @@ func TestConnection(t *testing.T) {
 					settings.AuthInfo = testNoAuthAuthInfo
 				})
 			assert.Nil(t, err)
+			assert.NotNil(t, remote)
+			defer remote.Close()
 			s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
 			assert.Nil(t, s1)
 			assert.Equal(t, NewError(err0201CreateSessionMultipleIdsError), err)
@@ -644,6 +798,8 @@ func TestConnection(t *testing.T) {
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
+		defer client.Close()
+
 		resultSet, err := client.Submit("x + x", map[string]interface{}{"x": 2})
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
@@ -653,7 +809,6 @@ func TestConnection(t *testing.T) {
 		res, err := result.GetInt()
 		assert.Nil(t, err)
 		assert.Equal(t, 4, res)
-		client.Close()
 	})
 
 	t.Run("Test Bindings To Server Configured with Modern Graph", func(t *testing.T) {
@@ -666,6 +821,7 @@ func TestConnection(t *testing.T) {
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
+		defer remote.Close()
 		g := Traversal_().WithRemote(remote)
 
 		r, err := g.V((&Bindings{}).Of("x", 1)).Out("created").Map(&Lambda{Script: "it.get().value('name').length()", Language: ""}).Sum().ToList()
