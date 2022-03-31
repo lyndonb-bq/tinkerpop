@@ -33,7 +33,6 @@ import (
 	"testing"
 )
 
-// TODO proper error handling
 type tinkerPopGraph struct {
 	*CucumberWorld
 }
