@@ -85,7 +85,10 @@ const (
 	err1001ConvertArgumentChildTraversalNotFromAnonError errorCode = "E1001_BYTECODE_CHILD_T_NOT_ANON_ERROR"
 )
 
-func getLocalizer(locale language.Tag) *i18n.Localizer {
+func initializeLocalizer(locale language.Tag) {
+	if localizer != nil {
+		return
+	}
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
 
@@ -93,12 +96,13 @@ func getLocalizer(locale language.Tag) *i18n.Localizer {
 	_, path, _, _ := runtime.Caller(0)
 	path = filepath.Join(filepath.Dir(path), "resources/error-messages/en.json")
 	bundle.LoadMessageFile(path)
-	return i18n.NewLocalizer(bundle, locale.String())
+	localizer = i18n.NewLocalizer(bundle, locale.String())
 }
 
-var localizer = getLocalizer(language.English)
+var localizer *i18n.Localizer
 
 func NewError(errorCode errorCode, args ...interface{}) error {
+	initializeLocalizer(language.English)
 	config := i18n.LocalizeConfig{
 		MessageID: string(errorCode),
 	}
