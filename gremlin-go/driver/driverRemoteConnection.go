@@ -42,7 +42,7 @@ type DriverRemoteConnectionSettings struct {
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
 	Session                      string
-	// Connection Timout. Default: 45 Seconds
+	// Connection Timeout. Default: 45 Seconds
 	ConnectionTimeout time.Duration
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
