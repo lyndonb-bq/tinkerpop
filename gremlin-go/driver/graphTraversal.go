@@ -692,7 +692,7 @@ func (t *transaction) Begin() (*GraphTraversalSource, error) {
 		return nil, err
 	}
 
-	sc, err := t.sessionBasedConnection.CreateSession()
+	sc, err := t.remoteConnection.CreateSession()
 	if err != nil {
 		return nil, err
 	}

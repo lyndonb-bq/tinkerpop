@@ -20,9 +20,9 @@ under the License.
 package gremlingo
 
 import (
-	"testing"
-
+	"crypto/tls"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestTraversal(t *testing.T) {
@@ -62,4 +62,139 @@ func TestTraversal(t *testing.T) {
 		}, bytecode.stepInstructions[1].arguments[0])
 		assert.Equal(t, "binding[b=created]", bytecode.stepInstructions[1].arguments[0].(*Binding).String())
 	})
+
+	t.Run("Test Transaction commit", func(t *testing.T) {
+		// skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		startCount := getCount(t, g)
+		tx := g.Tx()
+
+		// Except transaction to not be open until begin is called.
+		assert.False(t, tx.IsOpen())
+		gtx, _ := tx.Begin()
+		assert.True(t, tx.IsOpen())
+
+		addV(t, gtx)
+		addV(t, gtx)
+		assert.Equal(t, startCount, getCount(t, g))
+		assert.Equal(t, startCount+2, getCount(t, gtx))
+
+		// Commit the transaction, this should close it.
+		// Our vertex count outside the transaction should be 2 + the start count.
+		_, err := tx.Commit()
+		assert.Nil(t, err)
+
+		assert.False(t, tx.IsOpen())
+		// todo: assert.Equal(t, startCount+2, getCount(t, g))
+
+		// dropGraphCheckCount(t, g)
+		verifyGtxClosed(t, gtx)
+	})
+	t.Run("Test Transaction rollback", func(t *testing.T) {
+		// skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		startCount := getCount(t, g)
+		tx := g.Tx()
+
+		// Except transaction to not be open until begin is called.
+		assert.False(t, tx.IsOpen())
+		gtx, _ := tx.Begin()
+		assert.True(t, tx.IsOpen())
+
+		addV(t, gtx)
+		addV(t, gtx)
+		assert.Equal(t, startCount, getCount(t, g))
+		assert.Equal(t, startCount+2, getCount(t, gtx))
+
+		// Rollback the transaction, this should close it.
+		// Our vertex count outside the transaction should be the start count.
+		_, err := tx.Rollback()
+		assert.Nil(t, err)
+
+		assert.False(t, tx.IsOpen())
+		assert.Equal(t, startCount, getCount(t, g))
+		assert.Equal(t, closed, gtx.remoteConnection.client.connection.state)
+
+		// dropGraphCheckCount(t, g)
+		verifyGtxClosed(t, gtx)
+	})
+
+}
+
+func newConnection(t *testing.T) *DriverRemoteConnection {
+	testNoAuthWithAliasUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
+	testNoAuthWithAliasAuthInfo := &AuthInfo{}
+	testNoAuthWithAliasTlsConfig := &tls.Config{}
+
+	remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
+		func(settings *DriverRemoteConnectionSettings) {
+			settings.TlsConfig = testNoAuthWithAliasTlsConfig
+			settings.AuthInfo = testNoAuthWithAliasAuthInfo
+			settings.TraversalSource = "gtx"
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, remote)
+	return remote
+}
+
+func addV(t *testing.T, g *GraphTraversalSource) {
+	_, promise, err := g.AddV("person").Property("name", "lyndon").Iterate()
+	assert.Nil(t, err)
+	assert.Nil(t, <-promise)
+}
+
+/*func addNodeValidateTransactionState(t *testing.T, g, gAddTo *GraphTraversalSource,
+	gStartCount, gAddToStartCount int32, txVerifyList ...*transaction) {
+	// Add a single node to g_add_to, but not g.
+	// Check that vertex count in g is gStartCount and vertex count in gAddTo is gAddToStartCount + 1.
+	_, promise, err := gAddTo.AddV("person").Property("name", "lyndon").Iterate()
+	assert.Nil(t, err)
+	assert.Nil(t, <-promise)
+	fmt.Printf("--addNodeValidateTransactionState %v-%v\n", gStartCount, getCount(t, g))
+	assert.Equal(t, gAddToStartCount+1, getCount(t, gAddTo))
+	assert.Equal(t, gStartCount, getCount(t, g))
+	verifyTxState(t, txVerifyList, true)
+}*/
+
+func verifyTxState(t *testing.T, gtxList []*transaction, value bool) {
+	for _, tx := range gtxList {
+		assert.Equal(t, value, tx.IsOpen())
+	}
+}
+
+func dropGraphCheckCount(t *testing.T, g *GraphTraversalSource) {
+	//time.Sleep(200 * time.Millisecond)
+
+	g1, _ := g.V().ToList()
+
+	//time.Sleep(200 * time.Millisecond)
+
+	dropGraph(t, g)
+
+	g2, err := g.V().ToList()
+	count, err := g.V().Count().ToList()
+	println("-- XXX:", g1, g2, err, count)
+
+	assert.Equal(t, int32(0), getCount(t, g))
+}
+
+func verifyGtxClosed(t *testing.T, gtx *GraphTraversalSource) {
+	// Attempt to add an additional vertex to the transaction. This should return an error since it
+	// has been closed.
+	_, _, err := gtx.AddV("failure").Iterate()
+	assert.NotNil(t, err)
+}
+
+func getCount(t *testing.T, g *GraphTraversalSource) int32 {
+	count, err := g.V().Count().ToList()
+	assert.Nil(t, err)
+	assert.NotNil(t, count)
+	assert.Equal(t, 1, len(count))
+	val, err := count[0].GetInt32()
+	assert.Nil(t, err)
+	return val
 }

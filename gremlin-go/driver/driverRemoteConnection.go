@@ -134,6 +134,7 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 
 	driver.client.logHandler.log(Info, creatingSessionConnection)
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
+		settings.TraversalSource = driver.client.traversalSource
 		if len(sessionId) == 1 {
 			settings.Session = sessionId[0]
 		} else {
