@@ -77,6 +77,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	for _, configuration := range configurations {
 		configuration(settings)
 	}
+
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
 	if settings.Session != "" {
 		logHandler.log(Info, sessionDetected)
