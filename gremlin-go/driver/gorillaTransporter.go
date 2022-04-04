@@ -28,8 +28,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const maxFailCount = 3
-
 const keepAliveIntervalDefault = 5 * time.Second
 const writeDeadlineDefault = 3 * time.Second
 const writeChannelSizeDefault = 100

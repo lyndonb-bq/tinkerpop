@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"errors"
 	"sync"
 	"time"
 )

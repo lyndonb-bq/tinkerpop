@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
@@ -101,7 +100,7 @@ func initializeGraph(t *testing.T, url string, auth *AuthInfo, tls *tls.Config) 
 func resetGraph(t *testing.T, g *GraphTraversalSource) {
 	defer func(remoteConnection *DriverRemoteConnection) {
 		remoteConnection.Close()
-	} (g.remoteConnection)
+	}(g.remoteConnection)
 	// Drop the graph and check that it is empty.
 	dropGraph(t, g)
 	readCount(t, g, "", 0)
@@ -227,7 +226,7 @@ func getBasicAuthInfo() *AuthInfo {
 
 func skipTestsIfNotEnabled(t *testing.T, testSuiteName string, testSuiteEnabled bool) {
 	if !testSuiteEnabled {
-		t.Skip(fmt.Sprintf("Skipping %s because %s tests are not enabled.", t.Name(), testSuiteName))
+		t.Skipf("Skipping %s because %s tests are not enabled.", t.Name(), testSuiteName)
 	}
 }
 
@@ -258,21 +257,21 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test createConnection without valid server", func(t *testing.T) {
 		connection, err := createConnection(invalidHostValidPortValidPath, newLogHandler(&defaultLogger{}, Info,
-		language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault)
+			language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault)
 		assert.NotNil(t, err)
 		assert.Nil(t, connection)
 	})
 
 	t.Run("Test createConnection without valid port", func(t *testing.T) {
 		connection, err := createConnection(validHostInvalidPortValidPath, newLogHandler(&defaultLogger{}, Info,
-		language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault)
+			language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault)
 		assert.NotNil(t, err)
 		assert.Nil(t, connection)
 	})
 
 	t.Run("Test createConnection without valid path", func(t *testing.T) {
 		connection, err := createConnection(validHostValidPortInvalidPath, newLogHandler(&defaultLogger{}, Info,
-		language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault)
+			language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault)
 		assert.NotNil(t, err)
 		assert.Nil(t, connection)
 	})
@@ -446,8 +445,8 @@ func TestConnection(t *testing.T) {
 
 		t.Run("newConcurrentThreshold reached with no capacity remaining", func(t *testing.T) {
 			capacityFullConnectionPool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info,
-			language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault,
-			1, 1)
+				language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault,
+				1, 1)
 			assert.Nil(t, err)
 			assert.NotNil(t, capacityFullConnectionPool)
 			capacityFullLbp := capacityFullConnectionPool.(*loadBalancingPool)
@@ -834,6 +833,7 @@ func TestConnection(t *testing.T) {
 					settings.TlsConfig = testNoAuthTlsConfig
 					settings.AuthInfo = testNoAuthAuthInfo
 				})
+			assert.Nil(t, err)
 			assert.NotNil(t, remote)
 			defer remote.Close()
 			s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())

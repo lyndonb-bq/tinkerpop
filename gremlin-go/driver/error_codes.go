@@ -32,7 +32,8 @@ type errorCode string
 
 const (
 	// connection.go errors
-	err0101ConnectionCloseError errorCode = "E0101_CONNECTION_CLOSE_ERROR"
+	err0101ConnectionCloseError       errorCode = "E0101_CONNECTION_CLOSE_ERROR"
+	err0102WriteConnectionClosedError errorCode = "E0102_CONNECTION_WRITE_CLOSED_ERROR"
 
 	// driverRemoteConnection.go errors
 	err0201CreateSessionMultipleIdsError errorCode = "E0201_DRIVER_REMOTE_CONNECTION_CREATESESSION_MULTIPLE_UUIDS_ERROR"

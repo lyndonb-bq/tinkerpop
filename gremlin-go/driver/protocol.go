@@ -106,7 +106,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		response.responseResult.meta, response.responseResult.data
 	responseIDString := responseID.String()
 	if resultSets.load(responseIDString) == nil {
-		return errors.New("resultSet was not created before data was received")
+		return NewError(err0501ResponseHandlerResultSetNotCreatedError)
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSets.load(responseIDString).setAggregateTo(aggregateTo.(string))

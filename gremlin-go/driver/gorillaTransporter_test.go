@@ -30,9 +30,11 @@ import (
 )
 
 const mockMessage string = "MockMessage"
-const mockWriteErrMessage string = "MockWriteJSONErrMessage"
+
+// const mockWriteErrMessage string = "MockWriteJSONErrMessage"
 const mockReadErrMessage string = "MockReadMessageErrMessage"
-const mockCloseErrMessage string = "MockCloseErrMessage"
+
+// const mockCloseErrMessage string = "MockCloseErrMessage"
 
 type mockWebsocketConn struct {
 	mock.Mock

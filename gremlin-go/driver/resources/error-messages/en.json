@@ -1,5 +1,6 @@
 {
   "E0101_CONNECTION_CLOSE_ERROR": "E0101: cannot close connection that has already been closed or has not been connected",
+  "E0102_CONNECTION_WRITE_CLOSED_ERROR": "E0102: cannot write connection that has already been closed or has not been connected",
 
   "E0201_DRIVER_REMOTE_CONNECTION_CREATESESSION_MULTIPLE_UUIDS_ERROR": "E0201: more than one Session ID specified. Cannot create Session with multiple UUIDs",
   "E0202_DRIVER_REMOTE_CONNECTION_CREATESESSION_SESSION_FROM_SESSION_ERROR": "E0202: connection is already bound to a Session - child sessions are not allowed",
