@@ -27,7 +27,7 @@ import (
 )
 
 func TestTraversal(t *testing.T) {
-	testTransactionEnable := getEnvOrDefaultBool("TEST_TRANSACTIONS", false)
+	testTransactionEnable := getEnvOrDefaultBool("TEST_TRANSACTIONS", true)
 
 	t.Run("Test clone traversal", func(t *testing.T) {
 		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
@@ -125,6 +125,228 @@ func TestTraversal(t *testing.T) {
 		dropGraphCheckCount(t, g)
 		verifyGtxClosed(t, gtx)
 	})
+
+	t.Run("Test Transaction flows", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		tx := g.Tx()
+		assert.False(t, tx.IsOpen())
+
+		// Commit should return error when transaction not started
+		err := tx.Commit()
+		assert.NotNil(t, err)
+
+		// Rollback should return error when transaction not started
+		err = tx.Rollback()
+		assert.NotNil(t, err)
+
+		// Create transaction and verify it is open.
+		gtx, err := tx.Begin()
+		assert.Nil(t, err)
+		assert.NotNil(t, gtx)
+		assert.True(t, tx.IsOpen())
+
+		// Can't open inner transaction.
+		_, err = gtx.Tx().Begin()
+		assert.NotNil(t, err)
+
+		// Commit this unused transaction and verify it is no longer open.
+		err = tx.Commit()
+		assert.Nil(t, err)
+		assert.False(t, tx.IsOpen())
+
+		// Create another transaction and verify it is open.
+		gtx, err = tx.Begin()
+		assert.Nil(t, err)
+		assert.NotNil(t, gtx)
+		assert.True(t, tx.IsOpen())
+
+		// Rollback this unused transaction and verify it is no longer open.
+		err = tx.Rollback()
+		assert.Nil(t, err)
+		assert.False(t, tx.IsOpen())
+	})
+
+	t.Run("Test multi commit Transaction", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		startCount := getCount(t, g)
+
+		// Create two transactions.
+		tx1 := g.Tx()
+		tx2 := g.Tx()
+
+		// Generate two GraphTraversalSource's for each transaction with begin.
+		gtx1, _ := tx1.Begin()
+		gtx2, _ := tx2.Begin()
+		verifyTxState(t, true, tx1, tx2)
+
+		// Add node to gtx1, which should be visible to gtx1, not gtx2.
+		addNodeValidateTransactionState(t, g, gtx1, startCount, startCount, tx1, tx2)
+
+		// Add node to gtx2, which should be visible to gtx2, not gtx1
+		addNodeValidateTransactionState(t, g, gtx2, startCount, startCount, tx1, tx2)
+
+		// Add node to gtx1, which should be visible to gtx1, not gtx2. Note previous node also added.
+		addNodeValidateTransactionState(t, g, gtx1, startCount, startCount+1, tx1, tx2)
+
+		tx1.Commit()
+		verifyTxState(t, false, tx1)
+		verifyTxState(t, true, tx2)
+		assert.Equal(t, startCount+2, getCount(t, g))
+
+		tx2.Commit()
+		verifyTxState(t, false, tx1, tx2)
+		assert.Equal(t, startCount+3, getCount(t, g))
+	})
+
+	t.Run("Test multi rollback Transaction", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		startCount := getCount(t, g)
+
+		// Create two transactions.
+		tx1 := g.Tx()
+		tx2 := g.Tx()
+
+		// Generate two GraphTraversalSource's for each transaction with begin.
+		gtx1, _ := tx1.Begin()
+		gtx2, _ := tx2.Begin()
+		verifyTxState(t, true, tx1, tx2)
+
+		// Add node to gtx1, which should be visible to gtx1, not gtx2.
+		addNodeValidateTransactionState(t, g, gtx1, startCount, startCount, tx1, tx2)
+
+		// Add node to gtx2, which should be visible to gtx2, not gtx1
+		addNodeValidateTransactionState(t, g, gtx2, startCount, startCount, tx1, tx2)
+
+		// Add node to gtx1, which should be visible to gtx1, not gtx2. Note previous node also added.
+		addNodeValidateTransactionState(t, g, gtx1, startCount, startCount+1, tx1, tx2)
+
+		tx1.Rollback()
+		verifyTxState(t, false, tx1)
+		verifyTxState(t, true, tx2)
+		assert.Equal(t, startCount, getCount(t, g))
+
+		tx2.Rollback()
+		verifyTxState(t, false, tx1, tx2)
+		assert.Equal(t, startCount, getCount(t, g))
+	})
+
+	t.Run("Test multi commit and rollback Transaction", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		startCount := getCount(t, g)
+
+		// Create two transactions.
+		tx1 := g.Tx()
+		tx2 := g.Tx()
+
+		// Generate two GraphTraversalSource's for each transaction with begin.
+		gtx1, _ := tx1.Begin()
+		gtx2, _ := tx2.Begin()
+		verifyTxState(t, true, tx1, tx2)
+
+		// Add node to gtx1, which should be visible to gtx1, not gtx2.
+		addNodeValidateTransactionState(t, g, gtx1, startCount, startCount, tx1, tx2)
+
+		// Add node to gtx2, which should be visible to gtx2, not gtx1
+		addNodeValidateTransactionState(t, g, gtx2, startCount, startCount, tx1, tx2)
+
+		// Add node to gtx1, which should be visible to gtx1, not gtx2. Note previous node also added.
+		addNodeValidateTransactionState(t, g, gtx1, startCount, startCount+1, tx1, tx2)
+
+		tx1.Commit()
+		verifyTxState(t, false, tx1)
+		verifyTxState(t, true, tx2)
+		assert.Equal(t, startCount+2, getCount(t, g))
+
+		tx2.Rollback()
+		verifyTxState(t, false, tx1, tx2)
+		assert.Equal(t, startCount+2, getCount(t, g))
+	})
+
+	t.Run("Test Transaction close", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		dropGraphCheckCount(t, g)
+
+		// Create two transactions.
+		tx1 := g.Tx()
+		tx2 := g.Tx()
+
+		// Generate two GraphTraversalSource's for each transaction with begin.
+		gtx1, _ := tx1.Begin()
+		gtx2, _ := tx2.Begin()
+		verifyTxState(t, true, tx1, tx2)
+
+		// Add stuff to both gtx.
+		addNodeValidateTransactionState(t, g, gtx1, 0, 0, tx1, tx2)
+		addNodeValidateTransactionState(t, g, gtx2, 0, 0, tx1, tx2)
+		addNodeValidateTransactionState(t, g, gtx2, 0, 1, tx1, tx2)
+		addNodeValidateTransactionState(t, g, gtx2, 0, 2, tx1, tx2)
+
+		// someone gets lazy and doesn't commit/rollback and just calls close() - the graph
+		// will decide how to treat the transaction, but for neo4j/gremlin server in this
+		// test configuration it should rollback
+		tx1.Close()
+		tx2.Close()
+
+		verifyGtxClosed(t, gtx1)
+		verifyGtxClosed(t, gtx2)
+
+		remote = newConnection(t)
+		g = Traversal_().WithRemote(remote)
+		assert.Equal(t, int32(0), getCount(t, g))
+	})
+
+	t.Run("Test Transaction close tx from parent", func(t *testing.T) {
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
+		// Start a transaction traversal.
+		remote := newConnection(t)
+		g := Traversal_().WithRemote(remote)
+		dropGraphCheckCount(t, g)
+
+		// Create two transactions.
+		tx1 := g.Tx()
+		tx2 := g.Tx()
+
+		// Generate two GraphTraversalSource's for each transaction with begin.
+		gtx1, _ := tx1.Begin()
+		gtx2, _ := tx2.Begin()
+		verifyTxState(t, true, tx1, tx2)
+
+		// Add stuff to both gtx.
+		addNodeValidateTransactionState(t, g, gtx1, 0, 0, tx1, tx2)
+		addNodeValidateTransactionState(t, g, gtx2, 0, 0, tx1, tx2)
+		addNodeValidateTransactionState(t, g, gtx2, 0, 1, tx1, tx2)
+		addNodeValidateTransactionState(t, g, gtx2, 0, 2, tx1, tx2)
+
+		// someone gets lazy and doesn't commit/rollback and just calls Close() but on the parent
+		// DriverRemoteConnection for all the session that were created via Tx() - the graph
+		// will decide how to treat the transaction, but for neo4j/gremlin server in this
+		// test configuration it should rollback.
+		remote.Close()
+
+		assert.False(t, tx1.IsOpen())
+		assert.False(t, tx2.IsOpen())
+		verifyGtxClosed(t, gtx1)
+		verifyGtxClosed(t, gtx2)
+
+		remote = newConnection(t)
+		g = Traversal_().WithRemote(remote)
+		assert.Equal(t, int32(0), getCount(t, g))
+	})
 }
 
 func newConnection(t *testing.T) *DriverRemoteConnection {
@@ -143,6 +365,22 @@ func newConnection(t *testing.T) *DriverRemoteConnection {
 	return remote
 }
 
+func addNodeValidateTransactionState(t *testing.T, g, gAddTo *GraphTraversalSource,
+	gStartCount, gAddToStartCount int32, txVerifyList ...*transaction) {
+	// Add a single node to gAddTo, but not g.
+	// Check that vertex count in g is gStartCount and vertex count in gAddTo is gAddToStartCount + 1.
+	addV(t, gAddTo, "lyndon")
+	assert.Equal(t, gAddToStartCount+1, getCount(t, gAddTo))
+	assert.Equal(t, gStartCount, getCount(t, g))
+	verifyTxState(t, true, txVerifyList...)
+}
+
+func verifyTxState(t *testing.T, expected bool, gtxList ...*transaction) {
+	for _, tx := range gtxList {
+		assert.Equal(t, expected, tx.IsOpen())
+	}
+}
+
 func addV(t *testing.T, g *GraphTraversalSource, name string) {
 	_, promise, err := g.AddV("person").Property("name", name).Iterate()
 	assert.Nil(t, err)
@@ -156,7 +394,7 @@ func dropGraphCheckCount(t *testing.T, g *GraphTraversalSource) {
 
 func verifyGtxClosed(t *testing.T, gtx *GraphTraversalSource) {
 	// todo: should we wait for sessionBasedConnection.Close()?
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	// Attempt to add an additional vertex to the transaction. This should return an error since it
 	// has been closed.
 	_, promise, err := gtx.AddV("failure").Iterate()

@@ -742,11 +742,14 @@ func (t *transaction) Close() error {
 }
 
 func (t *transaction) IsOpen() bool {
+	if t.sessionBasedConnection != nil && t.sessionBasedConnection.closed {
+		t.isOpen = false
+	}
 	return t.isOpen
 }
 
 func (t *transaction) verifyTransactionState(state bool, error string) error {
-	if t.isOpen != state {
+	if t.IsOpen() != state {
 		return errors.New(error)
 	}
 	return nil
@@ -757,7 +760,9 @@ func (t *transaction) closeSession(rs ResultSet, err error) error {
 	if err != nil {
 		return err
 	}
-
+	if rs == nil {
+		return nil
+	}
 	_, e := rs.All()
 	return e
 }

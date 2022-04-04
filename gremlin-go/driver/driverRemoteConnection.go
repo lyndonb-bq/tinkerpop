@@ -54,6 +54,7 @@ type DriverRemoteConnectionSettings struct {
 type DriverRemoteConnection struct {
 	client          *Client
 	spawnedSessions []*DriverRemoteConnection
+	closed          bool
 }
 
 // NewDriverRemoteConnection creates a new DriverRemoteConnection.
@@ -109,7 +110,7 @@ func NewDriverRemoteConnection(
 		session:         settings.Session,
 	}
 
-	return &DriverRemoteConnection{client: client}, nil
+	return &DriverRemoteConnection{client: client, closed: false}, nil
 }
 
 // Close closes the DriverRemoteConnection.
@@ -121,6 +122,7 @@ func (driver *DriverRemoteConnection) Close() {
 		for _, session := range driver.spawnedSessions {
 			session.Close()
 		}
+		driver.spawnedSessions = driver.spawnedSessions[:0]
 	}
 
 	if driver.isSession() {
@@ -129,6 +131,7 @@ func (driver *DriverRemoteConnection) Close() {
 		driver.client.logHandler.logf(Info, closeDriverRemoteConnection, driver.client.url)
 	}
 	driver.client.Close()
+	driver.closed = true
 }
 
 // Submit sends a string traversal to the server.
