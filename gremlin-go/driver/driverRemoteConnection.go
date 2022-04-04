@@ -21,25 +21,29 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"errors"
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
 	"runtime"
+	"time"
 )
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
 type DriverRemoteConnectionSettings struct {
-	TraversalSource string
-	TransporterType TransporterType
-	LogVerbosity    LogVerbosity
-	Logger          Logger
-	Language        language.Tag
-	AuthInfo        *AuthInfo
-	TlsConfig       *tls.Config
+	TraversalSource   string
+	TransporterType   TransporterType
+	LogVerbosity      LogVerbosity
+	Logger            Logger
+	Language          language.Tag
+	AuthInfo          *AuthInfo
+	TlsConfig         *tls.Config
+	KeepAliveInterval time.Duration
+	WriteDeadline     time.Duration
 	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-	Session                      string
+	Session         string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -60,16 +64,18 @@ func NewDriverRemoteConnection(
 	url string,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
-		TraversalSource:              "g",
-		TransporterType:              Gorilla,
-		LogVerbosity:                 Info,
-		Logger:                       &defaultLogger{},
-		Language:                     language.English,
-		AuthInfo:                     &AuthInfo{},
-		TlsConfig:                    &tls.Config{},
+		TraversalSource:   "g",
+		TransporterType:   Gorilla,
+		LogVerbosity:      Info,
+		Logger:            &defaultLogger{},
+		Language:          language.English,
+		AuthInfo:          &AuthInfo{},
+		TlsConfig:         &tls.Config{},
+		KeepAliveInterval: keepAliveIntervalDefault,
+		WriteDeadline:     writeDeadlineDefault,
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
-		Session:                      "",
+		Session:         "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -85,9 +91,12 @@ func NewDriverRemoteConnection(
 		settings.MaximumConcurrentConnections = 1
 	}
 
-	pool, err := newLoadBalancingPool(url, settings.AuthInfo, settings.TlsConfig, settings.NewConnectionThreshold,
-		settings.MaximumConcurrentConnections, logHandler)
+	pool, err := newLoadBalancingPool(url, logHandler, settings.AuthInfo, settings.TlsConfig, settings.KeepAliveInterval,
+		settings.WriteDeadline, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
 	if err != nil {
+		if err != nil {
+			logHandler.logf(Error, logErrorGeneric, "NewDriverRemoteConnection", err.Error())
+		}
 		return nil, err
 	}
 
@@ -124,7 +133,11 @@ func (driver *DriverRemoteConnection) Close() {
 
 // Submit sends a string traversal to the server.
 func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet, error) {
-	return driver.client.Submit(traversalString)
+	result, err := driver.client.Submit(traversalString)
+	if err != nil {
+		driver.client.logHandler.logf(Error, logErrorGeneric, "Driver.Submit()", err.Error())
+	}
+	return result, err
 }
 
 // submitBytecode sends a bytecode traversal to the server.
@@ -139,9 +152,9 @@ func (driver *DriverRemoteConnection) isSession() bool {
 // CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
 	if len(sessionId) > 1 {
-		return nil, NewError(err0201CreateSessionMultipleIdsError)
+		return nil, errors.New("more than one Session ID specified. Cannot create Session with multiple UUIDs")
 	} else if driver.isSession() {
-		return nil, NewError(err0202CreateSessionFromSessionError)
+		return nil, errors.New("connection is already bound to a Session - child sessions are not allowed")
 	}
 
 	driver.client.logHandler.log(Info, creatingSessionConnection)

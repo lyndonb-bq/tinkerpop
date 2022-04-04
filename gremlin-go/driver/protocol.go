@@ -24,6 +24,7 @@ import (
 	"encoding/base64"
 	"net/http"
 	"sync"
+	"time"
 )
 
 // protocol handles invoking serialization and deserialization, as well as handling the lifecycle of raw data passed to
@@ -33,6 +34,8 @@ type protocol interface {
 	write(request *request) error
 	close() (err error)
 }
+
+const authenticationFailed = uint16(151)
 
 type protocolBase struct {
 	protocol
@@ -48,6 +51,7 @@ type gremlinServerWSProtocol struct {
 	maxContentLength int
 	closed           bool
 	mutex            sync.Mutex
+	wg               *sync.WaitGroup
 }
 
 func (protocol *gremlinServerWSProtocol) readLoop(resultSets *synchronizedMap, errorCallback func(), log *logHandler) {
@@ -57,6 +61,7 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets *synchronizedMap, e
 		protocol.mutex.Lock()
 		if protocol.closed {
 			protocol.mutex.Unlock()
+			protocol.wg.Done()
 			return
 		}
 		protocol.mutex.Unlock()
@@ -65,6 +70,7 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets *synchronizedMap, e
 			_ = protocol.transporter.Close()
 			log.logf(Error, readLoopError, err.Error())
 			readErrorHandler(resultSets, errorCallback, err, log)
+			protocol.wg.Done()
 			return
 		}
 
@@ -73,12 +79,14 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets *synchronizedMap, e
 		if err != nil {
 			log.logger.Log(Error, err)
 			readErrorHandler(resultSets, errorCallback, err, log)
+			protocol.wg.Done()
 			return
 		}
 
 		err = protocol.responseHandler(resultSets, resp, log)
 		if err != nil {
 			readErrorHandler(resultSets, errorCallback, err, log)
+			protocol.wg.Done()
 			return
 		}
 	}
@@ -98,7 +106,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		response.responseResult.meta, response.responseResult.data
 	responseIDString := responseID.String()
 	if resultSets.load(responseIDString) == nil {
-		return NewError(err0501ResponseHandlerResultSetNotCreatedError)
+		return errors.New("resultSet was not created before data was received")
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSets.load(responseIDString).setAggregateTo(aggregateTo.(string))
@@ -121,7 +129,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		// Add data to the ResultSet.
 		resultSets.load(responseIDString).addResult(&Result{data})
 		log.logger.Logf(Info, "Partial %v===>%v", response.responseStatus, data)
-	} else if statusCode == http.StatusProxyAuthRequired || statusCode == 151 {
+	} else if statusCode == http.StatusProxyAuthRequired || statusCode == authenticationFailed {
 		// http status code 151 is not defined here, but corresponds with 403, i.e. authentication has failed.
 		// Server has requested basic auth.
 		authInfo := protocol.transporter.getAuthInfo()
@@ -168,11 +176,15 @@ func (protocol *gremlinServerWSProtocol) close() (err error) {
 		protocol.closed = true
 	}
 	protocol.mutex.Unlock()
+	protocol.wg.Wait()
 	return
 }
 
-func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, url string, authInfo *AuthInfo, tlsConfig *tls.Config, results *synchronizedMap, errorCallback func()) (protocol, error) {
-	transport, err := getTransportLayer(transporterType, url, authInfo, tlsConfig)
+func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, url string, authInfo *AuthInfo,
+	tlsConfig *tls.Config, keepAliveInterval time.Duration, writeDeadline time.Duration, results *synchronizedMap,
+	errorCallback func()) (protocol, error) {
+	wg := &sync.WaitGroup{}
+	transport, err := getTransportLayer(transporterType, url, authInfo, tlsConfig, keepAliveInterval, writeDeadline)
 	if err != nil {
 		return nil, err
 	}
@@ -184,11 +196,13 @@ func newGremlinServerWSProtocol(handler *logHandler, transporterType Transporter
 		maxContentLength: 1,
 		closed:           false,
 		mutex:            sync.Mutex{},
+		wg:               wg,
 	}
 	err = gremlinProtocol.transporter.Connect()
 	if err != nil {
 		return nil, err
 	}
+	wg.Add(1)
 	go gremlinProtocol.readLoop(results, errorCallback, handler)
 	return gremlinProtocol, nil
 }

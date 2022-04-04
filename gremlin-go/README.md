@@ -72,7 +72,9 @@ Please review the [staticcheck documentation][scheck docs] for more details on i
 
 To install the Gremlin-Go as a dependency for your project, run the following in the root directory of your project that contains your `go.mod` file:
 
-`go get github.com/apache/tinkerpop/gremlin-go@3.5-dev`
+`go get github.com/apache/tinkerpop/gremlin-go[optionally append @<version>, note this requires GO111MODULE=on]`
+
+Note: Currently as of Milestone #2, Gremlin-Go exists on the `gremlin-go` branch. Expect this to change in the future when the project is merged to .
 
 After running the `go get` command, your `go.mod` file should contain something similar to the following:
 
@@ -81,7 +83,7 @@ module gremlin-go-example
 
 go 1.17
 
-require github.com/apache/tinkerpop/gremlin-go v3.5
+require github.com/apache/tinkerpop/gremlin-go v<version>
 ```
 
 If it does, then this means Gremlin-Go was successfully installed as a dependency of your project.
@@ -106,7 +108,7 @@ module gremlin-go-example
 
 go 1.17
 
-require github.com/apache/tinkerpop/gremlin-go v3.5
+require github.com/apache/tinkerpop/gremlin-go v0.0.0-20220131225152-54920637bf94
 
 require (
 	github.com/google/uuid v1.3.0 // indirect
@@ -166,7 +168,7 @@ data-flow language that enables users to succinctly express complex traversals o
 property graph.
 
 Gremlin-Go implements Gremlin within the Go language and can be used on any Go runtime greater than v1.17. One
-important distinction with Go and Java is that the functions are capitalized, as is required to export functions is Go. 
+important difference between Go and Java is that the functions are capitalized, as is required to export functions is Go. 
 
 Gremlin-Go is designed to connect to a "server" that is hosting a TinkerPop-enabled graph system. That "server"
 could be [Gremlin Server][gs] or a [remote Gremlin provider][rgp] that exposes protocols by which Gremlin-Go
@@ -247,8 +249,12 @@ func main() {
 		fmt.Println(err)
 		return 
 	}
-	// The returned promised is a go channel, to wait for all submitted steps to finish execution.
-	<-promise
+	
+	// The returned promised is a go channel to wait for all submitted steps to finish execution and return error.
+	if <-promise != nil {
+		fmt.Println(err)
+		return
+	}
 	
 	// Get the value of the property
 	result, err := g.V().HasLabel("gremlin").Values("language").ToList()
@@ -290,8 +296,11 @@ if err != nil {
     fmt.Println(err)
     return
 }
-// Wait for all steps to finish execution
-<-promise
+// Wait for all steps to finish execution and check for error.
+if <-promise != nil {
+    fmt.Println(err)
+    return
+}
 ```
 ### Find Vertices
 Getting the property value associated with the added vertex. We currently only support `ToList()` for submitting the remote traversal. Support for `Next()` will be implemented in the subsequent milestones. 
@@ -317,8 +326,11 @@ if err != nil {
 	fmt.Println(err)
     return
 }
-// Wait for all steps to finish execution
-<-promise
+// Wait for all steps to finish execution and check for error.
+if <-promise != nil {
+    fmt.Println(err)
+    return
+}
 ```
 
 # Specifications

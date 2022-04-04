@@ -22,16 +22,20 @@ package org.apache.tinkerpop.gremlin.server.util;
  * Utility class for working with exceptions.
  *
  * @author Stephen Mallette (http://stephen.genoprime.com)
+ * @deprecated As of release 3.5.3, replaced by {@link org.apache.tinkerpop.gremlin.util.ExceptionHelper} in {@code gremlin-core}
  */
+@Deprecated
 public final class ExceptionHelper {
 
     private ExceptionHelper() {}
 
+    @Deprecated
     public static String getMessageOrName(final Throwable t) {
         return (null == t.getMessage() || t.getMessage().isEmpty()) ?
             t.getClass().getName() : t.getMessage();
     }
 
+    @Deprecated
     public static String getMessageFromExceptionOrCause(final Throwable t) {
         return null == t.getCause() ? getMessageOrName(t) : getMessageOrName(t.getCause());
     }

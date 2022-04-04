@@ -23,6 +23,7 @@
 'use strict';
 
 const EventEmitter = require('events');
+const Stream = require('stream');
 const WebSocket = require('ws');
 const util = require('util');
 const utils = require('../utils');
@@ -34,7 +35,7 @@ const responseStatusCode = {
   success: 200,
   noContent: 204,
   partialContent: 206,
-  authenticationChallenge:  407,
+  authenticationChallenge: 407,
 };
 
 const defaultMimeType = 'application/vnd.gremlin-v3.0+json';
@@ -47,7 +48,6 @@ const pongTimeoutDelay = 30 * 1000;
  * Represents a single connection to a Gremlin Server.
  */
 class Connection extends EventEmitter {
-
   /**
    * Creates a new instance of {@link Connection}.
    * @param {String} url The resource uri.
@@ -118,14 +118,14 @@ class Connection extends EventEmitter {
       return this._openPromise;
     }
 
-    this.emit('log', `ws open`);
+    this.emit('log', 'ws open');
 
     this._ws = new WebSocket(this.url, {
       headers: this.options.headers,
       ca: this.options.ca,
       cert: this.options.cert,
       pfx: this.options.pfx,
-      rejectUnauthorized: this.options.rejectUnauthorized
+      rejectUnauthorized: this.options.rejectUnauthorized,
     });
 
     this._ws.on('message', (data) => this._handleMessage(data));
@@ -143,7 +143,7 @@ class Connection extends EventEmitter {
       this._ws.pong();
     });
 
-    return this._openPromise = new Promise((resolve, reject) => {
+    return (this._openPromise = new Promise((resolve, reject) => {
       this._ws.on('open', () => {
         this.isOpen = true;
         if (this._pingEnabled) {
@@ -155,51 +155,79 @@ class Connection extends EventEmitter {
         this._handleError(err);
         reject(err);
       });
-    });
+    }));
   }
 
   /** @override */
   submit(processor, op, args, requestId) {
     const rid = requestId || utils.getUuid();
-    return this.open().then(() => new Promise((resolve, reject) => {
-      if (op !== 'authentication') {
-        this._responseHandlers[rid] = {
-          callback: (err, result) => err ? reject(err) : resolve(result),
-          result: null
+    return this.open().then(
+      () =>
+        new Promise((resolve, reject) => {
+          if (op !== 'authentication') {
+            this._responseHandlers[rid] = {
+              callback: (err, result) => (err ? reject(err) : resolve(result)),
+              result: null,
+            };
+          }
+
+          const request = {
+            requestId: rid,
+            op: op || 'bytecode',
+            // if using op eval need to ensure processor stays unset if caller didn't set it.
+            processor: !processor && op !== 'eval' ? 'traversal' : processor,
+            args: args || {},
+          };
+
+          const request_buf = this._writer.writeRequest(request);
+          const message = Buffer.concat([this._header_buf, request_buf], this._header_buf.length + request_buf.length);
+          this._ws.send(message);
+        }),
+    );
+  }
+
+  /** @override */
+  stream(processor, op, args, requestId) {
+    const rid = requestId || utils.getUuid();
+
+    const readableStream = new Stream.Readable({
+      objectMode: true,
+      read() {},
+    });
+
+    this._responseHandlers[rid] = {
+      callback: (err) => (err ? readableStream.destroy(err) : readableStream.push(null)),
+      result: readableStream,
+    };
+
+    this.open()
+      .then(() => {
+        const request = {
+          requestId: rid,
+          op: op || 'bytecode',
+          // if using op eval need to ensure processor stays unset if caller didn't set it.
+          processor: !processor && op !== 'eval' ? 'traversal' : processor,
+          args: args || {},
         };
-      }
 
-      const request = {
-        'requestId': rid,
-        'op': op || 'bytecode',
-        // if using op eval need to ensure processor stays unset if caller didn't set it.
-        'processor': (!processor && op !== 'eval') ? 'traversal' : processor,
-        'args': args || {},
-      };
+        const request_buf = this._writer.writeRequest(request);
+        const message = Buffer.concat([this._header_buf, request_buf], this._header_buf.length + request_buf.length);
+        this._ws.send(message);
+      })
+      .catch((err) => readableStream.destroy(err));
 
-      const request_buf = this._writer.writeRequest(request);
-      const message = Buffer.concat(
-        [this._header_buf, request_buf],
-        this._header_buf.length + request_buf.length
-      );
-      this._ws.send(message);
-    }));
+    return readableStream;
   }
 
   _getDefaultReader(mimeType) {
-    return mimeType === graphSON2MimeType
-      ? new serializer.GraphSON2Reader()
-      : new serializer.GraphSONReader();
+    return mimeType === graphSON2MimeType ? new serializer.GraphSON2Reader() : new serializer.GraphSONReader();
   }
 
   _getDefaultWriter(mimeType) {
-    return mimeType === graphSON2MimeType
-      ? new serializer.GraphSON2Writer()
-      : new serializer.GraphSONWriter();
+    return mimeType === graphSON2MimeType ? new serializer.GraphSON2Writer() : new serializer.GraphSONWriter();
   }
 
   _pingHeartbeat() {
-
     if (this._pingInterval) {
       clearInterval(this._pingInterval);
       this._pingInterval = null;
@@ -219,7 +247,6 @@ class Connection extends EventEmitter {
       }, this._pongTimeoutDelay);
 
       this._ws.ping();
-
     }, this._pingIntervalDelay);
   }
 
@@ -243,18 +270,26 @@ class Connection extends EventEmitter {
     if (response.requestId === null || response.requestId === undefined) {
       // There was a serialization issue on the server that prevented the parsing of the request id
       // We invoke any of the pending handlers with an error
-      Object.keys(this._responseHandlers).forEach(requestId => {
+      Object.keys(this._responseHandlers).forEach((requestId) => {
         const handler = this._responseHandlers[requestId];
         this._clearHandler(requestId);
         if (response.status !== undefined && response.status.message) {
           return handler.callback(
             // TINKERPOP-2285: keep the old server error message in case folks are parsing that - fix in a future breaking version
-            new ResponseError(util.format(
-              'Server error (no request information): %s (%d)', response.status.message, response.status.code), response.status));
-        } else {
-           // TINKERPOP-2285: keep the old server error message in case folks are parsing that - fix in a future breaking version
-          return handler.callback(new ResponseError(util.format('Server error (no request information): %j', response), response.status));
+            new ResponseError(
+              util.format(
+                'Server error (no request information): %s (%d)',
+                response.status.message,
+                response.status.code,
+              ),
+              response.status,
+            ),
+          );
         }
+        // TINKERPOP-2285: keep the old server error message in case folks are parsing that - fix in a future breaking version
+        return handler.callback(
+          new ResponseError(util.format('Server error (no request information): %j', response), response.status),
+        );
       });
       return;
     }
@@ -268,31 +303,49 @@ class Connection extends EventEmitter {
     }
 
     if (response.status.code === responseStatusCode.authenticationChallenge && this._authenticator) {
-      this._authenticator.evaluateChallenge(response.result.data).then(res => {
-        return this.submit(undefined, 'authentication', res, response.requestId);
-      }).catch(handler.callback);
+      this._authenticator
+        .evaluateChallenge(response.result.data)
+        .then((res) => this.submit(undefined, 'authentication', res, response.requestId))
+        .catch(handler.callback);
 
       return;
-    }
-    else if (response.status.code >= 400) {
+    } else if (response.status.code >= 400) {
       // callback in error
       return handler.callback(
         // TINKERPOP-2285: keep the old server error message in case folks are parsing that - fix in a future breaking version
-        new ResponseError(util.format('Server error: %s (%d)', response.status.message, response.status.code), response.status));
+        new ResponseError(
+          util.format('Server error: %s (%d)', response.status.message, response.status.code),
+          response.status,
+        ),
+      );
     }
+
+    const isStreamingResponse = handler.result instanceof Stream.Readable;
+
     switch (response.status.code) {
       case responseStatusCode.noContent:
         this._clearHandler(response.requestId);
+        if (isStreamingResponse) {
+          handler.result.push(new ResultSet(utils.emptyArray, response.status.attributes));
+          return handler.callback(null);
+        }
         return handler.callback(null, new ResultSet(utils.emptyArray, response.status.attributes));
       case responseStatusCode.partialContent:
+        if (isStreamingResponse) {
+          handler.result.push(new ResultSet(response.result.data, response.status.attributes));
+          break;
+        }
         handler.result = handler.result || [];
         handler.result.push.apply(handler.result, response.result.data);
         break;
       default:
+        if (isStreamingResponse) {
+          handler.result.push(new ResultSet(response.result.data, response.status.attributes));
+          return handler.callback(null);
+        }
         if (handler.result) {
           handler.result.push.apply(handler.result, response.result.data);
-        }
-        else {
+        } else {
           handler.result = response.result.data;
         }
         this._clearHandler(response.requestId);
@@ -337,7 +390,7 @@ class Connection extends EventEmitter {
       return Promise.resolve();
     }
     if (!this._closePromise) {
-      this._closePromise = new Promise(resolve => {
+      this._closePromise = new Promise((resolve) => {
         this._closeCallback = resolve;
         this._ws.close();
       });

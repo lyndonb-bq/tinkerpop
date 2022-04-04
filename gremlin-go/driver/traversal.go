@@ -36,7 +36,7 @@ type Traversal struct {
 
 // ToList returns the result in a list.
 func (t *Traversal) ToList() ([]*Result, error) {
-	// TODO: AN-1065 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
+	// TODO: This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
 	if t.remote == nil {
 		return nil, NewError(err0901ToListAnonTraversalError)
 	}
@@ -64,7 +64,7 @@ func (t *Traversal) ToSet() (map[*Result]bool, error) {
 
 // Iterate all the Traverser instances in the traversal and returns the empty traversal.
 func (t *Traversal) Iterate() (*Traversal, <-chan error, error) {
-	// TODO: AN-1065 This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
+	// TODO: This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
 	if t.remote == nil {
 		return nil, nil, NewError(err0902IterateAnonTraversalError)
 	}

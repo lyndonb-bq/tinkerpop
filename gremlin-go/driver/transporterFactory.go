@@ -21,6 +21,9 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"errors"
+	"sync"
+	"time"
 )
 
 // TransporterType is an alias for valid transport protocols.
@@ -31,11 +34,11 @@ const (
 	Gorilla TransporterType = iota + 1
 )
 
-func getTransportLayer(transporterType TransporterType, url string, authInfo *AuthInfo, tlsConfig *tls.Config) (transporter, error) {
+func getTransportLayer(transporterType TransporterType, url string, authInfo *AuthInfo, tlsConfig *tls.Config, keepAliveInterval time.Duration, writeDeadline time.Duration) (transporter, error) {
 	var transporter transporter
 	switch transporterType {
 	case Gorilla:
-		transporter = &gorillaTransporter{url: url, authInfo: authInfo, tlsConfig: tlsConfig}
+		transporter = &gorillaTransporter{url: url, authInfo: authInfo, tlsConfig: tlsConfig, keepAliveInterval: keepAliveInterval, writeDeadline: writeDeadline, writeChannel: make(chan []byte, writeChannelSizeDefault), wg: &sync.WaitGroup{}}
 	default:
 		return nil, NewError(err0801GetTransportLayerNoTypeError)
 	}

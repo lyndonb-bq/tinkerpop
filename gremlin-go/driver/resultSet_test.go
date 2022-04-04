@@ -140,6 +140,16 @@ func TestChannelResultSet(t *testing.T) {
 		empty = channelResultSet.IsEmpty()
 		assert.True(t, empty)
 	})
+
+	t.Run("Test ResultSet removes self from container.", func(t *testing.T) {
+		container := getSyncMap()
+		assert.Equal(t, 0, container.size())
+		channelResultSet := newChannelResultSet(mockID, container)
+		container.store(mockID, channelResultSet)
+		assert.Equal(t, 1, container.size())
+		channelResultSet.Close()
+		assert.Equal(t, 0, container.size())
+	})
 }
 
 func AddResultsPause(resultSet ResultSet, count int, ticks time.Duration) {
