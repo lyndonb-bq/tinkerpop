@@ -26,6 +26,8 @@ import (
 )
 
 func TestTraversal(t *testing.T) {
+	testTransactionEnable := getEnvOrDefaultBool("TEST_TRANSACTIONS", false)
+
 	t.Run("Test clone traversal", func(t *testing.T) {
 		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
 		original := g.V().Out("created")
@@ -64,7 +66,7 @@ func TestTraversal(t *testing.T) {
 	})
 
 	t.Run("Test Transaction commit", func(t *testing.T) {
-		// skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
 		// Start a transaction traversal.
 		remote := newConnection(t)
 		g := Traversal_().WithRemote(remote)
@@ -95,7 +97,7 @@ func TestTraversal(t *testing.T) {
 	})
 
 	t.Run("Test Transaction rollback", func(t *testing.T) {
-		// skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		skipTestsIfNotEnabled(t, integrationTestSuiteName, testTransactionEnable)
 		// Start a transaction traversal.
 		remote := newConnection(t)
 		g := Traversal_().WithRemote(remote)
@@ -146,12 +148,6 @@ func addV(t *testing.T, g *GraphTraversalSource, name string) {
 	_, promise, err := g.AddV("person").Property("name", name).Iterate()
 	assert.Nil(t, err)
 	assert.Nil(t, <-promise)
-}
-
-func verifyTxState(t *testing.T, gtxList []*transaction, value bool) {
-	for _, tx := range gtxList {
-		assert.Equal(t, value, tx.IsOpen())
-	}
 }
 
 func dropGraphCheckCount(t *testing.T, g *GraphTraversalSource) {
