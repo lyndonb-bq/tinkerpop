@@ -725,7 +725,7 @@ func (t *transaction) Commit() (ResultSet, error) {
 	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
 		return nil, err
 	}
-
+	
 	return t.closeSession(t.sessionBasedConnection.commit())
 }
 
@@ -753,6 +753,15 @@ func (t *transaction) verifyTransactionState(state bool, error string) error {
 }
 
 func (t *transaction) closeSession(rs ResultSet, err error) (ResultSet, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	_, e := rs.All()
+	if e != nil {
+		return nil, err
+	}
+
 	t.sessionBasedConnection.Close()
 	t.isOpen = false
 	return rs, err

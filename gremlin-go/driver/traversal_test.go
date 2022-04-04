@@ -76,8 +76,8 @@ func TestTraversal(t *testing.T) {
 		gtx, _ := tx.Begin()
 		assert.True(t, tx.IsOpen())
 
-		addV(t, gtx)
-		addV(t, gtx)
+		addV(t, gtx, "lyndon")
+		addV(t, gtx, "valentyn")
 		assert.Equal(t, startCount, getCount(t, g))
 		assert.Equal(t, startCount+2, getCount(t, gtx))
 
@@ -87,11 +87,13 @@ func TestTraversal(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.False(t, tx.IsOpen())
-		// todo: assert.Equal(t, startCount+2, getCount(t, g))
+		assert.Equal(t, startCount+2, getCount(t, g))
+		assert.Equal(t, closed, gtx.remoteConnection.client.connection.state)
 
-		// dropGraphCheckCount(t, g)
+		dropGraphCheckCount(t, g)
 		verifyGtxClosed(t, gtx)
 	})
+
 	t.Run("Test Transaction rollback", func(t *testing.T) {
 		// skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 		// Start a transaction traversal.
@@ -105,8 +107,8 @@ func TestTraversal(t *testing.T) {
 		gtx, _ := tx.Begin()
 		assert.True(t, tx.IsOpen())
 
-		addV(t, gtx)
-		addV(t, gtx)
+		addV(t, gtx, "lyndon")
+		addV(t, gtx, "valentyn")
 		assert.Equal(t, startCount, getCount(t, g))
 		assert.Equal(t, startCount+2, getCount(t, gtx))
 
@@ -119,10 +121,9 @@ func TestTraversal(t *testing.T) {
 		assert.Equal(t, startCount, getCount(t, g))
 		assert.Equal(t, closed, gtx.remoteConnection.client.connection.state)
 
-		// dropGraphCheckCount(t, g)
+		dropGraphCheckCount(t, g)
 		verifyGtxClosed(t, gtx)
 	})
-
 }
 
 func newConnection(t *testing.T) *DriverRemoteConnection {
@@ -141,24 +142,11 @@ func newConnection(t *testing.T) *DriverRemoteConnection {
 	return remote
 }
 
-func addV(t *testing.T, g *GraphTraversalSource) {
-	_, promise, err := g.AddV("person").Property("name", "lyndon").Iterate()
+func addV(t *testing.T, g *GraphTraversalSource, name string) {
+	_, promise, err := g.AddV("person").Property("name", name).Iterate()
 	assert.Nil(t, err)
 	assert.Nil(t, <-promise)
 }
-
-/*func addNodeValidateTransactionState(t *testing.T, g, gAddTo *GraphTraversalSource,
-	gStartCount, gAddToStartCount int32, txVerifyList ...*transaction) {
-	// Add a single node to g_add_to, but not g.
-	// Check that vertex count in g is gStartCount and vertex count in gAddTo is gAddToStartCount + 1.
-	_, promise, err := gAddTo.AddV("person").Property("name", "lyndon").Iterate()
-	assert.Nil(t, err)
-	assert.Nil(t, <-promise)
-	fmt.Printf("--addNodeValidateTransactionState %v-%v\n", gStartCount, getCount(t, g))
-	assert.Equal(t, gAddToStartCount+1, getCount(t, gAddTo))
-	assert.Equal(t, gStartCount, getCount(t, g))
-	verifyTxState(t, txVerifyList, true)
-}*/
 
 func verifyTxState(t *testing.T, gtxList []*transaction, value bool) {
 	for _, tx := range gtxList {
@@ -167,18 +155,7 @@ func verifyTxState(t *testing.T, gtxList []*transaction, value bool) {
 }
 
 func dropGraphCheckCount(t *testing.T, g *GraphTraversalSource) {
-	//time.Sleep(200 * time.Millisecond)
-
-	g1, _ := g.V().ToList()
-
-	//time.Sleep(200 * time.Millisecond)
-
 	dropGraph(t, g)
-
-	g2, err := g.V().ToList()
-	count, err := g.V().Count().ToList()
-	println("-- XXX:", g1, g2, err, count)
-
 	assert.Equal(t, int32(0), getCount(t, g))
 }
 

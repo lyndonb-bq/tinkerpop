@@ -111,6 +111,10 @@ func (client *Client) submitBytecode(bytecode *bytecode) (ResultSet, error) {
 
 func (client *Client) closeSession() error {
 	message := makeCloseSessionRequest(client.session)
-	_, err := client.connection.write(&message)
+	result, err := client.connection.write(&message)
+	if err != nil {
+		return err
+	}
+	_, err = result.All()
 	return err
 }
