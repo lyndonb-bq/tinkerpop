@@ -707,35 +707,35 @@ func (t *transaction) Begin() (*GraphTraversalSource, error) {
 	return gts, nil
 }
 
-func (t *transaction) Rollback() (ResultSet, error) {
+func (t *transaction) Rollback() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
 	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
-		return nil, err
+		return err
 	}
 
 	return t.closeSession(t.sessionBasedConnection.rollback())
 }
 
-func (t *transaction) Commit() (ResultSet, error) {
+func (t *transaction) Commit() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
 	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
-		return nil, err
+		return err
 	}
-	
+
 	return t.closeSession(t.sessionBasedConnection.commit())
 }
 
-func (t *transaction) Close() (ResultSet, error) {
+func (t *transaction) Close() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
 	err := t.verifyTransactionState(true, "Cannot close a transaction that has previously been closed.")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	return t.closeSession(nil, nil)
@@ -752,17 +752,17 @@ func (t *transaction) verifyTransactionState(state bool, error string) error {
 	return nil
 }
 
-func (t *transaction) closeSession(rs ResultSet, err error) (ResultSet, error) {
+func (t *transaction) closeSession(rs ResultSet, err error) error {
+	defer t.closeConnection()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, e := rs.All()
-	if e != nil {
-		return nil, err
-	}
+	return e
+}
 
+func (t *transaction) closeConnection() {
 	t.sessionBasedConnection.Close()
 	t.isOpen = false
-	return rs, err
 }

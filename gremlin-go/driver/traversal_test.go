@@ -86,7 +86,7 @@ func TestTraversal(t *testing.T) {
 
 		// Commit the transaction, this should close it.
 		// Our vertex count outside the transaction should be 2 + the start count.
-		_, err := tx.Commit()
+		err := tx.Commit()
 		assert.Nil(t, err)
 
 		assert.False(t, tx.IsOpen())
@@ -116,7 +116,7 @@ func TestTraversal(t *testing.T) {
 
 		// Rollback the transaction, this should close it.
 		// Our vertex count outside the transaction should be the start count.
-		_, err := tx.Rollback()
+		err := tx.Rollback()
 		assert.Nil(t, err)
 
 		assert.False(t, tx.IsOpen())
