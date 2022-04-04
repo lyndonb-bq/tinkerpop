@@ -26,6 +26,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.CallbackRegistry;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.Event;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.EventCallback;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.ListCallbackRegistry;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.decoration.EventStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
@@ -42,6 +43,7 @@ import org.apache.tinkerpop.gremlin.structure.util.keyed.KeyedVertexProperty;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -106,67 +108,76 @@ public class AddPropertyStep<S extends Element> extends SideEffectStep<S>
                     "Property cardinality can only be set for a Vertex but the traversal encountered %s for key: %s",
                     element.getClass().getSimpleName(), key));
 
-        if (this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()) {
-            getTraversal().getStrategies().getStrategy(EventStrategy.class)
-                    .ifPresent(eventStrategy -> {
-                        Event.ElementPropertyChangedEvent evt = null;
-                        if (element instanceof Vertex) {
-                            final VertexProperty.Cardinality cardinality = this.cardinality != null
-                                    ? this.cardinality
-                                    : element.graph().features().vertex().getCardinality(key);
+        VertexProperty.Cardinality cardinality = this.cardinality != null
+                ? this.cardinality
+                : element.graph().features().vertex().getCardinality(key);
 
-                            if (cardinality == VertexProperty.Cardinality.list) {
-                                evt = new Event.VertexPropertyChangedEvent(eventStrategy.detach((Vertex) element),
-                                        new KeyedVertexProperty(key), value, vertexPropertyKeyValues);
-                            }
-                            else if (cardinality == VertexProperty.Cardinality.set) {
-                                Property currentProperty = null;
-                                final Iterator<? extends Property> properties = traverser.get().properties(key);
-                                while (properties.hasNext()) {
-                                    final Property property = properties.next();
-                                    if (Objects.equals(property.value(), value)) {
-                                        currentProperty = property;
-                                        break;
-                                    }
-                                }
-                                evt = new Event.VertexPropertyChangedEvent(eventStrategy.detach((Vertex) element),
-                                        currentProperty == null ?
-                                                new KeyedVertexProperty(key) :
-                                                eventStrategy.detach((VertexProperty) currentProperty), value, vertexPropertyKeyValues);
-                            }
+        final Optional<EventStrategy> optEventStrategy = getTraversal().getStrategies().getStrategy(EventStrategy.class);
+        final boolean eventingIsConfigured =  this.callbackRegistry != null && !callbackRegistry.getCallbacks().isEmpty()
+                && optEventStrategy.isPresent();
+        final EventStrategy es = optEventStrategy.orElse(null);
+
+        // find property to remove
+        Property removedProperty = VertexProperty.empty();
+
+        // only need to capture the removedProperty if eventing is configured
+        if (eventingIsConfigured) {
+            if (element instanceof Vertex) {
+                if (cardinality == VertexProperty.Cardinality.set) {
+                    final Iterator<? extends Property> properties = element.properties(key);
+                    while (properties.hasNext()) {
+                        final Property property = properties.next();
+                        if (Objects.equals(property.value(), value)) {
+                            removedProperty = property;
+                            break;
                         }
-                        if (evt == null) {
-                            final Property currentProperty = traverser.get().property(key);
-                            final boolean newProperty = element instanceof Vertex ? currentProperty == VertexProperty.empty() : currentProperty == Property.empty();
-                            if (element instanceof Vertex)
-                                evt = new Event.VertexPropertyChangedEvent(eventStrategy.detach((Vertex) element),
-                                        newProperty ?
-                                                new KeyedVertexProperty(key) :
-                                                eventStrategy.detach((VertexProperty) currentProperty), value, vertexPropertyKeyValues);
-                            else if (element instanceof Edge)
-                                evt = new Event.EdgePropertyChangedEvent(eventStrategy.detach((Edge) element),
-                                        newProperty ?
-                                                new KeyedProperty(key) :
-                                                eventStrategy.detach(currentProperty), value);
-                            else if (element instanceof VertexProperty)
-                                evt = new Event.VertexPropertyPropertyChangedEvent(eventStrategy.detach((VertexProperty) element),
-                                        newProperty ?
-                                                new KeyedProperty(key) :
-                                                eventStrategy.detach(currentProperty), value);
-                            else
-                                throw new IllegalStateException(String.format("The incoming object cannot be processed by change eventing in %s:  %s", AddPropertyStep.class.getName(), element));
-                        }
-                        final Event.ElementPropertyChangedEvent event = evt;
-                        this.callbackRegistry.getCallbacks().forEach(c -> c.accept(event));
-                    });
+                    }
+                } else if (cardinality == VertexProperty.Cardinality.single) {
+                    removedProperty = element.property(key);
+                }
+            } else {
+                removedProperty = element.property(key);
+            }
+
+            // detach removed property
+            if (removedProperty.isPresent()) {
+                removedProperty = es.detach(removedProperty);
+            } else {
+                removedProperty = element instanceof Vertex ? new KeyedVertexProperty(key) : new KeyedProperty(key);
+            }
         }
 
-        if (null != this.cardinality)
-            ((Vertex) element).property(this.cardinality, key, value, vertexPropertyKeyValues);
-        else if (vertexPropertyKeyValues.length > 0)
-            ((Vertex) element).property(key, value, vertexPropertyKeyValues);
-        else
+        // update property
+        if (element instanceof Vertex) {
+            if (null != this.cardinality) {
+                ((Vertex) element).property(this.cardinality, key, value, vertexPropertyKeyValues);
+            } else if (vertexPropertyKeyValues.length > 0) {
+                ((Vertex) element).property(key, value, vertexPropertyKeyValues);
+            } else {
+                ((Vertex) element).property(key, value);
+            }
+        } else if (element instanceof Edge) {
             element.property(key, value);
+        } else if (element instanceof VertexProperty) {
+            element.property(key, value);
+        }
+
+        // trigger event callbacks
+        if (eventingIsConfigured) {
+            final Event.ElementPropertyChangedEvent event;
+            if (element instanceof Vertex) {
+                event = new Event.VertexPropertyChangedEvent(es.detach((Vertex) element), removedProperty, value, vertexPropertyKeyValues);
+            } else if (element instanceof Edge) {
+                event = new Event.EdgePropertyChangedEvent(es.detach((Edge) element), removedProperty, value);
+            } else if (element instanceof VertexProperty) {
+                event = new Event.VertexPropertyPropertyChangedEvent(es.detach((VertexProperty) element), removedProperty, value);
+            } else {
+                throw new IllegalStateException(String.format("The incoming object cannot be processed by change eventing in %s:  %s", AddPropertyStep.class.getName(), element));
+            }
+            for (EventCallback<Event.ElementPropertyChangedEvent> c : this.callbackRegistry.getCallbacks()) {
+                c.accept(event);
+            }
+        }
     }
 
     @Override

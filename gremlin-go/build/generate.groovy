@@ -31,7 +31,7 @@ import javax.script.SimpleBindings
 import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource.traversal
 
 // file is overwritten on each generation
-radishGremlinFile = new File("${projectBaseDir}/gremlin-go/cucumber/gremlin.go")
+radishGremlinFile = new File("${projectBaseDir}/gremlin-go/driver/cucumber/gremlin.go")
 
 // assumes globally unique scenario names for keys with list of Gremlin traversals as they appear
 gremlins = FeatureReader.parse("${projectBaseDir}")
@@ -75,7 +75,7 @@ radishGremlinFile.withWriter('UTF-8') { Writer writer ->
         '\n' +
         'import (\n' +
         '\t \"errors\"\n' +
-        '\t \"github.com/lyndonb-bq/tinkerpop/gremlin-go/driver\"\n' +
+        '\t \"github.com/apache/tinkerpop/gremlin-go/driver\"\n' +
         ')\n'
     )
 

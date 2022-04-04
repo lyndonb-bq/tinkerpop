@@ -24,18 +24,26 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
+	"runtime"
+	"time"
 )
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
 type DriverRemoteConnectionSettings struct {
-	TraversalSource string
-	TransporterType TransporterType
-	LogVerbosity    LogVerbosity
-	Logger          Logger
-	Language        language.Tag
-	AuthInfo        *AuthInfo
-	TlsConfig       *tls.Config
-	Session         string
+	TraversalSource   string
+	TransporterType   TransporterType
+	LogVerbosity      LogVerbosity
+	Logger            Logger
+	Language          language.Tag
+	AuthInfo          *AuthInfo
+	TlsConfig         *tls.Config
+	KeepAliveInterval time.Duration
+	WriteDeadline     time.Duration
+	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
+	NewConnectionThreshold int
+	// Maximum number of concurrent connections. Default: number of runtime processors
+	MaximumConcurrentConnections int
+	Session                      string
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -56,14 +64,18 @@ func NewDriverRemoteConnection(
 	url string,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
-		TraversalSource: "g",
-		TransporterType: Gorilla,
-		LogVerbosity:    Info,
-		Logger:          &defaultLogger{},
-		Language:        language.English,
-		AuthInfo:        &AuthInfo{},
-		TlsConfig:       &tls.Config{},
-		Session:         "",
+		TraversalSource:              "g",
+		TransporterType:              Gorilla,
+		LogVerbosity:                 Info,
+		Logger:                       &defaultLogger{},
+		Language:                     language.English,
+		AuthInfo:                     &AuthInfo{},
+		TlsConfig:                    &tls.Config{},
+		KeepAliveInterval:            keepAliveIntervalDefault,
+		WriteDeadline:                writeDeadlineDefault,
+		NewConnectionThreshold:       defaultNewConnectionThreshold,
+		MaximumConcurrentConnections: runtime.NumCPU(),
+		Session:                      "",
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -74,8 +86,17 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	connection, err := createConnection(url, settings.AuthInfo, settings.TlsConfig, logHandler)
+	if settings.Session != "" {
+		logHandler.log(Info, sessionDetected)
+		settings.MaximumConcurrentConnections = 1
+	}
+
+	pool, err := newLoadBalancingPool(url, logHandler, settings.AuthInfo, settings.TlsConfig, settings.KeepAliveInterval,
+		settings.WriteDeadline, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
 	if err != nil {
+		if err != nil {
+			logHandler.logf(Error, logErrorGeneric, "NewDriverRemoteConnection", err.Error())
+		}
 		return nil, err
 	}
 
@@ -84,7 +105,7 @@ func NewDriverRemoteConnection(
 		traversalSource: settings.TraversalSource,
 		transporterType: settings.TransporterType,
 		logHandler:      logHandler,
-		connection:      connection,
+		connections:     pool,
 		session:         settings.Session,
 	}
 
@@ -112,7 +133,11 @@ func (driver *DriverRemoteConnection) Close() {
 
 // Submit sends a string traversal to the server.
 func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet, error) {
-	return driver.client.Submit(traversalString)
+	result, err := driver.client.Submit(traversalString)
+	if err != nil {
+		driver.client.logHandler.logf(Error, logErrorGeneric, "Driver.Submit()", err.Error())
+	}
+	return result, err
 }
 
 // submitBytecode sends a bytecode traversal to the server.
