@@ -711,7 +711,7 @@ func (t *transaction) Rollback() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
+	if err := t.verifyTransactionState(true, "Cannot rollback a transaction that is not started."); err != nil {
 		return err
 	}
 
