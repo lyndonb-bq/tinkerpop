@@ -328,10 +328,10 @@ func TestConnection(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, closed, connection.state)
 		err = connection.close()
-		assert.NotNil(t, NewError(err0101ConnectionCloseError))
+		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
 		assert.Equal(t, closed, connection.state)
 		err = connection.close()
-		assert.NotNil(t, NewError(err0101ConnectionCloseError))
+		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
 		assert.Equal(t, closed, connection.state)
 	})
 
@@ -347,7 +347,7 @@ func TestConnection(t *testing.T) {
 		request := makeStringRequest("g.V().count()", "g", "")
 		resultSet, err := connection.write(&request)
 		assert.Nil(t, resultSet)
-		assert.NotNil(t, NewError(err0102WriteConnectionClosedError))
+		assert.Equal(t, NewError(err0102WriteConnectionClosedError), err)
 		assert.Equal(t, closed, connection.state)
 	})
 
@@ -823,7 +823,7 @@ func TestConnection(t *testing.T) {
 			defer s1.Close()
 			s2, err := s1.CreateSession()
 			assert.Nil(t, s2)
-			assert.NotNil(t, NewError(err0202CreateSessionFromSessionError))
+			assert.Equal(t, NewError(err0202CreateSessionFromSessionError), err)
 		})
 
 		t.Run("Test CreateSession with multiple UUIDs failure", func(t *testing.T) {
@@ -838,7 +838,7 @@ func TestConnection(t *testing.T) {
 			defer remote.Close()
 			s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
 			assert.Nil(t, s1)
-			assert.NotNil(t, NewError(err0201CreateSessionMultipleIdsError))
+			assert.Equal(t, NewError(err0201CreateSessionMultipleIdsError), err)
 		})
 	})
 
@@ -902,7 +902,7 @@ func TestConnection(t *testing.T) {
 		// Add vertices and edges to graph.
 		rs, err := g.AddV("person").Property("id", T__.Unfold().Property().AddV()).ToList()
 		assert.Nil(t, rs)
-		assert.NotNil(t, NewError(err0901ToListAnonTraversalError))
+		assert.Equal(t, NewError(err0901ToListAnonTraversalError), err)
 
 		rs, err = g.V().Count().ToList()
 		assert.NotNil(t, rs)
