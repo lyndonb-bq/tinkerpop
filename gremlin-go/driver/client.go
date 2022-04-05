@@ -73,7 +73,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
-		ConnectionTimeout:            45 * time.Second,
+		ConnectionTimeout:            connectionTimeoutDefault,
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
