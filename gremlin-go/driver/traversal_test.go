@@ -148,7 +148,8 @@ func TestTraversal(t *testing.T) {
 		assert.True(t, tx.IsOpen())
 
 		// Can't open inner transaction.
-		_, err = gtx.Tx().Begin()
+		innerTx, err := gtx.Tx().Begin()
+		assert.Nil(t, innerTx)
 		assert.NotNil(t, err)
 
 		// Commit this unused transaction and verify it is no longer open.
