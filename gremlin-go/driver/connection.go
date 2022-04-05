@@ -86,7 +86,7 @@ func (connection *connection) activeResults() int {
 // 		closed: connection was closed by the user.
 //		closedDueToError: connection was closed internally due to an error.
 func createConnection(url string, logHandler *logHandler, authInfo *AuthInfo, tlsConfig *tls.Config,
-	keepAliveInterval time.Duration, writeDeadline time.Duration) (*connection, error) {
+	keepAliveInterval time.Duration, writeDeadline time.Duration, connectionTimeout time.Duration) (*connection, error) {
 	conn := &connection{
 		logHandler,
 		nil,
@@ -95,7 +95,7 @@ func createConnection(url string, logHandler *logHandler, authInfo *AuthInfo, tl
 	}
 	logHandler.log(Info, connectConnection)
 	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, authInfo, tlsConfig, keepAliveInterval,
-		writeDeadline, conn.results, conn.errorCallback)
+		writeDeadline, conn.results, conn.errorCallback, connectionTimeout)
 	if err != nil {
 		logHandler.logf(Error, failedConnection)
 		conn.state = closedDueToError

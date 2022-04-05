@@ -21,6 +21,7 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"net/http"
 	"net/url"
 	"sync"
 	"time"
@@ -31,6 +32,7 @@ import (
 const keepAliveIntervalDefault = 5 * time.Second
 const writeDeadlineDefault = 3 * time.Second
 const writeChannelSizeDefault = 100
+const connectionTimeoutDefault = 45 * time.Second
 
 // Transport layer that uses gorilla/websocket: https://github.com/gorilla/websocket
 // Gorilla WebSocket is a widely used and stable Go implementation of the WebSocket protocol.
@@ -45,6 +47,7 @@ type gorillaTransporter struct {
 	writeDeadline     time.Duration
 	writeChannel      chan []byte
 	wg                *sync.WaitGroup
+	connectionTimeout time.Duration
 }
 
 // Connect used to establish a connection.
@@ -59,7 +62,10 @@ func (transporter *gorillaTransporter) Connect() (err error) {
 		return
 	}
 
-	dialer := websocket.DefaultDialer
+	dialer := &websocket.Dialer{
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: transporter.connectionTimeout,
+	}
 	dialer.TLSClientConfig = transporter.tlsConfig
 	// TODO: make this configurable from client; this currently does nothing since 4096 is the default
 	dialer.WriteBufferSize = 4096

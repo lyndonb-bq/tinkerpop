@@ -41,13 +41,13 @@ const defaultNewConnectionThreshold = 4
 // multiple active connections with no active traversals on them, one will be used and the others will be closed and
 // removed from the pool.
 type loadBalancingPool struct {
-	url        string
-	logHandler *logHandler
-	authInfo   *AuthInfo
-	tlsConfig  *tls.Config
+	url               string
+	logHandler        *logHandler
+	authInfo          *AuthInfo
+	tlsConfig         *tls.Config
 	keepAliveInterval time.Duration
-	writeDeadline time.Duration
-
+	writeDeadline     time.Duration
+	connectionTimeout time.Duration
 
 	newConnectionThreshold int
 	connections            []*connection
@@ -128,7 +128,7 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 
 func (pool *loadBalancingPool) newConnection() (*connection, error) {
 	connection, err := createConnection(pool.url, pool.logHandler, pool.authInfo, pool.tlsConfig,
-		pool.keepAliveInterval, pool.writeDeadline)
+		pool.keepAliveInterval, pool.writeDeadline, pool.connectionTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +138,9 @@ func (pool *loadBalancingPool) newConnection() (*connection, error) {
 
 func newLoadBalancingPool(url string, logHandler *logHandler, authInfo *AuthInfo, tlsConfig *tls.Config,
 	keepAliveInterval time.Duration, writeDeadline time.Duration, newConnectionThreshold int,
-	maximumConcurrentConnections int) (connectionPool, error) {
+	maximumConcurrentConnections int, connectionTimeout time.Duration) (connectionPool, error) {
 	pool := make([]*connection, 0, maximumConcurrentConnections)
-	initialConnection, err := createConnection(url, logHandler, authInfo, tlsConfig, keepAliveInterval, writeDeadline)
+	initialConnection, err := createConnection(url, logHandler, authInfo, tlsConfig, keepAliveInterval, writeDeadline, connectionTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -150,9 +150,10 @@ func newLoadBalancingPool(url string, logHandler *logHandler, authInfo *AuthInfo
 		logHandler:             logHandler,
 		authInfo:               authInfo,
 		tlsConfig:              tlsConfig,
-		keepAliveInterval: keepAliveInterval,
-		writeDeadline: writeDeadline,
+		keepAliveInterval:      keepAliveInterval,
+		writeDeadline:          writeDeadline,
 		newConnectionThreshold: newConnectionThreshold,
 		connections:            pool,
+		connectionTimeout:      connectionTimeout,
 	}, nil
 }

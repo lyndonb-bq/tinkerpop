@@ -43,6 +43,7 @@ type ClientSettings struct {
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
 	Session                      string
+	ConnectionTimeout            time.Duration
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -72,6 +73,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
+		ConnectionTimeout:            45 * time.Second,
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
@@ -84,7 +86,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	}
 
 	pool, err := newLoadBalancingPool(url, logHandler, settings.AuthInfo, settings.TlsConfig, settings.KeepAliveInterval,
-		settings.WriteDeadline, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
+		settings.WriteDeadline, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections, settings.ConnectionTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client with url '%s' and transport type '%v'. Error message: '%s'",
 			url, settings.TransporterType, err.Error())
