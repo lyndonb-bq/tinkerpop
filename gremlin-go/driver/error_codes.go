@@ -26,6 +26,7 @@ import (
 	"golang.org/x/text/language"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type errorCode string
@@ -109,4 +110,8 @@ func NewError(errorCode errorCode, args ...interface{}) error {
 	}
 	localizedMessage, _ := localizer.Localize(&config)
 	return fmt.Errorf(localizedMessage, args...)
+}
+
+func IsSameErrorCode(expectedError error, actualError error) bool {
+	return strings.HasPrefix(actualError.Error(), strings.Split(expectedError.Error(), ":")[0])
 }

@@ -100,7 +100,7 @@ func initializeGraph(t *testing.T, url string, auth *AuthInfo, tls *tls.Config) 
 func resetGraph(t *testing.T, g *GraphTraversalSource) {
 	defer func(remoteConnection *DriverRemoteConnection) {
 		remoteConnection.Close()
-	} (g.remoteConnection)
+	}(g.remoteConnection)
 	// Drop the graph and check that it is empty.
 	dropGraph(t, g)
 	readCount(t, g, "", 0)
@@ -902,7 +902,7 @@ func TestConnection(t *testing.T) {
 		// Add vertices and edges to graph.
 		rs, err := g.AddV("person").Property("id", T__.Unfold().Property().AddV()).ToList()
 		assert.Nil(t, rs)
-		assert.Equal(t, NewError(err0901ToListAnonTraversalError), err)
+		assert.True(t, IsSameErrorCode(NewError(err0502ResponseHandlerReadLoopError), err))
 
 		rs, err = g.V().Count().ToList()
 		assert.NotNil(t, rs)

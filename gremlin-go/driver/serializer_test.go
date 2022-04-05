@@ -76,7 +76,7 @@ func TestSerializerFailures(t *testing.T) {
 		resp, err := serializer.serializeMessage(&testRequest)
 		assert.Nil(t, resp)
 		assert.NotNil(t, err)
-		// assert.Equal(t, NewError(err0704ConvertArgsNoSerializerError), err)
+		assert.True(t, IsSameErrorCode(NewError(err0704ConvertArgsNoSerializerError), err))
 	})
 
 	t.Run("test map key not string failure", func(t *testing.T) {

@@ -96,7 +96,6 @@ func TestGraphStructureFunctions(t *testing.T) {
 		p := Path{keys, data}
 		val, err := p.GetPathObject("foobar")
 		assert.Nil(t, val)
-		assert.NotNil(t, err)
 		assert.Equal(t, NewError(err0303GetPathNoLabelFoundError, "foobar"), err)
 	})
 
