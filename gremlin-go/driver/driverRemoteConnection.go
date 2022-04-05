@@ -54,7 +54,7 @@ type DriverRemoteConnectionSettings struct {
 type DriverRemoteConnection struct {
 	client          *Client
 	spawnedSessions []*DriverRemoteConnection
-	closed          bool
+	isClosed        bool
 }
 
 // NewDriverRemoteConnection creates a new DriverRemoteConnection.
@@ -110,7 +110,7 @@ func NewDriverRemoteConnection(
 		session:         settings.Session,
 	}
 
-	return &DriverRemoteConnection{client: client, closed: false}, nil
+	return &DriverRemoteConnection{client: client, isClosed: false}, nil
 }
 
 // Close closes the DriverRemoteConnection.
@@ -131,7 +131,7 @@ func (driver *DriverRemoteConnection) Close() {
 		driver.client.logHandler.logf(Info, closeDriverRemoteConnection, driver.client.url)
 	}
 	driver.client.Close()
-	driver.closed = true
+	driver.isClosed = true
 }
 
 // Submit sends a string traversal to the server.
@@ -145,7 +145,7 @@ func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet,
 
 // submitBytecode sends a bytecode traversal to the server.
 func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (ResultSet, error) {
-	if driver.closed {
+	if driver.isClosed {
 		return nil, errors.New("cannot invoke this method for closed connection")
 	}
 	return driver.client.submitBytecode(bytecode)

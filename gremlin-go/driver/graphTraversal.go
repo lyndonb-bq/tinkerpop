@@ -742,7 +742,7 @@ func (t *transaction) Close() error {
 }
 
 func (t *transaction) IsOpen() bool {
-	if t.sessionBasedConnection != nil && t.sessionBasedConnection.closed {
+	if t.sessionBasedConnection != nil && t.sessionBasedConnection.isClosed {
 		t.isOpen = false
 	}
 	return t.isOpen
