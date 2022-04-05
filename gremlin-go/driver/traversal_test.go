@@ -23,7 +23,6 @@ import (
 	"crypto/tls"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
 func TestTraversal(t *testing.T) {
@@ -393,13 +392,11 @@ func dropGraphCheckCount(t *testing.T, g *GraphTraversalSource) {
 }
 
 func verifyGtxClosed(t *testing.T, gtx *GraphTraversalSource) {
-	// todo: should we wait for sessionBasedConnection.Close()?
-	time.Sleep(1000 * time.Millisecond)
 	// Attempt to add an additional vertex to the transaction. This should return an error since it
 	// has been closed.
 	_, promise, err := gtx.AddV("failure").Iterate()
-	assert.Nil(t, err)
-	assert.Nil(t, <-promise)
+	assert.NotNil(t, err)
+	assert.Nil(t, promise)
 }
 
 func getCount(t *testing.T, g *GraphTraversalSource) int32 {

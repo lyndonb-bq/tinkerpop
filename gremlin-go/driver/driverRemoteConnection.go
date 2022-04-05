@@ -145,6 +145,9 @@ func (driver *DriverRemoteConnection) Submit(traversalString string) (ResultSet,
 
 // submitBytecode sends a bytecode traversal to the server.
 func (driver *DriverRemoteConnection) submitBytecode(bytecode *bytecode) (ResultSet, error) {
+	if driver.closed {
+		return nil, errors.New("cannot invoke this method for closed connection")
+	}
 	return driver.client.submitBytecode(bytecode)
 }
 
