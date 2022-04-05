@@ -675,7 +675,7 @@ func (g *GraphTraversal) Write(args ...interface{}) *GraphTraversal {
 	return g
 }
 
-type transaction struct {
+type Transaction struct {
 	g                      *GraphTraversalSource
 	sessionBasedConnection *DriverRemoteConnection
 	remoteConnection       *DriverRemoteConnection
@@ -683,7 +683,7 @@ type transaction struct {
 	mutex                  sync.Mutex
 }
 
-func (t *transaction) Begin() (*GraphTraversalSource, error) {
+func (t *Transaction) Begin() (*GraphTraversalSource, error) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
@@ -706,7 +706,7 @@ func (t *transaction) Begin() (*GraphTraversalSource, error) {
 	return gts, nil
 }
 
-func (t *transaction) Rollback() error {
+func (t *Transaction) Rollback() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
@@ -717,7 +717,7 @@ func (t *transaction) Rollback() error {
 	return t.closeSession(t.sessionBasedConnection.rollback())
 }
 
-func (t *transaction) Commit() error {
+func (t *Transaction) Commit() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
@@ -728,7 +728,7 @@ func (t *transaction) Commit() error {
 	return t.closeSession(t.sessionBasedConnection.commit())
 }
 
-func (t *transaction) Close() error {
+func (t *Transaction) Close() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
@@ -739,21 +739,21 @@ func (t *transaction) Close() error {
 	return t.closeSession(nil, nil)
 }
 
-func (t *transaction) IsOpen() bool {
+func (t *Transaction) IsOpen() bool {
 	if t.sessionBasedConnection != nil && t.sessionBasedConnection.isClosed {
 		t.isOpen = false
 	}
 	return t.isOpen
 }
 
-func (t *transaction) verifyTransactionState(state bool, err error) error {
+func (t *Transaction) verifyTransactionState(state bool, err error) error {
 	if t.IsOpen() != state {
 		return err
 	}
 	return nil
 }
 
-func (t *transaction) closeSession(rs ResultSet, err error) error {
+func (t *Transaction) closeSession(rs ResultSet, err error) error {
 	defer t.closeConnection()
 	if err != nil {
 		return err
@@ -765,7 +765,7 @@ func (t *transaction) closeSession(rs ResultSet, err error) error {
 	return e
 }
 
-func (t *transaction) closeConnection() {
+func (t *Transaction) closeConnection() {
 	t.sessionBasedConnection.Close()
 	t.isOpen = false
 }

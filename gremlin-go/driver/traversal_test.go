@@ -366,7 +366,7 @@ func newConnection(t *testing.T) *DriverRemoteConnection {
 }
 
 func addNodeValidateTransactionState(t *testing.T, g, gAddTo *GraphTraversalSource,
-	gStartCount, gAddToStartCount int32, txVerifyList ...*transaction) {
+	gStartCount, gAddToStartCount int32, txVerifyList ...*Transaction) {
 	// Add a single node to gAddTo, but not g.
 	// Check that vertex count in g is gStartCount and vertex count in gAddTo is gAddToStartCount + 1.
 	addV(t, gAddTo, "lyndon")
@@ -375,7 +375,7 @@ func addNodeValidateTransactionState(t *testing.T, g, gAddTo *GraphTraversalSour
 	verifyTxState(t, true, txVerifyList...)
 }
 
-func verifyTxState(t *testing.T, expected bool, gtxList ...*transaction) {
+func verifyTxState(t *testing.T, expected bool, gtxList ...*Transaction) {
 	for _, tx := range gtxList {
 		assert.Equal(t, expected, tx.IsOpen())
 	}
