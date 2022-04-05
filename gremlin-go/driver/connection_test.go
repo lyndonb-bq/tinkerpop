@@ -21,6 +21,7 @@ package gremlingo
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
@@ -270,12 +271,13 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test createConnection without valid path", func(t *testing.T) {
-		t.Run("Test 4 second timeout", func(t *testing.T) {
+		t.Run("Test 1 second timeout", func(t *testing.T) {
 			t1 := time.Now()
 			connection, err := createConnection(validHostValidPortInvalidPath, newLogHandler(&defaultLogger{}, Info,
 				language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault, 1*time.Second)
 			t2 := time.Since(t1)
 			assert.True(t, t2.Seconds() < 1.5 && t2.Seconds() > 0.5)
+			fmt.Println(t2.Seconds())
 			assert.NotNil(t, err)
 			assert.Nil(t, connection)
 		})
@@ -286,6 +288,7 @@ func TestConnection(t *testing.T) {
 				language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault, 2*time.Second)
 			t2 := time.Since(t1)
 			assert.True(t, t2.Seconds() < 2.5 && t2.Seconds() > 1.5)
+			fmt.Println(t2.Seconds())
 			assert.NotNil(t, err)
 			assert.Nil(t, connection)
 		})
@@ -296,6 +299,7 @@ func TestConnection(t *testing.T) {
 				language.English), testNoAuthAuthInfo, testNoAuthTlsConfig, keepAliveIntervalDefault, writeDeadlineDefault, 3*time.Second)
 			t2 := time.Since(t1)
 			assert.True(t, t2.Seconds() < 3.5 && t2.Seconds() > 2.5)
+			fmt.Println(t2.Seconds())
 			assert.NotNil(t, err)
 			assert.Nil(t, connection)
 		})
