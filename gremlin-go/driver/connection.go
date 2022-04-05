@@ -52,7 +52,7 @@ func (connection *connection) errorCallback() {
 
 func (connection *connection) close() error {
 	if connection.state != established {
-		return NewError(err0101ConnectionCloseError)
+		return newError(err0101ConnectionCloseError)
 	}
 	connection.logHandler.log(Info, closeConnection)
 	var err error
@@ -65,7 +65,7 @@ func (connection *connection) close() error {
 
 func (connection *connection) write(request *request) (ResultSet, error) {
 	if connection.state != established {
-		return nil, NewError(err0102WriteConnectionClosedError)
+		return nil, newError(err0102WriteConnectionClosedError)
 	}
 	connection.logHandler.log(Info, writeRequest)
 	requestID := request.requestID.String()

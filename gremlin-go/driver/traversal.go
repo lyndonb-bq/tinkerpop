@@ -38,7 +38,7 @@ type Traversal struct {
 func (t *Traversal) ToList() ([]*Result, error) {
 	// TODO: This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
 	if t.remote == nil {
-		return nil, NewError(err0901ToListAnonTraversalError)
+		return nil, newError(err0901ToListAnonTraversalError)
 	}
 
 	results, err := t.remote.submitBytecode(t.bytecode)
@@ -66,7 +66,7 @@ func (t *Traversal) ToSet() (map[*Result]bool, error) {
 func (t *Traversal) Iterate() (*Traversal, <-chan error, error) {
 	// TODO: This wont be needed once DriverRemoteConnection is replaced by TraversalStrategy
 	if t.remote == nil {
-		return nil, nil, NewError(err0902IterateAnonTraversalError)
+		return nil, nil, newError(err0902IterateAnonTraversalError)
 	}
 
 	err := t.bytecode.addStep("none")
@@ -107,7 +107,7 @@ func (t *Traversal) Next() (*Result, error) {
 		return nil, err
 	}
 	if results.IsEmpty() {
-		return nil, NewError(err0903NextNoResultsLeftError)
+		return nil, newError(err0903NextNoResultsLeftError)
 	}
 	return results.one()
 }

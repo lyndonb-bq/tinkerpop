@@ -73,7 +73,7 @@ func convertArgs(request *request, gs graphBinarySerializer) (map[string]interfa
 			typeName = reflect.TypeOf(gremlin).Name()
 		}
 
-		return nil, NewError(err0704ConvertArgsNoSerializerError, typeName)
+		return nil, newError(err0704ConvertArgsNoSerializerError, typeName)
 	}
 }
 
@@ -193,7 +193,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 		if err != nil {
 			return nil, err
 		} else if keyType != StringType {
-			return nil, NewError(err0703ReadMapNonStringKeyError)
+			return nil, newError(err0703ReadMapNonStringKeyError)
 		}
 		var nullable byte
 		err = binary.Read(buffer, binary.BigEndian, &nullable)
@@ -201,7 +201,7 @@ func readMap(buffer *bytes.Buffer, gs *graphBinarySerializer) (map[string]interf
 			return nil, err
 		}
 		if nullable != 0 {
-			return nil, NewError(err0701ReadMapNullKeyError)
+			return nil, newError(err0701ReadMapNullKeyError)
 		}
 
 		k, err := readString(buffer)

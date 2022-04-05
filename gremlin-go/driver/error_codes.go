@@ -103,7 +103,7 @@ func initializeLocalizer(locale language.Tag) {
 
 var localizer *i18n.Localizer
 
-func NewError(errorCode errorCode, args ...interface{}) error {
+func newError(errorCode errorCode, args ...interface{}) error {
 	initializeLocalizer(language.English)
 	config := i18n.LocalizeConfig{
 		MessageID: string(errorCode),
@@ -112,6 +112,6 @@ func NewError(errorCode errorCode, args ...interface{}) error {
 	return fmt.Errorf(localizedMessage, args...)
 }
 
-func IsSameErrorCode(expectedError error, actualError error) bool {
+func isSameErrorCode(expectedError error, actualError error) bool {
 	return strings.HasPrefix(actualError.Error(), strings.Split(expectedError.Error(), ":")[0])
 }

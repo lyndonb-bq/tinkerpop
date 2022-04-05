@@ -195,7 +195,7 @@ func readWithNextAndHasNext(t *testing.T, g *GraphTraversalSource) {
 	// Check for Next error when no more elements left
 	res, err := traversal.Next()
 	assert.Nil(t, res)
-	assert.Equal(t, NewError(err0903NextNoResultsLeftError), err)
+	assert.Equal(t, newError(err0903NextNoResultsLeftError), err)
 	assert.True(t, sortAndCompareTwoStringSlices(names, testNames))
 }
 
@@ -328,10 +328,10 @@ func TestConnection(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, closed, connection.state)
 		err = connection.close()
-		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
+		assert.Equal(t, newError(err0101ConnectionCloseError), err)
 		assert.Equal(t, closed, connection.state)
 		err = connection.close()
-		assert.Equal(t, NewError(err0101ConnectionCloseError), err)
+		assert.Equal(t, newError(err0101ConnectionCloseError), err)
 		assert.Equal(t, closed, connection.state)
 	})
 
@@ -347,7 +347,7 @@ func TestConnection(t *testing.T) {
 		request := makeStringRequest("g.V().count()", "g", "")
 		resultSet, err := connection.write(&request)
 		assert.Nil(t, resultSet)
-		assert.Equal(t, NewError(err0102WriteConnectionClosedError), err)
+		assert.Equal(t, newError(err0102WriteConnectionClosedError), err)
 		assert.Equal(t, closed, connection.state)
 	})
 
@@ -678,7 +678,7 @@ func TestConnection(t *testing.T) {
 		anonTrav := T__.Unfold().HasLabel(testLabel)
 		slice, err := anonTrav.ToList()
 		assert.Nil(t, slice)
-		assert.Equal(t, NewError(err0901ToListAnonTraversalError), err)
+		assert.Equal(t, newError(err0901ToListAnonTraversalError), err)
 	})
 
 	t.Run("Test Traversal.Iterate fail", func(t *testing.T) {
@@ -686,7 +686,7 @@ func TestConnection(t *testing.T) {
 		traversal, channel, err := anonTrav.Iterate()
 		assert.Nil(t, traversal)
 		assert.Nil(t, channel)
-		assert.Equal(t, NewError(err0902IterateAnonTraversalError), err)
+		assert.Equal(t, newError(err0902IterateAnonTraversalError), err)
 	})
 
 	t.Run("Test DriverRemoteConnection with basic authentication", func(t *testing.T) {
@@ -823,7 +823,7 @@ func TestConnection(t *testing.T) {
 			defer s1.Close()
 			s2, err := s1.CreateSession()
 			assert.Nil(t, s2)
-			assert.Equal(t, NewError(err0202CreateSessionFromSessionError), err)
+			assert.Equal(t, newError(err0202CreateSessionFromSessionError), err)
 		})
 
 		t.Run("Test CreateSession with multiple UUIDs failure", func(t *testing.T) {
@@ -838,7 +838,7 @@ func TestConnection(t *testing.T) {
 			defer remote.Close()
 			s1, err := remote.CreateSession(uuid.New().String(), uuid.New().String())
 			assert.Nil(t, s1)
-			assert.Equal(t, NewError(err0201CreateSessionMultipleIdsError), err)
+			assert.Equal(t, newError(err0201CreateSessionMultipleIdsError), err)
 		})
 	})
 
@@ -902,7 +902,7 @@ func TestConnection(t *testing.T) {
 		// Add vertices and edges to graph.
 		rs, err := g.AddV("person").Property("id", T__.Unfold().Property().AddV()).ToList()
 		assert.Nil(t, rs)
-		assert.True(t, IsSameErrorCode(NewError(err0502ResponseHandlerReadLoopError), err))
+		assert.True(t, isSameErrorCode(newError(err0502ResponseHandlerReadLoopError), err))
 
 		rs, err = g.V().Count().ToList()
 		assert.NotNil(t, rs)

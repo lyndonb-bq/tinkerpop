@@ -106,7 +106,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		response.responseResult.meta, response.responseResult.data
 	responseIDString := responseID.String()
 	if resultSets.load(responseIDString) == nil {
-		return NewError(err0501ResponseHandlerResultSetNotCreatedError)
+		return newError(err0501ResponseHandlerResultSetNotCreatedError)
 	}
 	if aggregateTo, ok := metadata["aggregateTo"]; ok {
 		resultSets.load(responseIDString).setAggregateTo(aggregateTo.(string))
@@ -150,10 +150,10 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 			}
 		} else {
 			resultSets.load(responseIDString).Close()
-			return NewError(err0503ResponseHandlerAuthError, response.responseStatus, response.responseResult)
+			return newError(err0503ResponseHandlerAuthError, response.responseStatus, response.responseResult)
 		}
 	} else {
-		newError := NewError(err0502ResponseHandlerReadLoopError, response.responseStatus, statusCode)
+		newError := newError(err0502ResponseHandlerReadLoopError, response.responseStatus, statusCode)
 		resultSets.load(responseIDString).setError(newError)
 		resultSets.load(responseIDString).Close()
 		log.logger.Log(Info, newError.Error())

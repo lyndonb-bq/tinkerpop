@@ -151,9 +151,9 @@ func (driver *DriverRemoteConnection) isSession() bool {
 // CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
 	if len(sessionId) > 1 {
-		return nil, NewError(err0201CreateSessionMultipleIdsError)
+		return nil, newError(err0201CreateSessionMultipleIdsError)
 	} else if driver.isSession() {
-		return nil, NewError(err0202CreateSessionFromSessionError)
+		return nil, newError(err0202CreateSessionFromSessionError)
 	}
 
 	driver.client.logHandler.log(Info, creatingSessionConnection)

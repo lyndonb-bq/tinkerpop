@@ -134,7 +134,7 @@ func (bytecode *bytecode) convertArgument(arg interface{}) (interface{}, error) 
 			}, nil
 		case *GraphTraversal:
 			if v.graph != nil {
-				return nil, NewError(err1001ConvertArgumentChildTraversalNotFromAnonError)
+				return nil, newError(err1001ConvertArgumentChildTraversalNotFromAnonError)
 			}
 			for k, val := range v.bytecode.bindings {
 				bytecode.bindings[k] = val

@@ -106,7 +106,7 @@ func (serializer *graphBinaryTypeSerializer) writeTypeValue(value interface{}, b
 	if value == nil {
 		if !nullable {
 			serializer.logHandler.log(Error, unexpectedNull)
-			return nil, NewError(err0401WriteTypeValueUnexpectedNullError)
+			return nil, newError(err0401WriteTypeValueUnexpectedNullError)
 		}
 		serializer.writeValueFlagNull(buffer)
 		return buffer.Bytes(), nil
@@ -289,7 +289,7 @@ func bytecodeWriter(value interface{}, buffer *bytes.Buffer, typeSerializer *gra
 	case *bytecode:
 		bc = *typedVal
 	default:
-		return nil, NewError(err0402BytecodeWriterError)
+		return nil, newError(err0402BytecodeWriterError)
 	}
 
 	// Write {steps_length} and {step_0} through {step_n}, then {sources_length} and {source_0} through {source_n}
@@ -853,7 +853,7 @@ func enumReader(buffer *bytes.Buffer, _ *graphBinaryTypeSerializer) (interface{}
 	if err != nil {
 		return nil, err
 	} else if typeCode != StringType.getCodeByte() {
-		return nil, NewError(err0406EnumReaderInvalidTypeError)
+		return nil, newError(err0406EnumReaderInvalidTypeError)
 	}
 
 	var nilByte uint8
@@ -1037,7 +1037,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToWrite(val interface{
 			return &graphBinaryTypeSerializer{dataType: ListType, writer: listWriter, reader: listReader, logHandler: serializer.logHandler}, nil
 		default:
 			serializer.logHandler.logf(Error, serializeDataTypeError, reflect.TypeOf(val).Name())
-			return nil, NewError(err0407GetSerializerToWriteUnknownTypeError, reflect.TypeOf(val).Name())
+			return nil, newError(err0407GetSerializerToWriteUnknownTypeError, reflect.TypeOf(val).Name())
 		}
 	}
 }
@@ -1150,7 +1150,7 @@ func (serializer *graphBinaryTypeSerializer) getSerializerToRead(typ byte) (*gra
 		return &graphBinaryTypeSerializer{dataType: BulkSetType, reader: bindingReader, nullFlagReturn: nil, logHandler: serializer.logHandler}, nil
 	default:
 		serializer.logHandler.logf(Error, deserializeDataTypeError, int32(typ))
-		return nil, NewError(err0408GetSerializerToReadUnknownTypeError, typ)
+		return nil, newError(err0408GetSerializerToReadUnknownTypeError, typ)
 	}
 }
 
@@ -1179,7 +1179,7 @@ func (serializer *graphBinaryTypeSerializer) writeValue(value interface{}, buffe
 	if value == nil {
 		if !nullable {
 			serializer.logHandler.log(Error, unexpectedNull)
-			return nil, NewError(err0403WriteValueUnexpectedNullError)
+			return nil, newError(err0403WriteValueUnexpectedNullError)
 		}
 		serializer.writeValueFlagNull(buffer)
 		return buffer.Bytes(), nil
@@ -1215,7 +1215,7 @@ func (serializer *graphBinaryTypeSerializer) read(buffer *bytes.Buffer) (interfa
 		var isNull byte
 		_ = binary.Read(buffer, binary.BigEndian, &isNull)
 		if isNull != 1 {
-			return nil, NewError(err0404ReadNullTypeError)
+			return nil, newError(err0404ReadNullTypeError)
 		}
 		return nil, nil
 	}
@@ -1230,7 +1230,7 @@ func (serializer *graphBinaryTypeSerializer) read(buffer *bytes.Buffer) (interfa
 func (serializer *graphBinaryTypeSerializer) readValue(buffer *bytes.Buffer, typ byte, nullable bool) (interface{}, error) {
 	if buffer == nil {
 		serializer.logHandler.log(Error, nullInput)
-		return nil, NewError(err0405ReadValueInvalidNullInputError)
+		return nil, newError(err0405ReadValueInvalidNullInputError)
 	}
 	typeSerializer, _ := serializer.getSerializerToRead(typ)
 	val, _ := typeSerializer.readTypeValue(buffer, typeSerializer, nullable)
