@@ -20,7 +20,6 @@ under the License.
 package gremlingo
 
 import (
-	"errors"
 	"sync"
 )
 
@@ -688,7 +687,7 @@ func (t *transaction) Begin() (*GraphTraversalSource, error) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	if err := t.verifyTransactionState(false, "Transaction already started on this object"); err != nil {
+	if err := t.verifyTransactionState(false, newError(err1101TransactionRepeatedOpenError)); err != nil {
 		return nil, err
 	}
 
@@ -711,7 +710,7 @@ func (t *transaction) Rollback() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	if err := t.verifyTransactionState(true, "Cannot rollback a transaction that is not started."); err != nil {
+	if err := t.verifyTransactionState(true, newError(err1102TransactionRollbackNotOpenedError)); err != nil {
 		return err
 	}
 
@@ -722,7 +721,7 @@ func (t *transaction) Commit() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	if err := t.verifyTransactionState(true, "Cannot commit a transaction that is not started."); err != nil {
+	if err := t.verifyTransactionState(true, newError(err1103TransactionCommitNotOpenedError)); err != nil {
 		return err
 	}
 
@@ -733,8 +732,7 @@ func (t *transaction) Close() error {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
-	err := t.verifyTransactionState(true, "Cannot close a transaction that has previously been closed.")
-	if err != nil {
+	if err := t.verifyTransactionState(true, newError(err1104TransactionRepeatedCloseError)); err != nil {
 		return err
 	}
 
@@ -748,9 +746,9 @@ func (t *transaction) IsOpen() bool {
 	return t.isOpen
 }
 
-func (t *transaction) verifyTransactionState(state bool, error string) error {
+func (t *transaction) verifyTransactionState(state bool, err error) error {
 	if t.IsOpen() != state {
-		return errors.New(error)
+		return err
 	}
 	return nil
 }
