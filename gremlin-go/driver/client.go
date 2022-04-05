@@ -42,8 +42,7 @@ type ClientSettings struct {
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-
-	Session string
+	Session                      string
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
