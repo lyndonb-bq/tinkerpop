@@ -98,13 +98,7 @@ func (logHandler *logHandler) logf(verbosity LogVerbosity, errorKey errorKey, v 
 
 func (logHandler *logHandler) logErr(verbosity LogVerbosity, err error) {
 	if verbosity >= logHandler.verbosity {
-		logHandler.logger.Log(verbosity, err)
-	}
-}
-
-func (logHandler *logHandler) logStr(verbosity LogVerbosity, s string) {
-	if verbosity >= logHandler.verbosity {
-		logHandler.logger.Log(verbosity, s)
+		logHandler.logger.Log(verbosity, err.Error())
 	}
 }
 

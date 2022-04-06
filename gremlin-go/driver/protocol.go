@@ -116,7 +116,6 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 	if statusCode == http.StatusNoContent {
 		resultSets.load(responseIDString).addResult(&Result{make([]interface{}, 0)})
 		resultSets.load(responseIDString).Close()
-		log.logStr(Info, "No content.")
 		log.logf(Info, readComplete, responseIDString)
 	} else if statusCode == http.StatusOK {
 		// Add data and status attributes to the ResultSet.
@@ -154,7 +153,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		newError := newError(err0502ResponseHandlerReadLoopError, response.responseStatus, statusCode)
 		resultSets.load(responseIDString).setError(newError)
 		resultSets.load(responseIDString).Close()
-		log.logStr(Info, newError.Error())
+		log.logErr(Info, newError)
 	}
 	return nil
 }
