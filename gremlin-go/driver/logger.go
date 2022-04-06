@@ -108,12 +108,6 @@ func (logHandler *logHandler) logStr(verbosity LogVerbosity, s string) {
 	}
 }
 
-func (logHandler *logHandler) logStrf(verbosity LogVerbosity, format string, v ...interface{}) {
-	if verbosity >= logHandler.verbosity {
-		logHandler.logger.Logf(verbosity, format, v...)
-	}
-}
-
 type errorKey string
 
 const (

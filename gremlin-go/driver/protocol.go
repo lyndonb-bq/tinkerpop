@@ -123,12 +123,10 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		resultSets.load(responseIDString).addResult(&Result{data})
 		resultSets.load(responseIDString).setStatusAttributes(response.responseStatus.attributes)
 		resultSets.load(responseIDString).Close()
-		log.logStrf(Info, "OK %v===>%v", response.responseStatus, data)
 		log.logf(Info, readComplete, responseIDString)
 	} else if statusCode == http.StatusPartialContent {
 		// Add data to the ResultSet.
 		resultSets.load(responseIDString).addResult(&Result{data})
-		log.logStrf(Info, "Partial %v===>%v", response.responseStatus, data)
 	} else if statusCode == http.StatusProxyAuthRequired || statusCode == authenticationFailed {
 		// http status code 151 is not defined here, but corresponds with 403, i.e. authentication has failed.
 		// Server has requested basic auth.
