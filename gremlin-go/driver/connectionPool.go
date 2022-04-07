@@ -137,8 +137,8 @@ func (pool *loadBalancingPool) newConnection() (*connection, error) {
 }
 
 func newLoadBalancingPool(url string, logHandler *logHandler, authInfo *AuthInfo, tlsConfig *tls.Config,
-	keepAliveInterval time.Duration, writeDeadline time.Duration, newConnectionThreshold int,
-	maximumConcurrentConnections int, connectionTimeout time.Duration) (connectionPool, error) {
+	keepAliveInterval time.Duration, writeDeadline time.Duration, connectionTimeout time.Duration, newConnectionThreshold int,
+	maximumConcurrentConnections int) (connectionPool, error) {
 	pool := make([]*connection, 0, maximumConcurrentConnections)
 	initialConnection, err := createConnection(url, logHandler, authInfo, tlsConfig, keepAliveInterval, writeDeadline, connectionTimeout)
 	if err != nil {
@@ -152,8 +152,8 @@ func newLoadBalancingPool(url string, logHandler *logHandler, authInfo *AuthInfo
 		tlsConfig:              tlsConfig,
 		keepAliveInterval:      keepAliveInterval,
 		writeDeadline:          writeDeadline,
+		connectionTimeout:      connectionTimeout,
 		newConnectionThreshold: newConnectionThreshold,
 		connections:            pool,
-		connectionTimeout:      connectionTimeout,
 	}, nil
 }

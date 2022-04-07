@@ -95,7 +95,7 @@ func createConnection(url string, logHandler *logHandler, authInfo *AuthInfo, tl
 	}
 	logHandler.log(Info, connectConnection)
 	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, authInfo, tlsConfig, keepAliveInterval,
-		writeDeadline, conn.results, conn.errorCallback, connectionTimeout)
+		writeDeadline, connectionTimeout, conn.results, conn.errorCallback)
 	if err != nil {
 		logHandler.logf(Error, failedConnection)
 		conn.state = closedDueToError

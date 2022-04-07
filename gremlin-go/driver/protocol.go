@@ -181,8 +181,8 @@ func (protocol *gremlinServerWSProtocol) close() (err error) {
 }
 
 func newGremlinServerWSProtocol(handler *logHandler, transporterType TransporterType, url string, authInfo *AuthInfo,
-	tlsConfig *tls.Config, keepAliveInterval time.Duration, writeDeadline time.Duration, results *synchronizedMap,
-	errorCallback func(), connectionTimeout time.Duration) (protocol, error) {
+	tlsConfig *tls.Config, keepAliveInterval time.Duration, writeDeadline time.Duration, connectionTimeout time.Duration, results *synchronizedMap,
+	errorCallback func()) (protocol, error) {
 	wg := &sync.WaitGroup{}
 	transport, err := getTransportLayer(transporterType, url, authInfo, tlsConfig, keepAliveInterval, writeDeadline, connectionTimeout)
 	if err != nil {

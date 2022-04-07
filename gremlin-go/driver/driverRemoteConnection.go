@@ -38,12 +38,12 @@ type DriverRemoteConnectionSettings struct {
 	TlsConfig         *tls.Config
 	KeepAliveInterval time.Duration
 	WriteDeadline     time.Duration
+	ConnectionTimeout time.Duration
 	// Minimum amount of concurrent active traversals on a connection to trigger creation of a new connection
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
 	Session                      string
-	ConnectionTimeout            time.Duration
 
 	// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 	Protocol   protocol
@@ -74,10 +74,10 @@ func NewDriverRemoteConnection(
 		TlsConfig:                    &tls.Config{},
 		KeepAliveInterval:            keepAliveIntervalDefault,
 		WriteDeadline:                writeDeadlineDefault,
+		ConnectionTimeout:            connectionTimeoutDefault,
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
 		Session:                      "",
-		ConnectionTimeout:            connectionTimeoutDefault,
 
 		// TODO: Figure out exact extent of configurability for these and expose appropriate types/helpers
 		Protocol:   nil,
@@ -94,7 +94,7 @@ func NewDriverRemoteConnection(
 	}
 
 	pool, err := newLoadBalancingPool(url, logHandler, settings.AuthInfo, settings.TlsConfig, settings.KeepAliveInterval,
-		settings.WriteDeadline, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections, settings.ConnectionTimeout)
+		settings.WriteDeadline, settings.ConnectionTimeout, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
 	if err != nil {
 		if err != nil {
 			logHandler.logf(Error, logErrorGeneric, "NewDriverRemoteConnection", err.Error())

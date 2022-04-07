@@ -45,9 +45,9 @@ type gorillaTransporter struct {
 	tlsConfig         *tls.Config
 	keepAliveInterval time.Duration
 	writeDeadline     time.Duration
+	connectionTimeout time.Duration
 	writeChannel      chan []byte
 	wg                *sync.WaitGroup
-	connectionTimeout time.Duration
 }
 
 // Connect used to establish a connection.

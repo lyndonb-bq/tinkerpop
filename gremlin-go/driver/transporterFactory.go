@@ -37,7 +37,7 @@ func getTransportLayer(transporterType TransporterType, url string, authInfo *Au
 	var transporter transporter
 	switch transporterType {
 	case Gorilla:
-		transporter = &gorillaTransporter{url: url, authInfo: authInfo, tlsConfig: tlsConfig, keepAliveInterval: keepAliveInterval, writeDeadline: writeDeadline, writeChannel: make(chan []byte, writeChannelSizeDefault), wg: &sync.WaitGroup{}, connectionTimeout: connectionTimeout}
+		transporter = &gorillaTransporter{url: url, authInfo: authInfo, tlsConfig: tlsConfig, keepAliveInterval: keepAliveInterval, writeDeadline: writeDeadline, connectionTimeout: connectionTimeout, writeChannel: make(chan []byte, writeChannelSizeDefault), wg: &sync.WaitGroup{}}
 	default:
 		return nil, newError(err0801GetTransportLayerNoTypeError)
 	}
