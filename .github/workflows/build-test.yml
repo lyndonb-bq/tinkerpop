@@ -1,5 +1,5 @@
 name: build-test
-on: [push, pull_request]
+on: [push]
 jobs:
   smoke:
     name: smoke
@@ -224,7 +224,6 @@ jobs:
       - name: Execute Go tests
         working-directory: ./gremlin-go
         run: |
-          mvn clean install -pl :gremlin-server -am && mvn install -Pdocker-images -pl :gremlin-server
           docker-compose up --exit-code-from gremlin-go-integration-tests
           docker-compose down
 
