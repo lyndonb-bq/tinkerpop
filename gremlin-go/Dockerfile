@@ -32,5 +32,5 @@ RUN /opt/gremlin-server/bin/gremlin-server.sh install org.apache.tinkerpop neo4j
 
 EXPOSE 45940 45941
 
-ENTRYPOINT ["/opt/docker-entrypoint.sh"]
+ENTRYPOINT ["bash", "/opt/docker-entrypoint.sh"]
 CMD []

@@ -361,7 +361,7 @@ func (tg *tinkerPopGraph) theGraphShouldReturnForCountOf(expectedCount int, trav
 		return err
 	}
 	if len(results) != expectedCount {
-		return errors.New("graph did not return the correct count")
+		return fmt.Errorf("graph returned count of %d when %d was expected", len(results), expectedCount)
 	}
 	return nil
 }
