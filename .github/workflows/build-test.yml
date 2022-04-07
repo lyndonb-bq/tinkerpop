@@ -204,7 +204,7 @@ jobs:
 #          mvn verify -pl :neo4j-gremlin -DincludeNeo4j
   go:
     name: Go
-    timeout-minutes: 20
+    timeout-minutes: 30
     needs: smoke
     runs-on: ubuntu-latest
     steps:
@@ -219,7 +219,7 @@ jobs:
       - name: Generate Gremlin Server Base Image
         working-directory: .
         run: |
-          mvn clean install -pl :gremlin-server -am && mvn install -Pdocker-images -pl :gremlin-server
+          mvn clean install -pl :gremlin-server -DskipTests -DskipIntegrationTests=true -am && mvn install -Pdocker-images -pl :gremlin-server
 
       - name: Execute Go tests
         working-directory: ./gremlin-go

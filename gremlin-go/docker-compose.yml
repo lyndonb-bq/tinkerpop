@@ -32,8 +32,6 @@ services:
     build:
       context: ../
       dockerfile: gremlin-go/Dockerfile
-    depends_on:
-      - gremlin-server
     ports:
       - "45940:45940"
       - "45941:45941"
