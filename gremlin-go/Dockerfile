@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-#ARG GREMLIN_SERVER_VERSION=${version:-3.5.3}
-#FROM tinkerpop/gremlin-server:${GREMLIN_SERVER_VERSION}-SNAPSHOT
-FROM tinkerpop:gremlin-server-base
+ARG GREMLIN_SERVER_VERSION=${version:-3.5.3}
+FROM tinkerpop/gremlin-server:${GREMLIN_SERVER_VERSION}-SNAPSHOT
+#FROM tinkerpop:gremlin-server-base
 
 USER root
 RUN mkdir -p /opt
