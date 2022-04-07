@@ -77,7 +77,7 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets *synchronizedMap, e
 		// Deserialize message and unpack.
 		resp, err := protocol.serializer.deserializeMessage(msg)
 		if err != nil {
-			protocol.logHandler.logErr(Error, err)
+			protocol.logHandler.logf(Error, logErrorGeneric, "gremlinServerWSProtocol.readLoop()", err.Error())
 			readErrorHandler(resultSets, errorCallback, err, protocol.logHandler)
 			protocol.wg.Done()
 			return
@@ -153,7 +153,7 @@ func (protocol *gremlinServerWSProtocol) responseHandler(resultSets *synchronize
 		newError := newError(err0502ResponseHandlerReadLoopError, response.responseStatus, statusCode)
 		resultSets.load(responseIDString).setError(newError)
 		resultSets.load(responseIDString).Close()
-		protocol.logHandler.logErr(Info, newError)
+		protocol.logHandler.logf(Error, logErrorGeneric, "gremlinServerWSProtocol.responseHandler()", newError.Error())
 	}
 	return nil
 }

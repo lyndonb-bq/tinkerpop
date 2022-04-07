@@ -96,12 +96,6 @@ func (logHandler *logHandler) logf(verbosity LogVerbosity, errorKey errorKey, v 
 	}
 }
 
-func (logHandler *logHandler) logErr(verbosity LogVerbosity, err error) {
-	if verbosity >= logHandler.verbosity {
-		logHandler.logger.Log(verbosity, err.Error())
-	}
-}
-
 type errorKey string
 
 const (
