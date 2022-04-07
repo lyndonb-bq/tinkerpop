@@ -45,6 +45,11 @@ const validHostValidPortInvalidPath = "ws://localhost:8182/invalid"
 const testServerGraphAlias = "gmodern"
 const manualTestSuiteName = "manual"
 
+// transaction is enabled on the same port as no auth url
+const noAuthUrl = "ws://localhost:45940/gremlin"
+const basicAuthNoSsl = "ws://localhost:45941/gremlin"
+const basicAuthWithSsl = "wss://localhost:45941/gremlin"
+
 var testNames = []string{"Lyndon", "Yang", "Simon", "Rithin", "Alexey", "Valentyn"}
 
 func dropGraph(t *testing.T, g *GraphTraversalSource) {
@@ -236,20 +241,21 @@ func deferredCleanup(t *testing.T, connection *connection) {
 
 func TestConnection(t *testing.T) {
 	// Integration test variables.
-	testNoAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
-	testNoAuthEnable := getEnvOrDefaultBool("RUN_INTEGRATION_TESTS", true)
+	testNoAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", noAuthUrl)
+	testNoAuthEnable := getEnvOrDefaultBool("RUN_INTEGRATION_TESTS", false)
 	testNoAuthAuthInfo := &AuthInfo{}
 	testNoAuthTlsConfig := &tls.Config{}
 
 	// No authentication integration test with graphs loaded and alias configured server
-	testNoAuthWithAliasUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
+	testNoAuthWithAliasUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", noAuthUrl)
 	testNoAuthWithAliasEnable := getEnvOrDefaultBool("RUN_INTEGRATION_WITH_ALIAS_TESTS", false)
 	testNoAuthWithAliasAuthInfo := &AuthInfo{}
 	testNoAuthWithAliasTlsConfig := &tls.Config{}
 
 	// Basic authentication integration test variables.
-	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", "wss://localhost:8183/gremlin")
-	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", false)
+	// TODO using "wss:" to connect to an auth server without ssl enabled ("ws:") will give an "EOF" error in NewDriverRemoteConnection, bug?
+	testBasicAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", basicAuthWithSsl)
+	testBasicAuthEnable := getEnvOrDefaultBool("RUN_BASIC_AUTH_INTEGRATION_TESTS", true)
 	testBasicAuthAuthInfo := getBasicAuthInfo()
 	testBasicAuthTlsConfig := &tls.Config{InsecureSkipVerify: true}
 
@@ -740,7 +746,7 @@ func TestConnection(t *testing.T) {
 			func(settings *DriverRemoteConnectionSettings) {
 				settings.TlsConfig = testNoAuthWithAliasTlsConfig
 				settings.AuthInfo = testNoAuthWithAliasAuthInfo
-				settings.TraversalSource = testServerGraphAlias
+				settings.TraversalSource = "g"
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
@@ -748,7 +754,7 @@ func TestConnection(t *testing.T) {
 
 		g := Traversal_().WithRemote(remote)
 
-		r, err := g.V().Count().ToList()
+		r, err := g.V().Has(nil, "test-null-key").ToList()
 		assert.Nil(t, err)
 		for _, res := range r {
 			assert.Equal(t, int64(6), res.GetInterface())

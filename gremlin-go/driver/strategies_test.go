@@ -26,7 +26,7 @@ import (
 )
 
 func TestStrategy(t *testing.T) {
-	testNoAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", "ws://localhost:8182/gremlin")
+	testNoAuthUrl := getEnvOrDefaultString("GREMLIN_SERVER_URL", noAuthUrl)
 
 	t.Run("Test read with ConnectiveStrategy", func(t *testing.T) {
 		g := initializeGraph(t, testNoAuthUrl, &AuthInfo{}, &tls.Config{})
