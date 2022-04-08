@@ -46,6 +46,14 @@ type ClientSettings struct {
 	Session                      string
 }
 
+type connectionSettings struct {
+	authInfo          *AuthInfo
+	tlsConfig         *tls.Config
+	keepAliveInterval time.Duration
+	writeDeadline     time.Duration
+	connectionTimeout time.Duration
+}
+
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
 	url             string
@@ -79,14 +87,21 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		configuration(settings)
 	}
 
+	connSettings := &connectionSettings{
+		authInfo:          settings.AuthInfo,
+		tlsConfig:         settings.TlsConfig,
+		keepAliveInterval: settings.KeepAliveInterval,
+		writeDeadline:     settings.WriteDeadline,
+		connectionTimeout: settings.ConnectionTimeout,
+	}
+
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
 	if settings.Session != "" {
 		logHandler.log(Info, sessionDetected)
 		settings.MaximumConcurrentConnections = 1
 	}
 
-	pool, err := newLoadBalancingPool(url, logHandler, settings.AuthInfo, settings.TlsConfig, settings.KeepAliveInterval,
-		settings.WriteDeadline, settings.ConnectionTimeout, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
+	pool, err := newLoadBalancingPool(url, logHandler, connSettings, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client with url '%s' and transport type '%v'. Error message: '%s'",
 			url, settings.TransporterType, err.Error())

@@ -20,9 +20,7 @@ under the License.
 package gremlingo
 
 import (
-	"crypto/tls"
 	"sync"
-	"time"
 )
 
 type connectionState int
@@ -85,8 +83,7 @@ func (connection *connection) activeResults() int {
 // 		established: connection has established communication established with the server
 // 		closed: connection was closed by the user.
 //		closedDueToError: connection was closed internally due to an error.
-func createConnection(url string, logHandler *logHandler, authInfo *AuthInfo, tlsConfig *tls.Config,
-	keepAliveInterval time.Duration, writeDeadline time.Duration, connectionTimeout time.Duration) (*connection, error) {
+func createConnection(url string, logHandler *logHandler, connSettings *connectionSettings) (*connection, error) {
 	conn := &connection{
 		logHandler,
 		nil,
@@ -94,8 +91,7 @@ func createConnection(url string, logHandler *logHandler, authInfo *AuthInfo, tl
 		initialized,
 	}
 	logHandler.log(Info, connectConnection)
-	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, authInfo, tlsConfig, keepAliveInterval,
-		writeDeadline, connectionTimeout, conn.results, conn.errorCallback)
+	protocol, err := newGremlinServerWSProtocol(logHandler, Gorilla, url, connSettings, conn.results, conn.errorCallback)
 	if err != nil {
 		logHandler.logf(Error, failedConnection)
 		conn.state = closedDueToError

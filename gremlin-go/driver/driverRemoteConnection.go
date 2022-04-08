@@ -87,14 +87,21 @@ func NewDriverRemoteConnection(
 		configuration(settings)
 	}
 
+	connSettings := &connectionSettings{
+		authInfo:          settings.AuthInfo,
+		tlsConfig:         settings.TlsConfig,
+		keepAliveInterval: settings.KeepAliveInterval,
+		writeDeadline:     settings.WriteDeadline,
+		connectionTimeout: settings.ConnectionTimeout,
+	}
+
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
 	if settings.Session != "" {
 		logHandler.log(Info, sessionDetected)
 		settings.MaximumConcurrentConnections = 1
 	}
 
-	pool, err := newLoadBalancingPool(url, logHandler, settings.AuthInfo, settings.TlsConfig, settings.KeepAliveInterval,
-		settings.WriteDeadline, settings.ConnectionTimeout, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
+	pool, err := newLoadBalancingPool(url, logHandler, connSettings, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
 	if err != nil {
 		if err != nil {
 			logHandler.logf(Error, logErrorGeneric, "NewDriverRemoteConnection", err.Error())

@@ -27,8 +27,12 @@ import (
 
 func Test(t *testing.T) {
 	t.Run("Test protocol connect error.", func(t *testing.T) {
+		connSettings := newDefaultConnectionSettings()
+		connSettings.authInfo, connSettings.tlsConfig = nil, nil
+		connSettings.keepAliveInterval, connSettings.writeDeadline, connSettings.writeDeadline = keepAliveIntervalDefault, writeDeadlineDefault, connectionTimeoutDefault
+
 		protocol, err := newGremlinServerWSProtocol(newLogHandler(&defaultLogger{}, Info, language.English), Gorilla,
-			"ws://localhost:9000/gremlin", nil, nil, keepAliveIntervalDefault, writeDeadlineDefault, connectionTimeoutDefault,
+			"ws://localhost:9000/gremlin", connSettings,
 			nil, nil)
 		assert.NotNil(t, err)
 		assert.Nil(t, protocol)

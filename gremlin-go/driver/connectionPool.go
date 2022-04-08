@@ -20,9 +20,7 @@ under the License.
 package gremlingo
 
 import (
-	"crypto/tls"
 	"sync"
-	"time"
 )
 
 type connectionPool interface {
@@ -41,13 +39,9 @@ const defaultNewConnectionThreshold = 4
 // multiple active connections with no active traversals on them, one will be used and the others will be closed and
 // removed from the pool.
 type loadBalancingPool struct {
-	url               string
-	logHandler        *logHandler
-	authInfo          *AuthInfo
-	tlsConfig         *tls.Config
-	keepAliveInterval time.Duration
-	writeDeadline     time.Duration
-	connectionTimeout time.Duration
+	url          string
+	logHandler   *logHandler
+	connSettings *connectionSettings
 
 	newConnectionThreshold int
 	connections            []*connection
@@ -127,8 +121,7 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 }
 
 func (pool *loadBalancingPool) newConnection() (*connection, error) {
-	connection, err := createConnection(pool.url, pool.logHandler, pool.authInfo, pool.tlsConfig,
-		pool.keepAliveInterval, pool.writeDeadline, pool.connectionTimeout)
+	connection, err := createConnection(pool.url, pool.logHandler, pool.connSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -136,11 +129,10 @@ func (pool *loadBalancingPool) newConnection() (*connection, error) {
 	return connection, nil
 }
 
-func newLoadBalancingPool(url string, logHandler *logHandler, authInfo *AuthInfo, tlsConfig *tls.Config,
-	keepAliveInterval time.Duration, writeDeadline time.Duration, connectionTimeout time.Duration, newConnectionThreshold int,
+func newLoadBalancingPool(url string, logHandler *logHandler, connSettings *connectionSettings, newConnectionThreshold int,
 	maximumConcurrentConnections int) (connectionPool, error) {
 	pool := make([]*connection, 0, maximumConcurrentConnections)
-	initialConnection, err := createConnection(url, logHandler, authInfo, tlsConfig, keepAliveInterval, writeDeadline, connectionTimeout)
+	initialConnection, err := createConnection(url, logHandler, connSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -148,11 +140,7 @@ func newLoadBalancingPool(url string, logHandler *logHandler, authInfo *AuthInfo
 	return &loadBalancingPool{
 		url:                    url,
 		logHandler:             logHandler,
-		authInfo:               authInfo,
-		tlsConfig:              tlsConfig,
-		keepAliveInterval:      keepAliveInterval,
-		writeDeadline:          writeDeadline,
-		connectionTimeout:      connectionTimeout,
+		connSettings:           connSettings,
 		newConnectionThreshold: newConnectionThreshold,
 		connections:            pool,
 	}, nil
