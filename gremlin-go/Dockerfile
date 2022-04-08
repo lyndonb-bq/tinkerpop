@@ -17,7 +17,6 @@
 
 ARG GREMLIN_SERVER_VERSION=${version:-3.5.3}
 FROM tinkerpop/gremlin-server:${GREMLIN_SERVER_VERSION}-SNAPSHOT
-#FROM tinkerpop:gremlin-server-base
 
 USER root
 RUN mkdir -p /opt
@@ -26,8 +25,12 @@ COPY gremlin-server/src/test /opt/test/
 COPY gremlin-go/docker/docker-entrypoint.sh gremlin-go/docker/*.yaml /opt/
 RUN chmod 755 /opt/docker-entrypoint.sh
 
-# setting to 3.5.3 does gives error even when using outside of Docker
+# Setting to 3.5.3 does gives error even when using outside of Docker.
 ENV NEO4J_VERSION=${version:-3.5.2}
+# Installs Neo4j libraries to this image so that we can test variants with transactions,
+# but only only port 45940 is configured with the neo4j graph as the neo4j-empty.properties
+# is statically pointing at a temp directory and that space can only be accessed by one
+# graph at a time.
 RUN /opt/gremlin-server/bin/gremlin-server.sh install org.apache.tinkerpop neo4j-gremlin $NEO4J_VERSION
 
 EXPOSE 45940 45941

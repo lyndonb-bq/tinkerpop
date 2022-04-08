@@ -30,7 +30,7 @@ func getModernGraph(t *testing.T, url string, auth *AuthInfo, tls *tls.Config) *
 		func(settings *DriverRemoteConnectionSettings) {
 			settings.TlsConfig = tls
 			settings.AuthInfo = auth
-			settings.TraversalSource = testServerGraphAlias
+			settings.TraversalSource = testServerModernGraphAlias
 		})
 	assert.Nil(t, err)
 	assert.NotNil(t, remote)

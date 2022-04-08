@@ -17,14 +17,6 @@
 
 version: "3.4"
 services:
-#  gremlin-server:
-#    container_name: gremlin-server
-#    image: tinkerpop:gremlin-server-base
-#    build:
-#      context: ../gremlin-server
-#      dockerfile: Dockerfile
-#      args:
-#        GREMLIN_SERVER_DIR: target/apache-tinkerpop-gremlin-server-3.5.3-SNAPSHOT-standalone
 
   gremlin-test-server:
     container_name: gremlin-test-server

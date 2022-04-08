@@ -42,7 +42,7 @@ const basicAuthIntegrationTestSuite = "basic authentication integration"
 const validHostInvalidPortValidPath = "ws://localhost:12341253/gremlin"
 const invalidHostValidPortValidPath = "ws://invalidhost:8182/gremlin"
 const validHostValidPortInvalidPath = "ws://localhost:8182/invalid"
-const testServerGraphAlias = "gmodern"
+const testServerModernGraphAlias = "gmodern"
 const manualTestSuiteName = "manual"
 
 // transaction is enabled on the same port as no auth url
@@ -746,7 +746,7 @@ func TestConnection(t *testing.T) {
 			func(settings *DriverRemoteConnectionSettings) {
 				settings.TlsConfig = testNoAuthWithAliasTlsConfig
 				settings.AuthInfo = testNoAuthWithAliasAuthInfo
-				settings.TraversalSource = "g"
+				settings.TraversalSource = testServerModernGraphAlias
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
@@ -754,7 +754,7 @@ func TestConnection(t *testing.T) {
 
 		g := Traversal_().WithRemote(remote)
 
-		r, err := g.V().Has(nil, "test-null-key").ToList()
+		r, err := g.V().Count().ToList()
 		assert.Nil(t, err)
 		for _, res := range r {
 			assert.Equal(t, int64(6), res.GetInterface())
@@ -877,7 +877,7 @@ func TestConnection(t *testing.T) {
 			func(settings *DriverRemoteConnectionSettings) {
 				settings.TlsConfig = testNoAuthWithAliasTlsConfig
 				settings.AuthInfo = testNoAuthWithAliasAuthInfo
-				settings.TraversalSource = testServerGraphAlias
+				settings.TraversalSource = testServerModernGraphAlias
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, remote)
