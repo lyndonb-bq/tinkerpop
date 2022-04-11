@@ -80,7 +80,7 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 				if leastUsed != nil && (leastUsed.activeResults() == 0 && connection.activeResults() == 0) {
 					// Close the connection asynchronously since it is a high-latency method
 					go func() {
-						pool.logHandler.log(Info, closeUnusedPoolConnection)
+						pool.logHandler.log(Debug, closeUnusedPoolConnection)
 						err := connection.close()
 						if err != nil {
 							pool.logHandler.logf(Warning, errorClosingConnection, err.Error())
@@ -99,7 +99,7 @@ func (pool *loadBalancingPool) getLeastUsedConnection() (*connection, error) {
 					leastUsed = connection
 				}
 			} else {
-				pool.logHandler.log(Info, purgingDeadConnection)
+				pool.logHandler.log(Debug, purgingDeadConnection)
 			}
 		}
 
