@@ -46,14 +46,6 @@ type ClientSettings struct {
 	Session                      string
 }
 
-type connectionSettings struct {
-	authInfo          *AuthInfo
-	tlsConfig         *tls.Config
-	keepAliveInterval time.Duration
-	writeDeadline     time.Duration
-	connectionTimeout time.Duration
-}
-
 // Client is used to connect and interact with a Gremlin-supported server.
 type Client struct {
 	url             string

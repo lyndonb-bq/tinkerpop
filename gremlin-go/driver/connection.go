@@ -20,7 +20,9 @@ under the License.
 package gremlingo
 
 import (
+	"crypto/tls"
 	"sync"
+	"time"
 )
 
 type connectionState int
@@ -37,6 +39,14 @@ type connection struct {
 	protocol   protocol
 	results    *synchronizedMap
 	state      connectionState
+}
+
+type connectionSettings struct {
+	authInfo          *AuthInfo
+	tlsConfig         *tls.Config
+	keepAliveInterval time.Duration
+	writeDeadline     time.Duration
+	connectionTimeout time.Duration
 }
 
 func (connection *connection) errorCallback() {
