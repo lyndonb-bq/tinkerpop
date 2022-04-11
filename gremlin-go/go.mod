@@ -17,7 +17,7 @@
 
 // If this file is changed, please also update the NOTICE file under gremlin-go.
 
-module github.com/lyndonbauto/tinkerpop/gremlin-go/v3
+module github.com/lyndonbauto/tinkerpop/gremlin-go
 
 go 1.17
 
