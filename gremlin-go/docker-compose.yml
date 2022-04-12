@@ -41,6 +41,7 @@ services:
       - RUN_INTEGRATION_TESTS=true
       - RUN_INTEGRATION_WITH_ALIAS_TESTS=true
       - RUN_BASIC_AUTH_INTEGRATION_TESTS=true
+      - TEST_TRANSACTIONS=true
     working_dir: /go_app
     command: >
       bash -c "go install github.com/haveyoudebuggedit/gotestfmt/v2/cmd/gotestfmt@latest
