@@ -30,6 +30,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -38,6 +39,7 @@ type tinkerPopGraph struct {
 }
 
 var parsers map[*regexp.Regexp]func(string, string) interface{}
+var toListLock sync.Mutex
 
 func init() {
 	parsers = map[*regexp.Regexp]func(string, string) interface{}{
@@ -282,6 +284,8 @@ func (tg *tinkerPopGraph) iteratedNext() error {
 }
 
 func (tg *tinkerPopGraph) iteratedToList() error {
+	toListLock.Lock()
+	defer toListLock.Unlock()
 	if tg.traversal == nil {
 		// Return pending because this is not currently implemented.
 		return godog.ErrPending
