@@ -36,6 +36,7 @@ import (
 
 type tinkerPopGraph struct {
 	*CucumberWorld
+	sync.Mutex
 }
 
 var parsers map[*regexp.Regexp]func(string, string) interface{}
@@ -284,8 +285,6 @@ func (tg *tinkerPopGraph) iteratedNext() error {
 }
 
 func (tg *tinkerPopGraph) iteratedToList() error {
-	toListLock.Lock()
-	defer toListLock.Unlock()
 	if tg.traversal == nil {
 		// Return pending because this is not currently implemented.
 		return godog.ErrPending
@@ -700,6 +699,7 @@ func (tg *tinkerPopGraph) usingTheParameterOfP(paramName, pVal, stringVal string
 
 var tg = &tinkerPopGraph{
 	NewCucumberWorld(),
+	sync.Mutex{},
 }
 
 func InitializeTestSuite(ctx *godog.TestSuiteContext) {
@@ -719,6 +719,12 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		tg.scenario = sc
 		// Add tg.recreateAllDataGraphConnection() here and tg.closeAllDataGraphConnection() in an After scenario
 		// hook if necessary to isolate failing tests that closes the shared connection.
+		tg.Lock()
+		return ctx, nil
+	})
+
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		tg.Unlock()
 		return ctx, nil
 	})
 
