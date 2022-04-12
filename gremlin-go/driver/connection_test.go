@@ -90,8 +90,6 @@ func addTestData(t *testing.T, g *GraphTraversalSource) {
 }
 
 func initializeGraph(t *testing.T, url string, auth *AuthInfo, tls *tls.Config) *GraphTraversalSource {
-	mu.Lock()
-	defer mu.Unlock()
 	remote, err := NewDriverRemoteConnection(url,
 		func(settings *DriverRemoteConnectionSettings) {
 			settings.TlsConfig = tls
@@ -326,6 +324,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -593,6 +594,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -611,6 +615,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test Traversal. Next and HasNext", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -622,6 +629,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal With Label", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -668,6 +678,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal P", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -684,6 +697,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection Next and HasNext", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -710,6 +726,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test anonymousTraversal", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -768,6 +787,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection GraphTraversal WithSack", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -942,6 +964,9 @@ func TestConnection(t *testing.T) {
 	})
 
 	t.Run("Test DriverRemoteConnection Invalid GraphTraversal", func(t *testing.T) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
