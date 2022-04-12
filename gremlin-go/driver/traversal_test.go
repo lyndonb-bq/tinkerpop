@@ -47,7 +47,7 @@ func TestTraversal(t *testing.T) {
 	})
 
 	t.Run("Test Iterate with empty removeConnection", func(t *testing.T) {
-		g := NewGraphTraversalSource(&Graph{}, &TraversalStrategies{}, newBytecode(nil), nil)
+		g := NewGraphTraversalSource(&Graph{}, nil, newBytecode(nil))
 
 		promise := g.V().Count().Iterate()
 		assert.NotNil(t, <-promise)
