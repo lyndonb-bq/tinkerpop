@@ -45,6 +45,6 @@ services:
     working_dir: /go_app
     command: >
       bash -c "go install github.com/haveyoudebuggedit/gotestfmt/v2/cmd/gotestfmt@latest
-      && go test -v -json ./... -race -covermode=atomic -coverprofile=\"coverage.out\" -coverpkg=./... | gotestfmt"
+      && go test -p 1 -v -json ./... -race -covermode=atomic -coverprofile=\"coverage.out\" -coverpkg=./... | gotestfmt"
     depends_on:
       - gremlin-test-server
