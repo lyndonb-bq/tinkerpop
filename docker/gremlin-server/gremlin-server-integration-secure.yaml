@@ -24,8 +24,7 @@ graphs: {
   modern: conf/tinkergraph-empty.properties,
   crew: conf/tinkergraph-empty.properties,
   grateful: conf/tinkergraph-empty.properties,
-  sink: conf/tinkergraph-empty.properties,
-  test: conf/tinkergraph-empty.properties}
+  sink: conf/tinkergraph-empty.properties}
 scriptEngines: {
   gremlin-lang : {},
   gremlin-groovy: {
