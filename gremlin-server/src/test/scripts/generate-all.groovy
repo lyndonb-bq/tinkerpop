@@ -45,7 +45,7 @@ globals << [hook : [
         idManagerField.set(graph, TinkerGraph.DefaultIdManager.INTEGER)
     }
 
-    [classic, modern, crew, sink, grateful, test].each{
+    [classic, modern, crew, sink, grateful].each{
       allowSetOfIdManager(it, "vertexIdManager")
       allowSetOfIdManager(it, "edgeIdManager")
       allowSetOfIdManager(it, "vertexPropertyIdManager")
