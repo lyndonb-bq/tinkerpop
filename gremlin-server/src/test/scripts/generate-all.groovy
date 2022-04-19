@@ -77,10 +77,7 @@ if (dynamicGtx != null)
 
 def dynamicTest = context.getBindings(javax.script.ScriptContext.GLOBAL_SCOPE)["test"]
 if (dynamicTest != null) {
-    allowSetOfIdManager(dynamicTest, "vertexIdManager")
-    allowSetOfIdManager(dynamicTest, "edgeIdManager")
-    allowSetOfIdManager(dynamicTest, "vertexPropertyIdManager")
-    TinkerFactory.generateModern(test)
+    TinkerFactory.generateModern(dynamicTest)
     globals << [gtest : traversal().withEmbedded(dynamicTest).withStrategies(ReferenceElementStrategy)]
 }
 
