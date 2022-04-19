@@ -55,7 +55,7 @@ globals << [hook : [
     TinkerFactory.generateTheCrew(crew)
     TinkerFactory.generateGratefulDead(grateful)
     TinkerFactory.generateKitchenSink(sink)
-
+    TinkerFactory.generateModern(test)
   }
 ] as LifeCycleHook]
 
@@ -67,6 +67,7 @@ globals << [gcrew : traversal().withEmbedded(crew).withStrategies(ReferenceEleme
 globals << [ggraph : traversal().withEmbedded(graph).withStrategies(ReferenceElementStrategy)]
 globals << [ggrateful : traversal().withEmbedded(grateful).withStrategies(ReferenceElementStrategy)]
 globals << [gsink : traversal().withEmbedded(sink).withStrategies(ReferenceElementStrategy)]
+globals << [gtest : traversal().withEmbedded(test).withStrategies(ReferenceElementStrategy)]
 
 // dynamically detect existence of gtx as it may or may not be present depending on the -DincludeNeo4j
 // and the configuration of the particular server instance. with docker/gremlin-server.sh the neo4j
