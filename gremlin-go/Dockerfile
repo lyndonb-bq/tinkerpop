@@ -22,8 +22,14 @@ USER root
 RUN mkdir -p /opt
 WORKDIR /opt
 COPY gremlin-server/src/test /opt/test/
+COPY gremlin-go/docker/generate-all.groovy /opt/test/scripts/
 COPY gremlin-go/docker/docker-entrypoint.sh gremlin-go/docker/*.yaml /opt/
 RUN chmod 755 /opt/docker-entrypoint.sh
+
+# Installing dos2unix to avoid errors in running the entrypoint script on Windows machines where their
+# carriage return is \r\n instead of the \n needed for linux/unix containers
+RUN apk update && apk add dos2unix
+RUN dos2unix /opt/docker-entrypoint.sh && apk del dos2unix
 
 # Setting to 3.5.3 does gives error even when using outside of Docker.
 ENV NEO4J_VERSION=${version:-3.5.2}

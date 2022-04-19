@@ -55,7 +55,6 @@ settings.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty
 settings.graphs.crew = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settings.graphs.grateful = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settings.graphs.sink = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settings.graphs.test = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 if (testTransactions) settings.graphs.tx = gremlinServerDir + "/src/test/scripts/neo4j-empty.properties"
 settings.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [gremlinServerDir + "/src/test/scripts/generate-all.groovy"]
 settings.port = 45940
