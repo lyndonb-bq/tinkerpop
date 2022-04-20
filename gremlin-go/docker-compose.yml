@@ -24,6 +24,8 @@ services:
     build:
       context: ../
       dockerfile: gremlin-go/Dockerfile
+      args:
+        NEO4J_VERSION: 3.5.3
     ports:
       - "45940:45940"
       - "45941:45941"
