@@ -22,6 +22,7 @@ USER root
 RUN mkdir -p /opt
 WORKDIR /opt
 COPY gremlin-server/src/test /opt/test/
+COPY gremlin-go/docker/generate-all.groovy /opt/test/scripts/
 COPY gremlin-go/docker/docker-entrypoint.sh gremlin-go/docker/*.yaml /opt/
 RUN chmod 755 /opt/docker-entrypoint.sh
 
