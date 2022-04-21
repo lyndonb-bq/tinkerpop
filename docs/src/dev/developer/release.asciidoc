@@ -250,7 +250,7 @@ for generating javadoc.
 .. link:https://www.nuget.org/packages/Gremlin.Net.Template/[Gremlin.Net.Template - nuget]
 .. link:https://www.npmjs.com/package/gremlin[gremlin - npm]
 .. link:https://www.npmjs.com/package/gremlint[gremlint - npm]
-.. link:https://pkg.go.dev/github.com/apache/tinkerpop/gremlin-go/v3/driver/[gremlin-go - go packages]
+.. link:https://pkg.go.dev/github.com/apache/tinkerpop/gremlin-go/v3[gremlin-go - go packages]
 . Deploy the Docker images
 .. `mvn deploy -pl gremlin-console -DskipTests -DdockerImages`
 .. `mvn deploy -pl gremlin-server -DskipTests -DdockerImages`

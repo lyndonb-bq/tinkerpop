@@ -251,7 +251,7 @@ See the <<release-environment,Release Environment>> section for more information
 [[go-environment]]
 === Go Environment
 
-The build optionally requires link:https://go.dev/dl/[Go] (>=1.7) to work with the `gremlin-go` module. If Go is not installed, TinkerPop will still build with Maven, but Go projects will be skipped.
+The build optionally requires link:https://go.dev/dl/[Go] (>=1.17) to work with the `gremlin-go` module. If Go is not installed, TinkerPop will still build with Maven, but Go projects will be skipped.
 
 `gremlin-go` can be built the command line with:
 
