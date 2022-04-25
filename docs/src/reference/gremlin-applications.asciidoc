@@ -1361,6 +1361,7 @@ Gremlin-Console |PLAIN SASL (username/password) |3.0.0-incubating
 |GSSAPI SASL (Kerberos) |3.4.7
 |Gremlin.Net |PLAIN SASL |3.2.7
 |Gremlin-Javascript |PLAIN SASL |3.3.0
+|Gremlin-go |PLAIN SASL |3.5.4
 |=========================================================
 
 By default, Gremlin Server is configured to allow all requests to be processed (i.e. no authentication).  To enable
