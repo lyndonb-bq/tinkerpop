@@ -2185,7 +2185,7 @@ Writing a Gremlin <<dsl,Domain Specific Language>> (DSL) in Go simply requires d
 The Social DSL based on the link:https://tinkerpop.apache.org/docs/current/images/tinkerpop-modern.png["modern" toy graph]
 might look like this:
 
-[source,python] //todo
+[source,go] //todo
 ----
 class SocialTraversal(GraphTraversal):
 
@@ -2274,17 +2274,15 @@ key.
 no `Graph` instance to deserialize a result into on the client-side. A workaround is to replace the step with
 `aggregate(local)` and then convert those results to something the client can use locally.
 
-[[gremlin-go-examples]] // todo
+[[gremlin-go-examples]]
 === Application Examples
 
-The TinkerPop source code contains a simple Python script that shows a basic example of how gremlinpython works. It
-can be found in GitHub link:https://github.com/apache/tinkerpop/tree/x.y.z/gremlin-python/src/main/python/example.py[here]
+The TinkerPop source code contains a simple Go script that shows a basic example of how gremlin-go works. It
+can be found in GitHub link:https://github.com/apache/tinkerpop/tree/x.y.z/gremlin-go/example/example.go[here]
 and is designed to work best with a running <<gremlin-server,Gremlin Server>> configured with the default
 `conf/gremlin-server.yaml` file as included with the standard release packaging.
 
 [source,shell]
 ----
-pip install gremlinpython
-pip install aiohttp
-python example.py
+go run example.go
 ----
