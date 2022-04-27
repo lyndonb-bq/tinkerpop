@@ -16,6 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+// CAUTION!!!
+// This file is intended for generating Performance test results only.
+// It is not to be used in a production setting.
+// It is being made available as a reference to the test results for
+// anyone that wants see the code used to obtain the performance metrics.
+
 package org.apache.tinkerpop.gremlin.driver;
 
 import lombok.AllArgsConstructor;
