@@ -47,7 +47,7 @@ type DriverRemoteConnectionSettings struct {
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-	Session                      string
+	session                      string
 }
 
 // DriverRemoteConnection is a remote connection.
@@ -84,7 +84,7 @@ func NewDriverRemoteConnection(
 		WriteBufferSize: 0,
 
 		MaximumConcurrentConnections: runtime.NumCPU(),
-		Session:                      "",
+		session:                      "",
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
@@ -102,7 +102,7 @@ func NewDriverRemoteConnection(
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	if settings.Session != "" {
+	if settings.session != "" {
 		logHandler.log(Debug, sessionDetected)
 		settings.MaximumConcurrentConnections = 1
 	}
@@ -121,7 +121,7 @@ func NewDriverRemoteConnection(
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connections:     pool,
-		session:         settings.Session,
+		session:         settings.session,
 	}
 
 	return &DriverRemoteConnection{client: client, isClosed: false}, nil
@@ -169,7 +169,7 @@ func (driver *DriverRemoteConnection) isSession() bool {
 	return driver.client.session != ""
 }
 
-// CreateSession generates a new Session. sessionId stores the optional UUID param. It can be used to create a Session with a specific UUID.
+// CreateSession generates a new session. sessionId stores the optional UUID param. It can be used to create a session with a specific UUID.
 func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*DriverRemoteConnection, error) {
 	if len(sessionId) > 1 {
 		return nil, newError(err0201CreateSessionMultipleIdsError)
@@ -181,9 +181,9 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
 		settings.TraversalSource = driver.client.traversalSource
 		if len(sessionId) == 1 {
-			settings.Session = sessionId[0]
+			settings.session = sessionId[0]
 		} else {
-			settings.Session = uuid.New().String()
+			settings.session = uuid.New().String()
 		}
 	})
 	if err != nil {

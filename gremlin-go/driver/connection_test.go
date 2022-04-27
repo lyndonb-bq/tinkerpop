@@ -608,14 +608,14 @@ func TestConnection(t *testing.T) {
 		assert.NotNil(t, result)
 	})
 
-	t.Run("Test client.submit() on Session", func(t *testing.T) {
+	t.Run("Test client.submit() on session", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		client, err := NewClient(testNoAuthUrl,
 			func(settings *ClientSettings) {
 				settings.TlsConfig = testNoAuthTlsConfig
 				settings.AuthInfo = testNoAuthAuthInfo
-				settings.Session = "abc123"
+				settings.session = "abc123"
 			})
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
@@ -865,7 +865,7 @@ func TestConnection(t *testing.T) {
 			assert.Equal(t, 2, len(remote.spawnedSessions))
 		})
 
-		t.Run("Test Session close", func(t *testing.T) {
+		t.Run("Test session close", func(t *testing.T) {
 			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 				func(settings *DriverRemoteConnectionSettings) {
@@ -888,7 +888,7 @@ func TestConnection(t *testing.T) {
 			assert.Equal(t, 3, len(remote.spawnedSessions))
 		})
 
-		t.Run("Test Session failures", func(t *testing.T) {
+		t.Run("Test session failures", func(t *testing.T) {
 			skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 			remote, err := NewDriverRemoteConnection(testNoAuthWithAliasUrl,
 				func(settings *DriverRemoteConnectionSettings) {
