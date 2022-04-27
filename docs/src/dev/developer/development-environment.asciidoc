@@ -261,7 +261,7 @@ go build
 Docker allows you to test the driver without installing any dependencies. The following command can be used to run docker:
 
 [source,text]
-docker-compose up --exit-code-from integration-tests
+docker-compose up --exit-code-from gremlin-go-integration-tests
 
 See the <<release-environment,Release Environment>> section for more information on release manager configurations.
 
