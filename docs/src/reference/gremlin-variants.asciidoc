@@ -2258,21 +2258,17 @@ to be public:
 
 *Statics* - <<__, T__>> //todo
 
-[[gremlin-go-limitations]]  //todo
+[[gremlin-go-limitations]]
 === Limitations
 
-* Traversals that return a `Set` *might* be coerced to a `List` in Python. In the case of Python, number equality
-is different from JVM languages which produces different `Set` results when those types are in use. When this case
-is detected during deserialization, the `Set` is coerced to a `List` so that traversals return consistent
-results within a collection across different languages. If a `Set` is needed then convert `List` results
-to `Set` manually.
-* Gremlin is capable of returning `Dictionary` results that use non-hashable keys (e.g. Dictionary as a key) and Python
-does not support that at a language level. Using GraphSON 3.0 or GraphBinary (after 3.5.0) makes it possible to return
-such results. In all other cases, Gremlin that returns such results will need to be re-written to avoid that sort of
-key.
-* The `subgraph()`-step is not supported by any variant that is not running on the Java Virtual Machine as there is
-no `Graph` instance to deserialize a result into on the client-side. A workaround is to replace the step with
-`aggregate(local)` and then convert those results to something the client can use locally.
+* The set data type is currently not implemented, as `go` does not have an underlying `set` data structure. Any set type 
+code from server will be deserialized into slices with the list type implementation. Set implemented with the `go` 
+convention of using a map will be serialized as map.
+* The `path` data type serialization is currently incomplete as labels are represented as list of lists instead of list 
+of sets. Fully functional Path serialization will be implemented when set is implemented in the next milestone. Path 
+can be successfully deserialized.
+* Traversal step functions currently take `string` arguments with double quotes only. Operations using Gremlin keywords,
+such as `By(label)`, will be supported in the next milestone.
 
 [[gremlin-go-examples]]
 === Application Examples
