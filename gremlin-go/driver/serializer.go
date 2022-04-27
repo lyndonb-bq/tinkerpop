@@ -43,7 +43,7 @@ type graphBinarySerializer struct {
 }
 
 func newGraphBinarySerializer(handler *logHandler) serializer {
-	serializer := graphBinaryTypeSerializer{NullType, nil, nil, nil, handler}
+	serializer := graphBinaryTypeSerializer{nullType, nil, nil, nil, handler}
 	return graphBinarySerializer{&serializer}
 }
 
