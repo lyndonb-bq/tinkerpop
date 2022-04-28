@@ -24,7 +24,6 @@
 // anyone that wants see the code used to obtain the performance metrics.
 
 import org.apache.tinkerpop.gremlin.driver.Cluster;
-import org.apache.tinkerpop.gremlin.driver.Result;
 import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -44,10 +43,11 @@ public class PerformanceTest {
         System.exit(0);
     }
     static final int SAMPLE_SIZE = 11;
-    static final Cluster cluster = Cluster.build("localhost").port(8182).create();
+    static final int VALUE_MAP_REPEATS = 500;
+    static final Cluster cluster = Cluster.build("localhost").port(8182).maxContentLength(Integer.MAX_VALUE).create();
     static final DriverRemoteConnection connection = DriverRemoteConnection.using(cluster, "ggrateful");
     static final GraphTraversalSource g = traversal().withRemote(connection);
-    static final int VALUEMAP_REPEATS = 50;
+
 
     public static String[] getArgs(final int repeats) {
         final String[] args = new String[repeats];
@@ -71,8 +71,6 @@ public class PerformanceTest {
         executeGetNextPerformanceTest();
         System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
         executeGetToListPerformanceTest();
-        System.out.println("~~~~~~~ RUNNING TRANSFER PERFORMANCE TEST ~~~~~~~");
-        executeTransferPerformanceTest();
         System.out.println("~~~~~~~ PERFORMANCE TESTS COMPLETE ~~~~~~~\"");
     }
 
@@ -80,10 +78,10 @@ public class PerformanceTest {
         final List<Duration> durations = new ArrayList<>();
         for (int i = 0; i < SAMPLE_SIZE; i++) {
             try {
-                final String[] args = getArgs(VALUEMAP_REPEATS);
+                final String[] args = getArgs(VALUE_MAP_REPEATS);
                 final Instant starts = Instant.now();
-                // execute(timed)
-                final Object obj = getProjectTraversal(g, VALUEMAP_REPEATS, args).next();
+                // execute and retrieve(timed)
+                getProjectTraversal(g, VALUE_MAP_REPEATS, args).next();
                 final Instant ends = Instant.now();
                 durations.add(Duration.between(starts, ends));
             } catch (Exception e) {
@@ -99,10 +97,10 @@ public class PerformanceTest {
         final List<Duration> durations = new ArrayList<>();
         for (int i = 0; i < SAMPLE_SIZE; i++) {
             try {
-                final String[] args = getArgs(VALUEMAP_REPEATS);
+                final String[] args = getArgs(VALUE_MAP_REPEATS);
                 final Instant starts = Instant.now();
-                // execute(timed)
-                final List<?> list = getProjectTraversal(g, VALUEMAP_REPEATS, args).toList();
+                // execute and retrieve(timed)
+                getProjectTraversal(g, VALUE_MAP_REPEATS, args).toList();
                 final Instant ends = Instant.now();
                 durations.add(Duration.between(starts, ends));
             } catch (Exception e) {
@@ -114,31 +112,7 @@ public class PerformanceTest {
         return data;
     }
 
-    public static TimingData executeTransferPerformanceTest() {
-        final List<Duration> durations = new ArrayList<>();
-        for (int i = 0; i < SAMPLE_SIZE; i++) {
-            try {
-                final String[] args = getArgs(VALUEMAP_REPEATS);
-                // execute(not timed)
-                final List<?> resultSet = getProjectTraversal(g, VALUEMAP_REPEATS, args).toList();
-                // retrieve(timed)
-                final Instant starts = Instant.now();
-                for (Object obj:resultSet) {
-                    Result result = (Result) obj;
-                    Object newObj = result.getObject();
-                }
-                final Instant ends = Instant.now();
-                durations.add(Duration.between(starts, ends));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        TimingData data = getTimingDataFromDurationList(durations);
-        System.out.println(data.toStringMillis("Transfer"));
-        return data;
-    }
-
-    private static TimingData getTimingDataFromDurationList(final List<Duration> durations) {;
+    private static TimingData getTimingDataFromDurationList(final List<Duration> durations) {
         Collections.sort(durations);
         durations.remove(durations.size()-1);
         return new TimingData(
