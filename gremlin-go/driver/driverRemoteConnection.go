@@ -189,7 +189,6 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 		settings.TraversalSource = driver.client.traversalSource
 		settings.TransporterType = driver.client.transporterType
 
-		// Should we keep the same logger as parent DRC? Language isnt stored in DRC, default to English?
 		settings.Logger = driver.client.logHandler.logger
 		settings.LogVerbosity = driver.client.logHandler.verbosity
 		//settings.Language = driver.client.logHandler
