@@ -41,6 +41,7 @@ import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalS
 public class PerformanceTest {
     public static void main(String[] args) {
         executePerformanceTests();
+        System.exit(0);
     }
     static final int SAMPLE_SIZE = 11;
     static final Cluster cluster = Cluster.build("localhost").port(8182).create();
