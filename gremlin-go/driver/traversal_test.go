@@ -458,8 +458,8 @@ func TestTraversal(t *testing.T) {
 			assert.True(t, ok)
 			assert.NotNil(t, value)
 
-			// Size should be 2.
-			assert.Equal(t, 2, len(result.GetInterface().(map[interface{}]interface{})))
+			// Size should be 3.
+			assert.Equal(t, 3, len(result.GetInterface().(map[interface{}]interface{})))
 		}
 	})
 
