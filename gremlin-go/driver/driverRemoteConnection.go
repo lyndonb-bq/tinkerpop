@@ -185,6 +185,25 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 		} else {
 			settings.session = uuid.New().String()
 		}
+
+		settings.TraversalSource = driver.client.traversalSource
+		settings.TransporterType = driver.client.transporterType
+
+		// Should we keep the same logger as parent DRC? Language isnt stored in DRC, default to English?
+		settings.Logger = driver.client.logHandler.logger
+		settings.LogVerbosity = driver.client.logHandler.verbosity
+		//settings.Language = driver.client.logHandler
+
+		settings.AuthInfo = driver.client.connections.(*loadBalancingPool).connSettings.authInfo
+		settings.TlsConfig = driver.client.connections.(*loadBalancingPool).connSettings.tlsConfig
+		settings.KeepAliveInterval = driver.client.connections.(*loadBalancingPool).connSettings.keepAliveInterval
+		settings.WriteDeadline = driver.client.connections.(*loadBalancingPool).connSettings.writeDeadline
+		settings.ConnectionTimeout = driver.client.connections.(*loadBalancingPool).connSettings.connectionTimeout
+		settings.NewConnectionThreshold = driver.client.connections.(*loadBalancingPool).newConnectionThreshold
+		settings.EnableCompression = driver.client.connections.(*loadBalancingPool).connSettings.enableCompression
+		settings.ReadBufferSize = driver.client.connections.(*loadBalancingPool).connSettings.readBufferSize
+		settings.WriteBufferSize = driver.client.connections.(*loadBalancingPool).connSettings.writeBufferSize
+		settings.MaximumConcurrentConnections = cap(driver.client.connections.(*loadBalancingPool).connections)
 	})
 	if err != nil {
 		return nil, err
