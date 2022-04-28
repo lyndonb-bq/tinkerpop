@@ -238,15 +238,12 @@ func main() {
 ```
 
 ## Sample Traversals
-<!--
-TODO: Add Go specific changes to following paragraph:
--->
 The Gremlin language allows users to write highly expressive graph traversals and has a broad list of functions that
 cover a wide body of features. Traversal in `Go` is very similar to other GLV, with the exception that all step functions are capitalized.
 
 Anonymous traversal `__` replaced with `T__` due to `Go` limitations.
 
-Constants and predicates should be prefixed with `gremlingo` like `gremlingo.Desc`.
+Anything in the package when referenced needs the prefix `gremlingo` like `gremlingo.Desc`.
 
 <!--
 The [Reference Documentation][steps] describes these functions and other aspects of the
@@ -301,6 +298,8 @@ if err != nil {
 ```go
 	results, err := g.V().HasLabel("person").Has("age", gremlingo.T__.Is(gremlingo.P.Gt(30))).Order().By("age", gremlingo.Desc).ToList()
 ```
+
+*List of all exports can be found at [pkg.go.dev](https://pkg.go.dev/github.com/apache/tinkerpop/gremlin-go/v3/driver)*
 
 # Specifications
 ### Supported Data Types
