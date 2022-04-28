@@ -148,6 +148,7 @@ func (channelResultSet *channelResultSet) Channel() chan *Result {
 	return channelResultSet.channel
 }
 
+// One returns the next Result from the channelResultSet, blocking until one is available.
 func (channelResultSet *channelResultSet) One() (*Result, error) {
 	if channelResultSet.err != nil {
 		return nil, channelResultSet.err
@@ -155,7 +156,7 @@ func (channelResultSet *channelResultSet) One() (*Result, error) {
 	return <-channelResultSet.channel, channelResultSet.err
 }
 
-// All returns all results for the channelResultSet.
+// All returns all remaining results for the channelResultSet (results grabbed through One will not be present).
 func (channelResultSet *channelResultSet) All() ([]*Result, error) {
 	var results []*Result
 	for result := range channelResultSet.channel {
