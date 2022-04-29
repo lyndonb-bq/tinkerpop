@@ -180,13 +180,27 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 
 	driver.client.logHandler.log(Info, creatingSessionConnection)
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
-		parentSettings := *driver.settings
-		settings = &parentSettings
 		if len(sessionId) == 1 {
 			settings.session = sessionId[0]
 		} else {
 			settings.session = uuid.New().String()
 		}
+		// copy other settings from parent
+		settings.TraversalSource = driver.settings.TraversalSource
+		settings.TransporterType = driver.settings.TransporterType
+		settings.Logger = driver.settings.Logger
+		settings.LogVerbosity = driver.settings.LogVerbosity
+		settings.Language = driver.settings.Language
+		settings.AuthInfo = driver.settings.AuthInfo
+		settings.TlsConfig = driver.settings.TlsConfig
+		settings.KeepAliveInterval = driver.settings.KeepAliveInterval
+		settings.WriteDeadline = driver.settings.WriteDeadline
+		settings.ConnectionTimeout = driver.settings.ConnectionTimeout
+		settings.NewConnectionThreshold = driver.settings.NewConnectionThreshold
+		settings.EnableCompression = driver.settings.EnableCompression
+		settings.ReadBufferSize = driver.settings.ReadBufferSize
+		settings.WriteBufferSize = driver.settings.WriteBufferSize
+		settings.MaximumConcurrentConnections = driver.settings.MaximumConcurrentConnections
 	})
 	if err != nil {
 		return nil, err
