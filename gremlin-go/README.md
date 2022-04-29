@@ -134,6 +134,18 @@ Note: The exact import name as well as the module prefix for `NewDriverRemoteCon
 		})
 ```
 
+## Troubleshooting
+
+### Can't establish connection and get any result
+* Verify you are using valid server protocol and path. Note that for secure connection `wss` should be used.
+* Verify firewall settings.
+
+### Local server doesn't have valid certificate
+* Set connection option &tls.Config{InsecureSkipVerify: true}
+
+### Client hangs on requests with large amount of data
+* Increase read buffer size.
+
 # Gremlin-Go Development
 
 ## Design Architecture
@@ -179,7 +191,7 @@ Docker allows you to test the driver without installing any dependencies. The fo
 # Go Gremlin Language Variant
 
 [Apache TinkerPop™][tk] is a graph computing framework for both graph databases (OLTP) and graph analytic systems
-(OLAP). [Gremlin][gremlin] is the graph traversal language of TinkerPop. It can be described as a functional,
+(OLAP). [Gremlin][gremlin] is the graph traversal language of TinkerPop. It can be descriutbed as a functional,
 data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's
 property graph.
 
