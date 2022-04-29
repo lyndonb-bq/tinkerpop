@@ -21,7 +21,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/lyndonbauto/tinkerpop/gremlin-go/v3/driver"
+	"github.com/apache/tinkerpop/gremlin-go/v3/driver"
 )
 
 func main() {
