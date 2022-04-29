@@ -55,6 +55,7 @@ type DriverRemoteConnection struct {
 	client          *Client
 	spawnedSessions []*DriverRemoteConnection
 	isClosed        bool
+	settings        *DriverRemoteConnectionSettings
 }
 
 // NewDriverRemoteConnection creates a new DriverRemoteConnection.
@@ -124,7 +125,7 @@ func NewDriverRemoteConnection(
 		session:         settings.session,
 	}
 
-	return &DriverRemoteConnection{client: client, isClosed: false}, nil
+	return &DriverRemoteConnection{client: client, isClosed: false, settings: settings}, nil
 }
 
 // Close closes the DriverRemoteConnection.
@@ -179,30 +180,13 @@ func (driver *DriverRemoteConnection) CreateSession(sessionId ...string) (*Drive
 
 	driver.client.logHandler.log(Info, creatingSessionConnection)
 	drc, err := NewDriverRemoteConnection(driver.client.url, func(settings *DriverRemoteConnectionSettings) {
-		settings.TraversalSource = driver.client.traversalSource
+		parentSettings := *driver.settings
+		settings = &parentSettings
 		if len(sessionId) == 1 {
 			settings.session = sessionId[0]
 		} else {
 			settings.session = uuid.New().String()
 		}
-
-		settings.TraversalSource = driver.client.traversalSource
-		settings.TransporterType = driver.client.transporterType
-
-		settings.Logger = driver.client.logHandler.logger
-		settings.LogVerbosity = driver.client.logHandler.verbosity
-		//settings.Language = driver.client.logHandler
-
-		settings.AuthInfo = driver.client.connections.(*loadBalancingPool).connSettings.authInfo
-		settings.TlsConfig = driver.client.connections.(*loadBalancingPool).connSettings.tlsConfig
-		settings.KeepAliveInterval = driver.client.connections.(*loadBalancingPool).connSettings.keepAliveInterval
-		settings.WriteDeadline = driver.client.connections.(*loadBalancingPool).connSettings.writeDeadline
-		settings.ConnectionTimeout = driver.client.connections.(*loadBalancingPool).connSettings.connectionTimeout
-		settings.NewConnectionThreshold = driver.client.connections.(*loadBalancingPool).newConnectionThreshold
-		settings.EnableCompression = driver.client.connections.(*loadBalancingPool).connSettings.enableCompression
-		settings.ReadBufferSize = driver.client.connections.(*loadBalancingPool).connSettings.readBufferSize
-		settings.WriteBufferSize = driver.client.connections.(*loadBalancingPool).connSettings.writeBufferSize
-		settings.MaximumConcurrentConnections = cap(driver.client.connections.(*loadBalancingPool).connections)
 	})
 	if err != nil {
 		return nil, err
