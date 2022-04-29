@@ -144,7 +144,7 @@ Note: The exact import name as well as the module prefix for `NewDriverRemoteCon
 * Set connection option &tls.Config{InsecureSkipVerify: true}
 
 ### Client hangs on requests with large amount of data
-* Increase read buffer size.
+* Increase read buffer size by settings connection option `readBufferSize`.
 
 # Gremlin-Go Development
 
