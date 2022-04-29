@@ -59,7 +59,7 @@ const poolingQueryNum = 50
 var poolSize = []int{1, 5, 10, 15}
 
 // number of projections to generate each traversal with
-const poolingTraversal = 80
+const poolingTraversal = 50
 const smokeTraversal = 10
 const fullTraversal = 500
 
@@ -341,8 +341,8 @@ const Port = 45940
 const GremlinWarning = gremlingo.Warning
 const gratefulGraphAlias = "ggrateful"
 const threshold = 4 // same as default
-const writeBufferSize = 1073741824
-const readBufferSize = 1073741824
+const writeBufferSize = 314572800
+const readBufferSize = 314572800
 
 //
 // createConnection: Creates a connection to a remote endpoint and returns a
@@ -374,15 +374,39 @@ func createConnection(host string, port, poolSize int) (*GraphTraversalSource, *
 	return g, drc, err
 }
 
+const (
+	usage = `Usage:
+Run Gremlin-Go Performance Tests.
+
+The performance test is expected to run on a Gremlin Server loaded with the grateful graph. 
+
+A projection query using ValueMap is executed for each test, g.V().Project(1).By(gremlingo.T__.ValueMap(true)), with 
+the number of projection scaled up depending on test suite. Smoke tests runs the projection query with 10 projections, 
+and full test runs the smoke test plus the query with 500 projections. Connection pooling test runs the query with 50 
+projections, executed 50 times per run with a default set of connection pool sizes (1, 5, 10, 15). 
+
+Each test is run 21 times by default, with the slowest run removed, and execution time is taken for retrieving a single 
+result with Next(), and retrieving all results with ToList(). Metrics include average, median, P90, P50, min, and max. 
+One can optionally enable memory profile metrics, which outputs the allocation and byte usage data. 
+
+Options:
+`
+)
+
 //
-// main: Program entry point. Create the connection, run some tests, shutdown.
+// main: Program entry point. Create the connection, run performance tests, shutdown.
 //
 func main() {
-	hostPtr := flag.String("host", Host, "server host, default is locolhost")
-	portPtr := flag.Int("port", Port, "server port, default is 45940")
-	runCount := flag.Int("runCount", suiteRunCount, "the number of times to run each query, default is 21, minimum is 2")
-	memProfile := flag.Bool("memProfile", false, "enable memory profiling")
-	runLevel := flag.String("runLevel", "smoke", "the test suite to run: smoke, full, or pooling, default is smoke")
+	hostPtr := flag.String("host", Host, "Server host, the default is locolhost.")
+	portPtr := flag.Int("port", Port, "Server port, the default is 45940.")
+	runCount := flag.Int("runCount", suiteRunCount, "The number of times to run each test, the default is 21, minimum is 2.")
+	memProfile := flag.Bool("memProfile", false, "Enables memory profiling.")
+	runLevel := flag.String("runLevel", "pooling", "The test suite to run: smoke, full, or pooling, the default is smoke")
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), usage)
+		flag.PrintDefaults()
+	}
 
 	flag.Parse()
 	fmt.Println("===RUNNING PERFORMANCE TEST SUITE ON THE GRATEFUL GRAPH===")
