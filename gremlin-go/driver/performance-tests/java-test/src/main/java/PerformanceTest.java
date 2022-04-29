@@ -143,11 +143,6 @@ class TimingData {
         MAX = max;
     }
 
-    @Override
-    public String toString() {
-        return toStringMillis("unknown");
-    }
-
     public String toStringMillis(final String testType) {
         return "Test Type: " + testType + "\n"+
                 "\tAVG=" + AVG.toMillis() + "ms \n" +
