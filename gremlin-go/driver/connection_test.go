@@ -615,8 +615,8 @@ func TestConnection(t *testing.T) {
 			func(settings *ClientSettings) {
 				settings.TlsConfig = testNoAuthTlsConfig
 				settings.AuthInfo = testNoAuthAuthInfo
-				settings.session = "abc123"
 			})
+		client.session = "abc123"
 		assert.Nil(t, err)
 		assert.NotNil(t, client)
 		defer client.Close()

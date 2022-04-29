@@ -47,7 +47,6 @@ type ClientSettings struct {
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
-	session                      string
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -84,7 +83,6 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
-		session:                      "",
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
@@ -102,10 +100,6 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 	}
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
-	if settings.session != "" {
-		logHandler.log(Debug, sessionDetected)
-		settings.MaximumConcurrentConnections = 1
-	}
 
 	pool, err := newLoadBalancingPool(url, logHandler, connSettings, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
 	if err != nil {
@@ -119,7 +113,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 		logHandler:      logHandler,
 		transporterType: settings.TransporterType,
 		connections:     pool,
-		session:         settings.session,
+		session:         "",
 	}
 
 	return client, nil
