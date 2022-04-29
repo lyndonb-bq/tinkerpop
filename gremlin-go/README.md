@@ -191,7 +191,7 @@ Docker allows you to test the driver without installing any dependencies. The fo
 # Go Gremlin Language Variant
 
 [Apache TinkerPop™][tk] is a graph computing framework for both graph databases (OLTP) and graph analytic systems
-(OLAP). [Gremlin][gremlin] is the graph traversal language of TinkerPop. It can be descriutbed as a functional,
+(OLAP). [Gremlin][gremlin] is the graph traversal language of TinkerPop. It can be described as a functional,
 data-flow language that enables users to succinctly express complex traversals on (or queries of) their application's
 property graph.
 
