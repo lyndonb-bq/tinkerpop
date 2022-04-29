@@ -22,6 +22,8 @@ for early testing purposes only.
 
 -->
 
+[![codecov](https://codecov.io/gh/lyndonbauto/tinkerpop/branch/simon/an-1108/graph/badge.svg?token=G3RIWWTZ83)](https://codecov.io/gh/lyndonbauto/tinkerpop)
+
 # Getting Started
 
 ## Prerequisites
