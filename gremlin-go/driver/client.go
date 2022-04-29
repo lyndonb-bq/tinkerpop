@@ -21,7 +21,6 @@ package gremlingo
 
 import (
 	"crypto/tls"
-	"fmt"
 	"golang.org/x/text/language"
 	"runtime"
 	"time"
@@ -47,6 +46,8 @@ type ClientSettings struct {
 	NewConnectionThreshold int
 	// Maximum number of concurrent connections. Default: number of runtime processors
 	MaximumConcurrentConnections int
+	// Initial amount of instantiated connections. Default: 1
+	InitialConcurrentConnections int
 }
 
 // Client is used to connect and interact with a Gremlin-supported server.
@@ -83,6 +84,7 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
+		InitialConcurrentConnections: defaultInitialConcurrentConnections,
 	}
 	for _, configuration := range configurations {
 		configuration(settings)
@@ -101,10 +103,18 @@ func NewClient(url string, configurations ...func(settings *ClientSettings)) (*C
 
 	logHandler := newLogHandler(settings.Logger, settings.LogVerbosity, settings.Language)
 
-	pool, err := newLoadBalancingPool(url, logHandler, connSettings, settings.NewConnectionThreshold, settings.MaximumConcurrentConnections)
+	if settings.InitialConcurrentConnections > settings.MaximumConcurrentConnections {
+		logHandler.logf(Warning, poolInitialExceedsMaximum, settings.InitialConcurrentConnections,
+			settings.MaximumConcurrentConnections, settings.MaximumConcurrentConnections)
+		settings.InitialConcurrentConnections = settings.MaximumConcurrentConnections
+	}
+	pool, err := newLoadBalancingPool(url, logHandler, connSettings, settings.NewConnectionThreshold,
+		settings.MaximumConcurrentConnections, settings.InitialConcurrentConnections)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client with url '%s' and transport type '%v'. Error message: '%s'",
-			url, settings.TransporterType, err.Error())
+		if err != nil {
+			logHandler.logf(Error, logErrorGeneric, "NewClient", err.Error())
+		}
+		return nil, err
 	}
 
 	client := &Client{

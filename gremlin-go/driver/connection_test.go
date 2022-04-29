@@ -382,7 +382,7 @@ func TestConnection(t *testing.T) {
 		resultSet, err := connection.write(&request)
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		result, err := resultSet.one()
+		result, err := resultSet.One()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 	})
@@ -399,7 +399,7 @@ func TestConnection(t *testing.T) {
 		resultSet, err := connection.write(&request)
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		result, err := resultSet.one()
+		result, err := resultSet.One()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 	})
@@ -454,23 +454,26 @@ func TestConnection(t *testing.T) {
 
 	t.Run("Test newLoadBalancingPool", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
+		newPoolSize := 2
 		pool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info, language.English),
-			newDefaultConnectionSettings(), 4, 4)
+			newDefaultConnectionSettings(), 4, 4, newPoolSize)
 		assert.Nil(t, err)
 		defer pool.close()
-		assert.Len(t, pool.(*loadBalancingPool).connections, 1)
+		assert.Len(t, pool.(*loadBalancingPool).connections, newPoolSize)
 	})
 
 	t.Run("Test loadBalancingPool.newConnection", func(t *testing.T) {
+		newPoolSize := 0
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 		pool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info, language.English),
-			newDefaultConnectionSettings(), 4, 4)
+			newDefaultConnectionSettings(), 4, 4, newPoolSize)
 		assert.Nil(t, err)
 		defer pool.close()
 		lhp := pool.(*loadBalancingPool)
-		newConn, err := lhp.newConnection()
+		// Pool instantiated with no connections so this will invoke newConnection
+		newConn, err := lhp.getLeastUsedConnection()
 		assert.Nil(t, err)
-		assert.Len(t, lhp.connections, 2)
+		assert.Len(t, lhp.connections, newPoolSize+1)
 		// Workaround for false positive in race condition check
 		found := false
 		for _, conn := range lhp.connections {
@@ -490,12 +493,10 @@ func TestConnection(t *testing.T) {
 		t.Run("pool is empty", func(t *testing.T) {
 			pool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info, language.English),
 				newDefaultConnectionSettings(),
-				newConnectionThreshold, maximumConcurrentConnections)
+				newConnectionThreshold, maximumConcurrentConnections, 0)
 			assert.Nil(t, err)
 			lbp := pool.(*loadBalancingPool)
 			defer lbp.close()
-			emptyPool := make([]*connection, 0, maximumConcurrentConnections)
-			lbp.connections = emptyPool
 			conn, err := lbp.getLeastUsedConnection()
 			assert.Nil(t, err)
 			assert.NotNil(t, conn)
@@ -505,7 +506,7 @@ func TestConnection(t *testing.T) {
 		t.Run("newConcurrentThreshold reached with capacity remaining", func(t *testing.T) {
 			pool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info, language.English),
 				newDefaultConnectionSettings(),
-				newConnectionThreshold, maximumConcurrentConnections)
+				newConnectionThreshold, maximumConcurrentConnections, 0)
 			assert.Nil(t, err)
 			lbp := pool.(*loadBalancingPool)
 			defer lbp.close()
@@ -534,7 +535,7 @@ func TestConnection(t *testing.T) {
 		t.Run("newConcurrentThreshold reached with no capacity remaining", func(t *testing.T) {
 			capacityFullConnectionPool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info,
 				language.English), newDefaultConnectionSettings(),
-				1, 1)
+				1, 1, 1)
 			assert.Nil(t, err)
 			assert.NotNil(t, capacityFullConnectionPool)
 			capacityFullLbp := capacityFullConnectionPool.(*loadBalancingPool)
@@ -550,7 +551,7 @@ func TestConnection(t *testing.T) {
 		t.Run("all connections in pool invalid", func(t *testing.T) {
 			pool, err := newLoadBalancingPool(testNoAuthUrl, newLogHandler(&defaultLogger{}, Info, language.English),
 				newDefaultConnectionSettings(),
-				newConnectionThreshold, maximumConcurrentConnections)
+				newConnectionThreshold, maximumConcurrentConnections, 0)
 			assert.Nil(t, err)
 			lbp := pool.(*loadBalancingPool)
 			defer lbp.close()
@@ -594,7 +595,7 @@ func TestConnection(t *testing.T) {
 		resultSet, err := client.Submit("g.V().count()")
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		result, err := resultSet.one()
+		result, err := resultSet.One()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 
@@ -603,7 +604,7 @@ func TestConnection(t *testing.T) {
 		resultSet, err = client.submitBytecode(b)
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		result, err = resultSet.one()
+		result, err = resultSet.One()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 	})
@@ -624,7 +625,7 @@ func TestConnection(t *testing.T) {
 		resultSet, err := client.Submit("g.V().count()")
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		result, err := resultSet.one()
+		result, err := resultSet.One()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 	})
@@ -938,7 +939,7 @@ func TestConnection(t *testing.T) {
 		resultSet, err := client.Submit("x + x", map[string]interface{}{"x": 2})
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
-		result, err := resultSet.one()
+		result, err := resultSet.One()
 		assert.Nil(t, err)
 		assert.NotNil(t, result)
 		res, err := result.GetInt()
