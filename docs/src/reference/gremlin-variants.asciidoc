@@ -2115,33 +2115,14 @@ Once a `Client` instance is ready, it is possible to issue some Gremlin:
 
 [source,go] //todo: clarify replacement one with One
 ----
-resultSet, err := client.Submit("g.V().count()")  <1>
-future_results = result_set.all()  <2>
-results = future_results.result() <3>
-assert results == [1, 2, 3, 4] <4>
-
-future_result_set = client.submitAsync('[1,2,3,4]') <5>
-result_set = future_result_set.result() <6>
-result = result_set.one() <7>
-assert results == [1, 2, 3, 4] <8>
-assert result_set.done.done() <9>
-
-client.close() <10>
+resultSet, err := client.Submit("g.V().count()") <1>
+result, err := resultSet.All() <2>
+fmt.Println(result[0].GetString()) <3>
 ----
 
-<1> Submit a script that simply returns a `List` of integers.  This method blocks until the request is written to
-the server and a `ResultSet` is constructed.
-<2> Even though the `ResultSet` is constructed, it does not mean that the server has sent back the results (or even
-evaluated the script potentially).  The `ResultSet` is just a holder that is awaiting the results from the server. The `all` method
-returns a `concurrent.futures.Future` that resolves to a list when it is complete.
-<3> Block until the the script is evaluated and results are sent back by the server.
-<4> Verify the result.
-<5> Submit the same script to the server but don't block.
-<6> Wait until request is written to the server and `ResultSet` is constructed.
-<7> Read a single result off the result stream.
-<8> Again, verify the result.
-<9> Verify that the all results have been read and stream is closed.
-<10> Close client and underlying pool connections.
+<1> Submit a script that simply returns a Count of vertexes.  
+<2> Get results from resultSet. Block until the the script is evaluated and results are sent back by the server.
+<3> Use the result.
 
 ==== Per Request Settings
 
@@ -2173,76 +2154,6 @@ In the above example, defines a timeout of 500 milliseconds, but the script has 
 two internal settings for the timeout using `with()`. The request timeout used by the server will therefore be 1000
 milliseconds (overriding the 500 which itself was an override for whatever configuration was on the server).
 
-[[gremlin-go-dsl]]
-=== Domain Specific Languages
-
-Writing a Gremlin <<dsl,Domain Specific Language>> (DSL) in Go simply requires direct extension of several classes:
-
-* `GraphTraversal` - which exposes the various steps used in traversal writing
-* `T__` - which spawns anonymous traversals from steps
-* `GraphTraversalSource` - which spawns `GraphTraversal` instances
-
-The Social DSL based on the link:https://tinkerpop.apache.org/docs/current/images/tinkerpop-modern.png["modern" toy graph]
-might look like this:
-
-[source,go] //todo
-----
-class SocialTraversal(GraphTraversal):
-
-    def knows(self, person_name):
-        return self.out('knows').hasLabel('person').has('name', person_name)
-
-    def youngestFriendsAge(self):
-        return self.out('knows').hasLabel('person').values('age').min()
-
-    def createdAtLeast(self, number):
-        return self.outE('created').count().is_(P.gte(number))
-
-class __(AnonymousTraversal):
-
-    graph_traversal = SocialTraversal
-
-    @classmethod
-    def knows(cls, *args):
-        return cls.graph_traversal(None, None, Bytecode()).knows(*args)
-
-    @classmethod
-    def youngestFriendsAge(cls, *args):
-        return cls.graph_traversal(None, None, Bytecode()).youngestFriendsAge(*args)
-
-    @classmethod
-    def createdAtLeast(cls, *args):
-        return cls.graph_traversal(None, None, Bytecode()).createdAtLeast(*args)
-
-
-class SocialTraversalSource(GraphTraversalSource):
-
-    def __init__(self, *args, **kwargs):
-        super(SocialTraversalSource, self).__init__(*args, **kwargs)
-        self.graph_traversal = SocialTraversal
-
-    def persons(self, *args):
-        traversal = self.get_graph_traversal()
-        traversal.bytecode.add_step('V')
-        traversal.bytecode.add_step('hasLabel', 'person')
-
-        if len(args) > 0:
-            traversal.bytecode.add_step('has', 'name', P.within(args))
-
-        return traversal
-----
-
-Using the DSL is straightforward and just requires that the graph instance know the `SocialTraversalSource` should
-be used:
-
-[source,go]
-----
-social = traversal(SocialTraversalSource).withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin'))
-social.persons('marko').knows('josh')
-social.persons('marko').youngestFriendsAge()
-social.persons().filter(__.createdAtLeast(2)).count()
-----
-
 [[gremlin-go-differences]]
 === Differences
 
@@ -2256,7 +2167,7 @@ to be public:
 
 *Tokens* - <<a-note-on-scopes,Scope.Global>>, <<a-note-on-scopes,Scope.Local>>
 
-*Statics* - <<__, T__>> //todo
+*Statics* - <<__, T__>> // todo: impove 
 
 [[gremlin-go-limitations]]
 === Limitations
