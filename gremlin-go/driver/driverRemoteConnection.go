@@ -29,6 +29,8 @@ import (
 
 // DriverRemoteConnectionSettings are used to configure the DriverRemoteConnection.
 type DriverRemoteConnectionSettings struct {
+	session string
+	
 	TraversalSource   string
 	TransporterType   TransporterType
 	LogVerbosity      LogVerbosity
@@ -49,8 +51,6 @@ type DriverRemoteConnectionSettings struct {
 	MaximumConcurrentConnections int
 	// Initial amount of instantiated connections. Default: 1
 	InitialConcurrentConnections int
-	
-	session                      string
 }
 
 // DriverRemoteConnection is a remote connection.
