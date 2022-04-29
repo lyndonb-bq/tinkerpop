@@ -1657,7 +1657,7 @@ except Exception as e:
 Supporting link:https://en.wikipedia.org/wiki/Anonymous_function[anonymous functions] across languages is difficult as
 most languages do not support lambda introspection and thus, code analysis. In Gremlin-Python, a Gremlin lambda should
 be represented as a zero-arg callable that returns a string representation of the lambda expected for use in the
-traversal. The lambda should be written as a `Gremlin-Groovy`string. When the lambda is represented in `Bytecode` its
+traversal. The lambda should be written as a `Gremlin-Groovy` string. When the lambda is represented in `Bytecode` its
 language is encoded such that the remote connection host can infer which translator and ultimate execution engine to
 use.
 
@@ -2066,7 +2066,7 @@ if err != nil {
 Supporting link:https://en.wikipedia.org/wiki/Anonymous_function[anonymous functions] across languages is difficult as
 most languages do not support lambda introspection and thus, code analysis. In Gremlin-Go, a Gremlin lambda should
 be represented as a zero-arg callable that returns a string representation of the lambda expected for use in the
-traversal. The lambda should be written as a `Gremlin-Groovy`string. When the lambda is represented in `Bytecode` its
+traversal. The lambda should be written as a `Gremlin-Groovy` string. When the lambda is represented in `Bytecode` its
 language is encoded such that the remote connection host can infer which translator and ultimate execution engine to
 use.
 
