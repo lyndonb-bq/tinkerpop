@@ -69,6 +69,8 @@ func NewDriverRemoteConnection(
 	url string,
 	configurations ...func(settings *DriverRemoteConnectionSettings)) (*DriverRemoteConnection, error) {
 	settings := &DriverRemoteConnectionSettings{
+		session:           "",
+		
 		TraversalSource:   "g",
 		TransporterType:   Gorilla,
 		LogVerbosity:      Info,
@@ -88,7 +90,6 @@ func NewDriverRemoteConnection(
 
 		NewConnectionThreshold:       defaultNewConnectionThreshold,
 		MaximumConcurrentConnections: runtime.NumCPU(),
-		session:                      "",
 		InitialConcurrentConnections: defaultInitialConcurrentConnections,
 	}
 	for _, configuration := range configurations {
