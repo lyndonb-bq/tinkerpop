@@ -66,12 +66,12 @@ public class PerformanceTest {
     }
 
     public static void executePerformanceTests() {
-        System.out.println("~~~~~~~ PERFORMANCE TESTS STARTED ~~~~~~~\"");
+        System.out.println("~~~~~~~ PERFORMANCE TESTS STARTED ~~~~~~~");
         System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
         executeGetNextPerformanceTest();
         System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
         executeGetToListPerformanceTest();
-        System.out.println("~~~~~~~ PERFORMANCE TESTS COMPLETE ~~~~~~~\"");
+        System.out.println("~~~~~~~ PERFORMANCE TESTS COMPLETE ~~~~~~~");
     }
 
     public static TimingData executeGetNextPerformanceTest() {
