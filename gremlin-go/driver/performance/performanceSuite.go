@@ -60,7 +60,7 @@ var poolSize = []int{1, 5, 10, 15}
 
 // number of projections to generate each traversal with
 const poolingTraversal = 80
-const smokeTraversal = 50
+const smokeTraversal = 10
 const fullTraversal = 500
 
 // placeholder variable to assign result value to
@@ -219,7 +219,8 @@ func runPerformance(testName string, g *GraphTraversalSource, runs int, memProf 
 	}
 	warmUp, err := g.V().Count().Next()
 	if err != nil {
-		fmt.Println("Error during warm up:", err)
+		log.Panic("Error during warm up:", err)
+		return
 	} else {
 		count, _ := warmUp.GetInt64()
 		fmt.Printf("Warming up. Vertex count of current graph: %d \n", count)
@@ -258,7 +259,8 @@ func runPerformancePooling(testName string, g *GraphTraversalSource, runs int, m
 	}
 	warmUp, err := g.V().Count().Next()
 	if err != nil {
-		fmt.Println("Error during warm up:", err)
+		log.Panic("Error during warm up:", err)
+		return
 	} else {
 		count, _ := warmUp.GetInt64()
 		fmt.Printf("Warming up. Vertex count of current graph: %d \n", count)

@@ -656,7 +656,7 @@ func TestConnection(t *testing.T) {
 		resetGraph(t, g)
 	})
 
-	t.Run("Test Traversal. GetResultSet", func(t *testing.T) {
+	t.Run("Test Traversal GetResultSet", func(t *testing.T) {
 		skipTestsIfNotEnabled(t, integrationTestSuiteName, testNoAuthEnable)
 
 		// Initialize graph
@@ -667,9 +667,7 @@ func TestConnection(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, resultSet)
 		allResults, err := resultSet.All()
-		if err != nil {
-			return
-		}
+		assert.Nil(t, err)
 		var names []string
 		for _, res := range allResults {
 			assert.NotNil(t, res)
