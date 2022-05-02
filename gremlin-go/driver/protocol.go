@@ -72,7 +72,7 @@ func (protocol *gremlinServerWSProtocol) readLoop(resultSets *synchronizedMap, e
 		}
 
 		// Deserialize message and unpack.
-		resp, err := protocol.serializer.deserializeMessage(msg)
+		resp, err := deserializeMessage2(msg)
 		if err != nil {
 			protocol.logHandler.logf(Error, logErrorGeneric, "gremlinServerWSProtocol.readLoop()", err.Error())
 			readErrorHandler(resultSets, errorCallback, err, protocol.logHandler)
