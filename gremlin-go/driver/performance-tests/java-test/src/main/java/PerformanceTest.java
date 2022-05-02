@@ -42,7 +42,7 @@ public class PerformanceTest {
         executePerformanceTests();
         System.exit(0);
     }
-    static final int SAMPLE_SIZE = 11;
+    static final int SAMPLE_SIZE = 21;
     static final int VALUE_MAP_REPEATS = 500;
     static final Cluster cluster = Cluster.build("172.31.24.17").port(45940).maxContentLength(300 * 1024 *1024).create();
     static final DriverRemoteConnection connection = DriverRemoteConnection.using(cluster, "ggrateful");
