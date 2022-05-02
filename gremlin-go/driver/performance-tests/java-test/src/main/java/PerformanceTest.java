@@ -44,7 +44,7 @@ public class PerformanceTest {
     }
     static final int SAMPLE_SIZE = 11;
     static final int VALUE_MAP_REPEATS = 500;
-    static final Cluster cluster = Cluster.build("172.31.24.17").port(45940).maxContentLength(Integer.MAX_VALUE).create();
+    static final Cluster cluster = Cluster.build("172.31.24.17").port(45940).maxContentLength(300 * 1024 *1024).create();
     static final DriverRemoteConnection connection = DriverRemoteConnection.using(cluster, "ggrateful");
     static final GraphTraversalSource g = traversal().withRemote(connection);
 
