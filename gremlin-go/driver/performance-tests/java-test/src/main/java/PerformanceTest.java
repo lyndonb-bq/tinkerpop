@@ -17,7 +17,7 @@
  * under the License.
  */
 
-// CAUTION!!!
+// DO NOT USE - THIS WILL BE DELETED
 // This file is intended for generating Performance test results only.
 // It is not to be used in a production setting.
 // It is being made available as a reference to the test results for
