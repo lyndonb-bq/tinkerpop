@@ -116,7 +116,7 @@ public class PerformanceTest {
         Collections.sort(durations);
         durations.remove(durations.size()-1);
         return new TimingData(
-                durations.stream().reduce(Duration.ZERO, Duration::plus).dividedBy(SAMPLE_SIZE),
+                durations.stream().reduce(Duration.ZERO, Duration::plus).dividedBy(durations.size()),
                 durations.get(durations.size() / 2),
                 durations.get((int)(durations.size() * 0.90)),
                 durations.get((int)(durations.size() * 0.95)),
