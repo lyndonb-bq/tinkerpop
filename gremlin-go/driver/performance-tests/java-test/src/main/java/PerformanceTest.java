@@ -38,16 +38,16 @@ import java.util.List;
 import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource.traversal;
 
 public class PerformanceTest {
-    public static void main(String[] args) {
-        executePerformanceTests();
-        System.exit(0);
-    }
     static final int SAMPLE_SIZE = 21;
     static final int VALUE_MAP_REPEATS = 500;
     static final Cluster cluster = Cluster.build("172.31.24.17").port(45940).maxContentLength(300 * 1024 *1024).create();
     static final DriverRemoteConnection connection = DriverRemoteConnection.using(cluster, "ggrateful");
     static final GraphTraversalSource g = traversal().withRemote(connection);
 
+    public static void main(String[] args) {
+        executePerformanceTests();
+        System.exit(0);
+    }
 
     public static String[] getArgs(final int repeats) {
         final String[] args = new String[repeats];
