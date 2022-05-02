@@ -22,7 +22,7 @@ for early testing purposes only.
 
 -->
 
-[![codecov](https://codecov.io/gh/lyndonbauto/tinkerpop/branch/simon/an-1108/graph/badge.svg?token=G3RIWWTZ83)](https://codecov.io/gh/lyndonbauto/tinkerpop)
+[![codecov](https://codecov.io/gh/apache/tinkerpop/branch/master/graph/badge.svg?token=TojD2nR5Qd)](https://codecov.io/gh/apache/tinkerpop)
 
 # Getting Started
 
