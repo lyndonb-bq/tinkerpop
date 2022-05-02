@@ -422,7 +422,7 @@ g = traversal().withRemote(
 [source,go]
 ----
 import (
-	gremlingo "github.com/lyndonbauto/tinkerpop/gremlin-go/v3/driver"
+	gremlingo "github.com/apache/tinkerpop/gremlin-go/v3/driver"
 )
 
 remote, err := gremlingo.NewDriverRemoteConnection("ws://localhost:8182/gremlin")
