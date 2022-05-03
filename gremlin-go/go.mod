@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-module github.com/apache/tinkerpop/gremlin-go
+module github.com/lyndonbauto/tinkerpop/gremlin-go
 
 go 1.17
 
