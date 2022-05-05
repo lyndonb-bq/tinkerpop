@@ -23,6 +23,8 @@
 // It is being made available as a reference to the test results for
 // anyone that wants see the code used to obtain the performance metrics.
 
+package org.apache.tinkerpop.gremlin.golang.performance.comparison;
+
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -112,6 +114,25 @@ public class PerformanceTest {
         return data;
     }
 
+    public static TimingData executeGetToListPerformanceTest() {
+        final List<Duration> durations = new ArrayList<>();
+        for (int i = 0; i < SAMPLE_SIZE; i++) {
+            try {
+                final String[] args = getArgs(VALUE_MAP_REPEATS);
+                final Instant starts = Instant.now();
+                // execute and retrieve(timed)
+                getProjectTraversal(g, VALUE_MAP_REPEATS, args).toList();
+                final Instant ends = Instant.now();
+                durations.add(Duration.between(starts, ends));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        TimingData data = getTimingDataFromDurationList(durations);
+        System.out.println(data.toStringMillis("List"));
+        return data;
+    }
+
     private static TimingData getTimingDataFromDurationList(final List<Duration> durations) {
         Collections.sort(durations);
         durations.remove(durations.size()-1);
@@ -126,7 +147,7 @@ public class PerformanceTest {
     }
 }
 
-class TimingData {
+private class TimingData {
     final Duration AVG;
     final Duration MEDIAN;
     final Duration PERCENTILE_90;
