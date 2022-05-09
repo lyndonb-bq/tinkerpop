@@ -53,10 +53,10 @@ type performanceStats struct {
 }
 
 // test suite constants
-const suiteRunCount = 21
+const suiteRunCount = 55
 
 var poolSize = []int{2, 4, 8}
-var poolQueryCount = []int{50, 100, 250}
+var poolQueryCount = []int{250}
 
 // number of projections to generate each traversal with
 const poolingTraversal = 10
@@ -190,8 +190,8 @@ func executeAndRetrieveAll(t *GraphTraversal) (*performanceResults, error) {
 }
 
 func run(g *GraphTraversalSource, runs int, runLevel string, memProfile bool) {
-	if runs < 2 {
-		log.Panic("each test must be run greater than 2 times")
+	if runs < 6 {
+		log.Panic("each test must be run greater than 6 times")
 		return
 	}
 	switch runLevel {
@@ -286,39 +286,39 @@ func handleMetrics(stats *performanceStats, testType string, runs int, memProf b
 	fmt.Println("Results for", testType)
 	sort.Slice(stats.executeDurationArr, func(i, j int) bool { return stats.executeDurationArr[i] < stats.executeDurationArr[j] })
 	// removing the slowest run as outlier
-	executeDurationArr := stats.executeDurationArr[:runs-1]
+	executeDurationArr := stats.executeDurationArr[:runs-5]
 	var totalTime int64
 	for i := range executeDurationArr {
 		totalTime += executeDurationArr[i]
 	}
-	printDuration(executeDurationArr, totalTime, runs-1)
+	printDuration(executeDurationArr, totalTime, runs-5)
 	if testType == connectionPooling {
 		sort.Ints(stats.executeThroughputArr)
 		// removing the lowest throughput (aka slowest) as outlier
-		executeThroughputArr := stats.executeThroughputArr[1:]
+		executeThroughputArr := stats.executeThroughputArr[5:]
 		var totalThroughput int
 		for i := range executeThroughputArr {
 			totalThroughput += executeThroughputArr[i]
 		}
-		printThroughput(executeThroughputArr, totalThroughput, runs-1)
+		printThroughput(executeThroughputArr, totalThroughput, runs-5)
 	}
 
 	if memProf {
 		sort.Slice(stats.executeAllocsArr, func(i, j int) bool { return stats.executeAllocsArr[i] < stats.executeAllocsArr[j] })
-		executeAllocsArr := stats.executeAllocsArr[:runs-1]
+		executeAllocsArr := stats.executeAllocsArr[:runs-5]
 		var totalAlloc uint64
 		for i := range executeAllocsArr {
 			totalAlloc += executeAllocsArr[i]
 		}
-		printAllocs(executeAllocsArr, totalAlloc, runs-1)
+		printAllocs(executeAllocsArr, totalAlloc, runs-5)
 
 		sort.Slice(stats.executeBytesArr, func(i, j int) bool { return stats.executeBytesArr[i] < stats.executeBytesArr[j] })
-		executeBytesArr := stats.executeBytesArr[:runs-1]
+		executeBytesArr := stats.executeBytesArr[:runs-5]
 		var totalBytes uint64
 		for i := range executeBytesArr {
 			totalBytes += executeBytesArr[i]
 		}
-		printBytes(executeBytesArr, totalBytes, runs-1)
+		printBytes(executeBytesArr, totalBytes, runs-5)
 	}
 }
 
@@ -401,13 +401,16 @@ Run Gremlin-Go Performance Tests.
 The performance test is expected to run on a Gremlin Server loaded with the grateful graph. 
 
 A projection query using ValueMap is executed for each test, g.V().Project(1).By(gremlingo.T__.ValueMap(true)), with 
-the number of projection scaled up depending on test suite. Smoke tests runs the projection query with 10 projections, 
-and full test runs the smoke test plus the query with 500 projections. Connection pooling test runs the query with 10 
-projections, executed 50, 100, 250 and 500 times per run with a default set of connection pool sizes (1, 2, 4, 8). 
+the number of projection scaled up depending on test suite run level. Smoke tests runs the projection query with 10 
+projections, and full test runs the smoke test plus the query with 500 projections. Connection pooling test runs the 
+query with 10 projections, executed 250 times per run with a default set of connection pool sizes (2, 4, 8). 
 
-Each test is run 21 times by default, with the slowest run removed, and execution time is taken for retrieving a single 
-result with Next(), and retrieving all results with ToList(). Metrics include average, median, P90, P50, min, and max. 
-One can optionally enable memory profile metrics, which outputs the allocation and byte usage data. 
+Each test is run 55 times by default, with the slowest 5 runs removed, and execution time is taken for retrieving a 
+single result with Next(), and retrieving all results with ToList(). 
+
+Metrics for single query execution include average, median, P90, P50, max, and min. One can optionally enable memory 
+profile metrics, which outputs the allocation and byte usage data. Connection pooling test includes throughput metrics, 
+which are average, median, P10, P5, max, and min query/s.
 
 Options:
 `
@@ -417,9 +420,9 @@ Options:
 // main: Program entry point. Create the connection, run performance tests, shutdown.
 //
 func main() {
-	hostPtr := flag.String("host", Host, "Server host, the default is locolhost.")
+	hostPtr := flag.String("host", Host, "Server host, the default is localhost.")
 	portPtr := flag.Int("port", Port, "Server port, the default is 45940.")
-	runCount := flag.Int("runCount", suiteRunCount, "The number of times to run each test, the default is 21, minimum is 2.")
+	runCount := flag.Int("runCount", suiteRunCount, "The number of times to run each test, the default is 55, minimum is 6.")
 	memProfile := flag.Bool("memProfile", false, "Enables memory profiling.")
 	runLevel := flag.String("runLevel", "smoke", "The test suite to run: smoke, full, or pooling, the default is smoke")
 
