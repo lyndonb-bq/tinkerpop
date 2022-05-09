@@ -44,7 +44,7 @@ import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalS
 class PerformanceTest {
     private static final int SAMPLE_SIZE = 21;
     private static final int VALUE_MAP_REPEATS = 500;
-    private static final String HOST = "localhost";
+    private static final String HOST = "172.31.24.17";
     private static final int PORT = 45940;
     private static final int POOLING_CONTENT_LENGTH = 25 * 1024 * 1024;
     private static final int MAX_CONTENT_LENGTH = 300 * 1024 * 1024;
