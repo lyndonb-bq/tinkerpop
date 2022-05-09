@@ -55,8 +55,8 @@ type performanceStats struct {
 // test suite constants
 const suiteRunCount = 21
 
-var poolSize = []int{1, 2, 4, 8}
-var poolQueryCount = []int{50, 100, 250, 500}
+var poolSize = []int{2, 4, 8}
+var poolQueryCount = []int{50, 100, 250}
 
 // number of projections to generate each traversal with
 const poolingTraversal = 10
@@ -285,7 +285,7 @@ func handleMetrics(stats *performanceStats, testType string, runs int, memProf b
 	fmt.Println("================================================")
 	fmt.Println("Results for", testType)
 	sort.Slice(stats.executeDurationArr, func(i, j int) bool { return stats.executeDurationArr[i] < stats.executeDurationArr[j] })
-	// treat first and last stat as outliers and remove
+	// removing the slowest run as outlier
 	executeDurationArr := stats.executeDurationArr[:runs-1]
 	var totalTime int64
 	for i := range executeDurationArr {
@@ -294,7 +294,8 @@ func handleMetrics(stats *performanceStats, testType string, runs int, memProf b
 	printDuration(executeDurationArr, totalTime, runs-1)
 	if testType == connectionPooling {
 		sort.Ints(stats.executeThroughputArr)
-		executeThroughputArr := stats.executeThroughputArr[:runs-1]
+		// removing the lowest throughput (aka slowest) as outlier
+		executeThroughputArr := stats.executeThroughputArr[1:]
 		var totalThroughput int
 		for i := range executeThroughputArr {
 			totalThroughput += executeThroughputArr[i]
@@ -328,9 +329,9 @@ func printDuration(stats []int64, total int64, runs int) {
 }
 
 func printThroughput(stats []int, total int, runs int) {
-	fmt.Printf("\tTHROUGHPUT STATS:\taverage %d query/s\tmedian %d query/s\tp90 %d query/s\tp95 %d query/s\tmax %d query/s\tmin %d query/s\n",
+	fmt.Printf("\tTHROUGHPUT STATS:\taverage %d query/s\tmedian %d query/s\tp10 %d query/s\tp5 %d query/s\tmax %d query/s\tmin %d query/s\n",
 		int(math.Round(float64(total)/float64(runs))), stats[int(math.Ceil(float64(runs/2)))],
-		stats[int(math.Ceil(float64(runs*90/100)))-1], stats[int(math.Ceil(float64(runs*95/100)))-1], stats[runs-1], stats[0])
+		stats[int(math.Ceil(float64(runs*10/100)))-1], stats[int(math.Ceil(float64(runs*5/100)))-1], stats[runs-1], stats[0])
 }
 
 func printAllocs(stats []uint64, total uint64, runs int) {
@@ -420,7 +421,7 @@ func main() {
 	portPtr := flag.Int("port", Port, "Server port, the default is 45940.")
 	runCount := flag.Int("runCount", suiteRunCount, "The number of times to run each test, the default is 21, minimum is 2.")
 	memProfile := flag.Bool("memProfile", false, "Enables memory profiling.")
-	runLevel := flag.String("runLevel", "smoke", "The test suite to run: smoke, full, or pooling, the default is smoke")
+	runLevel := flag.String("runLevel", "pooling", "The test suite to run: smoke, full, or pooling, the default is smoke")
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), usage)
