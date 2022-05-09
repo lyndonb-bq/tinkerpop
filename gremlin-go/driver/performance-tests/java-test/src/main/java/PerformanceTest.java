@@ -42,7 +42,7 @@ import static org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalS
  * anyone that wants see the code used to obtain the performance metrics.
  */
 class PerformanceTest {
-    private static final int SAMPLE_SIZE = 21;
+    private static final int SAMPLE_SIZE = 55;
     private static final int VALUE_MAP_REPEATS = 500;
     private static final String HOST = "172.31.24.17";
     private static final int PORT = 45940;
@@ -57,8 +57,8 @@ class PerformanceTest {
         POOL_SIZE.add(2);
         POOL_SIZE.add(4);
         POOL_SIZE.add(8);
-        POOL_QUERY_COUNT.add(50);
-        POOL_QUERY_COUNT.add(100);
+//        POOL_QUERY_COUNT.add(50);
+//        POOL_QUERY_COUNT.add(100);
         POOL_QUERY_COUNT.add(250);
         // POOL_QUERY_COUNT.add(500);
     }
@@ -105,10 +105,10 @@ class PerformanceTest {
 
     private static void executePerformanceTests() {
         System.out.println("~~~~~~~ PERFORMANCE TESTS STARTED ~~~~~~~");
-        System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
-        executeGetNextPerformanceTest();
-        System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
-        executeGetToListPerformanceTest();
+//        System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
+//        executeGetNextPerformanceTest();
+//        System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
+//        executeGetToListPerformanceTest();
         System.out.println("~~~~~~~ RUNNING THROUGHPUT PERFORMANCE TEST ~~~~~~~");
         POOL_QUERY_COUNT.forEach(queryCount -> {
             POOL_SIZE.forEach(poolSize -> {
@@ -185,7 +185,9 @@ class PerformanceTest {
 
     private static TimingData getTimingDataFromDurationList(final List<Duration> durations) {
         Collections.sort(durations);
-        durations.remove(durations.size() - 1);
+        for (int i = 0; i < 5; i++) {
+            durations.remove(durations.size() - 1);
+        }
         return new TimingData(
                 durations.stream().reduce(Duration.ZERO, Duration::plus).dividedBy(durations.size()),
                 durations.get(durations.size() / 2),
