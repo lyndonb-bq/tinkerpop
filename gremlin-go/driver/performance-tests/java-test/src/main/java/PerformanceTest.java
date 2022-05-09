@@ -17,12 +17,10 @@
  * under the License.
  */
 
-import org.antlr.v4.misc.Graph;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
-import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -56,12 +54,12 @@ class PerformanceTest {
     private static final List<Integer> POOL_QUERY_COUNT = new ArrayList<>();
     static {
         // POOL_SIZE.add(1);
-        // POOL_SIZE.add(2);
+        POOL_SIZE.add(2);
         POOL_SIZE.add(4);
         POOL_SIZE.add(8);
-        //POOL_QUERY_COUNT.add(50);
+        POOL_QUERY_COUNT.add(50);
         POOL_QUERY_COUNT.add(100);
-        // POOL_QUERY_COUNT.add(250);
+        POOL_QUERY_COUNT.add(250);
         // POOL_QUERY_COUNT.add(500);
     }
 
@@ -107,13 +105,13 @@ class PerformanceTest {
 
     private static void executePerformanceTests() {
         System.out.println("~~~~~~~ PERFORMANCE TESTS STARTED ~~~~~~~");
-        // System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
-        // executeGetNextPerformanceTest();
-        // System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
-        // executeGetToListPerformanceTest();
+        System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
+        executeGetNextPerformanceTest();
+        System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
+        executeGetToListPerformanceTest();
         System.out.println("~~~~~~~ RUNNING THROUGHPUT PERFORMANCE TEST ~~~~~~~");
-        POOL_SIZE.forEach(poolSize -> {
-            POOL_QUERY_COUNT.forEach(queryCount -> {
+        POOL_QUERY_COUNT.forEach(queryCount -> {
+            POOL_SIZE.forEach(poolSize -> {
                 System.out.println("~~~ Pool size " + poolSize + ", query count " + queryCount + " ~~~");
                 executeThroughputPerformanceTest(poolSize, queryCount);
             });
@@ -193,6 +191,8 @@ class PerformanceTest {
                 durations.get(durations.size() / 2),
                 durations.get((int) (durations.size() * 0.90)),
                 durations.get((int) (durations.size() * 0.95)),
+                durations.get((int) (durations.size() * 0.10)),
+                durations.get((int) (durations.size() * 0.05)),
                 durations.get(0),
                 durations.get(durations.size() - 1)
         );
@@ -205,15 +205,19 @@ class TimingData {
     final Duration MEDIAN;
     final Duration PERCENTILE_90;
     final Duration PERCENTILE_95;
+    final Duration PERCENTILE_10;
+    final Duration PERCENTILE_5;
     final Duration MIN;
     final Duration MAX;
 
-    TimingData(Duration avg, Duration median, Duration percentile_90, Duration percentile_95, Duration min,
+    TimingData(Duration avg, Duration median, Duration percentile_90, Duration percentile_95, Duration percentile_10, Duration percentile_5, Duration min,
                Duration max) {
         AVG = avg;
         MEDIAN = median;
         PERCENTILE_90 = percentile_90;
         PERCENTILE_95 = percentile_95;
+        PERCENTILE_10 = percentile_10;
+        PERCENTILE_5 = percentile_5;
         MIN = min;
         MAX = max;
     }
@@ -221,6 +225,8 @@ class TimingData {
     public String toStringMillis(final String testType) {
         return "Test Type: " + testType + "\n" +
                 "\tAVG=" + AVG.toMillis() + "ms \n" +
+                "\tPERCENTILE_5=" + PERCENTILE_5.toMillis() + "ms \n" +
+                "\tPERCENTILE_10=" + PERCENTILE_10.toMillis() + "ms \n" +
                 "\tMEDIAN=" + MEDIAN.toMillis() + "ms \n" +
                 "\tPERCENTILE_90=" + PERCENTILE_90.toMillis() + "ms \n" +
                 "\tPERCENTILE_95=" + PERCENTILE_95.toMillis() + "ms \n" +
@@ -231,10 +237,12 @@ class TimingData {
     public String toThroughput(final String testType, int queryCount) {
         return "Test Type: " + testType + "\n" +
                 "\tAVG=" + ((1000L * queryCount) / AVG.toMillis()) + " query/s \n" +
+                "\tPERCENTILE_5=" + ((1000L * queryCount) / PERCENTILE_95.toMillis()) + " query/s \n" +
+                "\tPERCENTILE_10=" + ((1000L * queryCount) / PERCENTILE_90.toMillis()) + " query/s \n" +
                 "\tMEDIAN=" + ((1000L * queryCount) / MEDIAN.toMillis()) + " query/s \n" +
-                "\tPERCENTILE_90=" + ((1000L * queryCount) / PERCENTILE_90.toMillis()) + " query/s \n" +
-                "\tPERCENTILE_95=" + ((1000L * queryCount) / PERCENTILE_95.toMillis()) + " query/s \n" +
-                "\tMIN=" + ((1000L * queryCount) / MIN.toMillis()) + " query/s \n" +
-                "\tMAX=" + ((1000L * queryCount) / MAX.toMillis()) + " query/s \n";
+                "\tPERCENTILE_90=" + ((1000L * queryCount) / PERCENTILE_10.toMillis()) + " query/s \n" +
+                "\tPERCENTILE_95=" + ((1000L * queryCount) / PERCENTILE_5.toMillis()) + " query/s \n" +
+                "\tMIN=" + ((1000L * queryCount) / MAX.toMillis()) + " query/s \n" +
+                "\tMAX=" + ((1000L * queryCount) / MIN.toMillis()) + " query/s \n";
     }
 }
