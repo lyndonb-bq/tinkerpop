@@ -1302,6 +1302,93 @@ Gremlin utilizes `camelCase` as is typical in Java for function names, but C# ut
 typical in that language. Therefore, when viewing a typical Gremlin example written in Gremlin Console, the conversion
 to C# usually just requires capitalization of the first letter in the step name, thus the following example in Groovy:
 
+[source,groovy]
+----
+g.V().has('person','name','marko').
+  out('knows').
+  elementMap().toList()
+----
+
+would become the following in C#:
+
+[source,csharp]
+----
+g.V().Has("Person","name","marko").
+  Out("knows").
+  ElementMap().ToList();
+----
+
+In addition to the uppercase change, also note the conversion of the single quotes to double quotes as is expected for
+declaring string values in C# and the addition of the semi-colon at the end of the line. In short, don't forget to
+apply the common syntax expectations for C# when trying to convert an example of Gremlin from a different language.
+
+Another common conversion issues lies in having to explicitly define generics, which can make canonical Gremlin appear
+much more complex in C# where type erasure is not a feature of the language. For example, the following example in
+Groovy:
+
+[source,groovy]
+----
+g.V().repeat(__.out()).times(2).values('name')
+----
+
+must be written as:
+
+[source,csharp]
+----
+g.V().Repeat(__.Out()).Times(2).Values<string>("name");
+----
+
+Gremlin allows for `Map` instances to include `null` keys, but `null` keys in C# `Dictionary` instances are not allowed.
+It is therefore necessary to rewrite a traversal such as:
+
+[source,javascript]
+----
+g.V().groupCount().by('age')
+----
+
+where "age" is not a valid key for all vertices in a way that will remove the need for a `null` to be returned.
+
+[source,javascript]
+----
+g.V().has('age').groupCount().by('age')
+g.V().hasLabel('person').groupCount().by('age')
+----
+
+Either of the above two options accomplishes the desired goal as both prevent `groupCount()` from having to process
+the possibility of `null`.
+
+anchor:gremlin-net-limitations[]
+[[gremlin-dotnet-limitations]]
+=== Limitations
+
+* The `subgraph()`-step is not supported by any variant that is not running on the Java Virtual Machine as there is
+no `Graph` instance to deserialize a result into on the client-side. A workaround is to replace the step with
+`aggregate(local)` and then convert those results to something the client can use locally.
+
+anchor:gremlin-dotnet-template[]
+anchor:dotnet-application-examples[]
+anchor:gremlin-net-examples[]
+[[gremlin-dotnet-examples]]
+=== Application Examples
+
+This link:https://docs.microsoft.com/dotnet/core/tools/custom-templates[dotnet template] helps getting started with
+<<gremlin-dotnet,Gremlin.Net>>. It creates a new C# console project that shows how to connect to a
+<<gremlin-server,Gremlin Server>> with Gremlin.Net.
+
+You can install the template with the dotnet CLI tool:
+[source,shell]
+dotnet new -i Gremlin.Net.Template
+
+After the template is installed, a new project based on this template can be installed:
+
+[source,shell]
+dotnet new gremlin
+
+Specify the output directory for the new project which will then also be used as the name of the created project:
+
+[source,shell]
+dotnet new gremlin -o MyFirstGremlinProject
+
 [[gremlin-go]]
 == Gremlin-Go
 
@@ -1598,93 +1685,6 @@ and is designed to work best with a running <<gremlin-server,Gremlin Server>> co
 ----
 go run example.go
 ----
-
-[source,groovy]
-----
-g.V().has('person','name','marko').
-  out('knows').
-  elementMap().toList()
-----
-
-would become the following in C#:
-
-[source,csharp]
-----
-g.V().Has("Person","name","marko").
-  Out("knows").
-  ElementMap().ToList();
-----
-
-In addition to the uppercase change, also note the conversion of the single quotes to double quotes as is expected for
-declaring string values in C# and the addition of the semi-colon at the end of the line. In short, don't forget to
-apply the common syntax expectations for C# when trying to convert an example of Gremlin from a different language.
-
-Another common conversion issues lies in having to explicitly define generics, which can make canonical Gremlin appear
-much more complex in C# where type erasure is not a feature of the language. For example, the following example in
-Groovy:
-
-[source,groovy]
-----
-g.V().repeat(__.out()).times(2).values('name')
-----
-
-must be written as:
-
-[source,csharp]
-----
-g.V().Repeat(__.Out()).Times(2).Values<string>("name");
-----
-
-Gremlin allows for `Map` instances to include `null` keys, but `null` keys in C# `Dictionary` instances are not allowed.
-It is therefore necessary to rewrite a traversal such as:
-
-[source,javascript]
-----
-g.V().groupCount().by('age')
-----
-
-where "age" is not a valid key for all vertices in a way that will remove the need for a `null` to be returned.
-
-[source,javascript]
-----
-g.V().has('age').groupCount().by('age')
-g.V().hasLabel('person').groupCount().by('age')
-----
-
-Either of the above two options accomplishes the desired goal as both prevent `groupCount()` from having to process
-the possibility of `null`.
-
-anchor:gremlin-net-limitations[]
-[[gremlin-dotnet-limitations]]
-=== Limitations
-
-* The `subgraph()`-step is not supported by any variant that is not running on the Java Virtual Machine as there is
-no `Graph` instance to deserialize a result into on the client-side. A workaround is to replace the step with
-`aggregate(local)` and then convert those results to something the client can use locally.
-
-anchor:gremlin-dotnet-template[]
-anchor:dotnet-application-examples[]
-anchor:gremlin-net-examples[]
-[[gremlin-dotnet-examples]]
-=== Application Examples
-
-This link:https://docs.microsoft.com/dotnet/core/tools/custom-templates[dotnet template] helps getting started with
-<<gremlin-dotnet,Gremlin.Net>>. It creates a new C# console project that shows how to connect to a
-<<gremlin-server,Gremlin Server>> with Gremlin.Net.
-
-You can install the template with the dotnet CLI tool:
-[source,shell]
-dotnet new -i Gremlin.Net.Template
-
-After the template is installed, a new project based on this template can be installed:
-
-[source,shell]
-dotnet new gremlin
-
-Specify the output directory for the new project which will then also be used as the name of the created project:
-
-[source,shell]
-dotnet new gremlin -o MyFirstGremlinProject
 
 [[gremlin-python]]
 == Gremlin-Python
