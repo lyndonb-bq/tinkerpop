@@ -57,8 +57,8 @@ class PerformanceTest {
         POOL_SIZE.add(2);
         POOL_SIZE.add(4);
         POOL_SIZE.add(8);
-//        POOL_QUERY_COUNT.add(50);
-//        POOL_QUERY_COUNT.add(100);
+        // POOL_QUERY_COUNT.add(50);
+        // POOL_QUERY_COUNT.add(100);
         POOL_QUERY_COUNT.add(250);
         // POOL_QUERY_COUNT.add(500);
     }
@@ -105,10 +105,10 @@ class PerformanceTest {
 
     private static void executePerformanceTests() {
         System.out.println("~~~~~~~ PERFORMANCE TESTS STARTED ~~~~~~~");
-//        System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
-//        executeGetNextPerformanceTest();
-//        System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
-//        executeGetToListPerformanceTest();
+        System.out.println("~~~~~~~ RUNNING ONE ITEM PERFORMANCE TEST ~~~~~~~");
+        executeGetNextPerformanceTest();
+        System.out.println("~~~~~~~ RUNNING LIST PERFORMANCE TEST ~~~~~~~");
+        executeGetToListPerformanceTest();
         System.out.println("~~~~~~~ RUNNING THROUGHPUT PERFORMANCE TEST ~~~~~~~");
         POOL_QUERY_COUNT.forEach(queryCount -> {
             POOL_SIZE.forEach(poolSize -> {
