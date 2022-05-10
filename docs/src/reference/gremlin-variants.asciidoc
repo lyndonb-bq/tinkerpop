@@ -1658,8 +1658,6 @@ capital letter in order to be public:
 
 *Tokens* - <<a-note-on-scopes,Scope.Global>>, <<a-note-on-scopes,Scope.Local>>
 
-*Statics* - <<__, T__>> // todo: impove
-
 [[gremlin-go-limitations]]
 === Limitations
 
