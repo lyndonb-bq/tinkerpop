@@ -62,7 +62,7 @@ globals << [hook : [
 // add default TraversalSource instances for each graph instance
 globals << [gclassic : traversal().withEmbedded(classic).withStrategies(ReferenceElementStrategy)]
 globals << [gmodern : traversal().withEmbedded(modern).withStrategies(ReferenceElementStrategy)]
-globals << [gtest : traversal().withEmbedded(test).withStrategies(ReferenceElementStrategy)]
+globals << [gimmutable : traversal().withEmbedded(test).withStrategies(ReferenceElementStrategy)]
 globals << [g : traversal().withEmbedded(graph).withStrategies(ReferenceElementStrategy)]
 globals << [gcrew : traversal().withEmbedded(crew).withStrategies(ReferenceElementStrategy)]
 globals << [ggraph : traversal().withEmbedded(graph).withStrategies(ReferenceElementStrategy)]
