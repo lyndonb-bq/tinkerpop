@@ -1,4 +1,4 @@
-package org.apache.tinkerpop.gremlin.util;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,6 +16,8 @@ package org.apache.tinkerpop.gremlin.util;/*
  * specific language governing permissions and limitations
  * under the License.
  */
+
+package org.apache.tinkerpop.gremlin.util;
 
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
