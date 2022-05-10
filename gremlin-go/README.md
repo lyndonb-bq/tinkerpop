@@ -316,7 +316,7 @@ if err != nil {
 *List of all exports can be found at [pkg.go.dev](https://pkg.go.dev/github.com/apache/tinkerpop/gremlin-go/v3/driver)*
 
 ### Supported Data Types
-The current `go` driver supports all of the GraphBinary serialization types.
+The `Go` driver supports all of the GraphBinary serialization types.
 
 [tk]: https://tinkerpop.apache.org
 [gremlin]: https://tinkerpop.apache.org/gremlin.html
