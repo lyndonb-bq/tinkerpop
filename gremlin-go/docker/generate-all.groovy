@@ -45,7 +45,7 @@ globals << [hook : [
         idManagerField.set(graph, TinkerGraph.DefaultIdManager.INTEGER)
     }
 
-    [classic, modern, crew, sink, grateful, test].each{
+    [classic, modern, crew, sink, grateful, immutable].each{
       allowSetOfIdManager(it, "vertexIdManager")
       allowSetOfIdManager(it, "edgeIdManager")
       allowSetOfIdManager(it, "vertexPropertyIdManager")
@@ -55,7 +55,7 @@ globals << [hook : [
     TinkerFactory.generateTheCrew(crew)
     TinkerFactory.generateGratefulDead(grateful)
     TinkerFactory.generateKitchenSink(sink)
-    TinkerFactory.generateModern(test)
+    TinkerFactory.generateModern(immutable)
   }
 ] as LifeCycleHook]
 
