@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
+	"log"
 	"os"
 	"reflect"
 	"runtime"
@@ -42,7 +43,7 @@ const basicAuthIntegrationTestSuite = "basic authentication integration"
 const validHostInvalidPortValidPath = "ws://localhost:12341253/gremlin"
 const invalidHostValidPortValidPath = "ws://invalidhost:8182/gremlin"
 const testServerModernGraphAlias = "gmodern"
-const testServerGraphAlias = "gimmutable"
+const testServerGraphAlias = "gtest"
 const manualTestSuiteName = "manual"
 const nonRoutableIPForConnectionTimeout = "ws://10.255.255.1/"
 
@@ -51,6 +52,35 @@ const noAuthUrl = "ws://localhost:45940/gremlin"
 const basicAuthWithSsl = "wss://localhost:45941/gremlin"
 
 var testNames = []string{"Lyndon", "Yang", "Simon", "Rithin", "Alexey", "Valentyn"}
+
+func init() {
+	// Test server status before starting the integration tests
+	log.Println("Initializing connection tests, testing no auth and auth server connection status.")
+	for {
+		conn, err := NewDriverRemoteConnection(getEnvOrDefaultString("GREMLIN_SERVER_URL", noAuthUrl))
+		if err == nil {
+			log.Printf("Connection %v successful, no auth server initialized.", conn)
+			conn.Close()
+			break
+		}
+		log.Println("Connection unsuccessful, trying again in 1 second.")
+		time.Sleep(1 * time.Second)
+	}
+	for {
+		conn, err := NewDriverRemoteConnection(getEnvOrDefaultString("GREMLIN_SERVER_BASIC_AUTH_URL", basicAuthWithSsl),
+			func(settings *DriverRemoteConnectionSettings) {
+				settings.TlsConfig = &tls.Config{InsecureSkipVerify: true}
+				settings.AuthInfo = getBasicAuthInfo()
+			})
+		if err == nil {
+			log.Printf("Connection %v successful, auth server initialized.", conn)
+			conn.Close()
+			break
+		}
+		log.Println("Connection unsuccessful, trying again in 1 second.")
+		time.Sleep(1 * time.Second)
+	}
+}
 
 func newDefaultConnectionSettings() *connectionSettings {
 	return &connectionSettings{

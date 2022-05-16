@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,27 +16,12 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-ARG GREMLIN_SERVER
-FROM tinkerpop/gremlin-server:${GREMLIN_SERVER}
+# Parses current gremlin server version from project pom.xml file using perl regex
+GREMLIN_SERVER_VERSION=$(grep tinkerpop -A2 pom.xml | grep -Po '(?<=<version>)([0-9]+\.?){3}(-SNAPSHOT)?(?=<)')
+echo "$GREMLIN_SERVER_VERSION"
 
-USER root
-RUN mkdir -p /opt
-WORKDIR /opt
-COPY gremlin-server/src/test /opt/test/
-COPY gremlin-go/docker/generate-all.groovy /opt/test/scripts/
-COPY gremlin-go/docker/docker-entrypoint.sh gremlin-go/docker/*.yaml /opt/
-RUN chmod 755 /opt/docker-entrypoint.sh
-
-# Installing dos2unix to avoid errors in running the entrypoint script on Windows machines where their
-# carriage return is \r\n instead of the \n needed for linux/unix containers
-RUN apk update && apk add dos2unix
-RUN dos2unix /opt/docker-entrypoint.sh && apk del dos2unix
-
-ARG GREMLIN_SERVER
-ENV GREMLIN_SERVER_VER=$GREMLIN_SERVER
-
-EXPOSE 45940 45941
-
-ENTRYPOINT ["bash", "/opt/docker-entrypoint.sh"]
-CMD []
+# Passes current gremlin server version into docker compose as environment variable
+GREMLIN_SERVER="$GREMLIN_SERVER_VERSION"  docker-compose up --exit-code-from gremlin-go-integration-tests
+docker-compose down

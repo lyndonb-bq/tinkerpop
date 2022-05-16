@@ -26,12 +26,14 @@ import (
 	"fmt"
 	"github.com/apache/tinkerpop/gremlin-go/driver"
 	"github.com/cucumber/godog"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 type tinkerPopGraph struct {
@@ -430,13 +432,10 @@ func (tg *tinkerPopGraph) theResultShouldBe(characterizedAs string, table *godog
 						return fmt.Errorf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 					}
 				}
-			} else if len(actualResult) == 1 && len(expectedResult) == 1 && reflect.TypeOf(actualResult[0]).Kind() == reflect.Map &&
-				reflect.TypeOf(expectedResult[0]).Kind() == reflect.Map {
-				if !compareMapEquals(actualResult[0].(map[interface{}]interface{}), expectedResult[0].(map[interface{}]interface{})) {
+			} else {
+				if fmt.Sprint(actualResult) != fmt.Sprint(expectedResult) {
 					return fmt.Errorf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 				}
-			} else if fmt.Sprint(actualResult) != fmt.Sprint(expectedResult) {
-				return fmt.Errorf("actual result does not match expected (order expected)\nActual: %v\nExpected: %v", actualResult, expectedResult)
 			}
 		} else {
 			if characterizedAs == "of" {
@@ -763,6 +762,20 @@ func getEnvOrDefaultBool(key string, defaultValue bool) bool {
 func TestCucumberFeatures(t *testing.T) {
 	skipTestsIfNotEnabled(t, "cucumber godog tests",
 		getEnvOrDefaultBool("RUN_INTEGRATION_WITH_ALIAS_TESTS", true))
+
+	// Test server status before starting the cucumber godog tests
+	log.Println("Initializing cucumber test suite, testing server connection status.")
+	for {
+		conn, err := gremlingo.NewDriverRemoteConnection(scenarioUrl())
+		if err == nil {
+			log.Printf("Connection %v successful, server initialized.", conn)
+			conn.Close()
+			break
+		}
+		log.Println("Connection unsuccessful, trying again in 1 second.")
+		time.Sleep(1 * time.Second)
+	}
+
 	suite := godog.TestSuite{
 		TestSuiteInitializer: InitializeTestSuite,
 		ScenarioInitializer:  InitializeScenario,
