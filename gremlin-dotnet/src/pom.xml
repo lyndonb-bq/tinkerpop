@@ -63,8 +63,9 @@ file = new File("${project.basedir}/Gremlin.Net.Template/Gremlin.Net.Template.cs
 file.write(file.getText("UTF-8").replaceFirst(/Version="(.*)"/, "Version=\"" + mavenVersion + "\""))
 
 file = new File("${project.basedir}/Gremlin.Net.Template/Gremlin.Net.Template.nuspec")
-file.write(file.getText("UTF-8").replaceFirst(/&lt;version&gt;(.*)&lt;\/version&gt;/, "&lt;version&gt;" + mavenVersion + "&lt;/version&gt;"))                                </script>
-                                </scripts>
+file.write(file.getText("UTF-8").replaceFirst(/&lt;version&gt;(.*)&lt;\/version&gt;/, "&lt;version&gt;" + mavenVersion + "&lt;/version&gt;"))
+                                </script>
+                            </scripts>
                         </configuration>
                     </execution>
                 </executions>
