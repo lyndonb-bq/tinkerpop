@@ -4,7 +4,10 @@ jobs:
   smoke:
     name: smoke
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -18,7 +21,10 @@ jobs:
     name: mvn clean install - jdk11
     timeout-minutes: 45
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -32,7 +38,10 @@ jobs:
     name: mvn clean install - jdk8
     timeout-minutes: 45
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 8
@@ -46,7 +55,10 @@ jobs:
     name: gremlin-server default
     timeout-minutes: 45
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -62,7 +74,10 @@ jobs:
     name: gremlin-server unified
     timeout-minutes: 45
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -78,7 +93,10 @@ jobs:
     name: spark core
     timeout-minutes: 45
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -94,7 +112,10 @@ jobs:
     name: spark gryo
     timeout-minutes: 45
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -110,7 +131,10 @@ jobs:
     name: gremlin-console
     timeout-minutes: 20
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -142,7 +166,10 @@ jobs:
     name: python
     timeout-minutes: 20
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -190,7 +217,10 @@ jobs:
     name: neo4j-gremlin
     timeout-minutes: 20
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK11
@@ -206,7 +236,10 @@ jobs:
     name: go
     timeout-minutes: 20
     needs: smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
