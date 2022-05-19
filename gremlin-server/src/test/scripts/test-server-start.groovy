@@ -76,6 +76,7 @@ if (!securePropsFile.exists()) {
 }
 
 def settingsSecure = Settings.read("${settingsFile}")
+def platformAgnosticBaseDirPath = new File(".").absolutePath.replace("\\.", "")
 settingsSecure.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
@@ -85,7 +86,7 @@ settingsSecure.graphs.sink = gremlinServerDir + "/src/test/scripts/tinkergraph-e
 settingsSecure.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [gremlinServerDir + "/src/test/scripts/generate-all.groovy"]
 settingsSecure.port = 45941
 settingsSecure.authentication.authenticator = "org.apache.tinkerpop.gremlin.server.auth.SimpleAuthenticator"
-settingsSecure.authentication.config = [credentialsDb: projectBaseDir + "/target/tinkergraph-credentials.properties"]
+settingsSecure.authentication.config = [credentialsDb: platformAgnosticBaseDirPath + "/target/tinkergraph-credentials.properties"]
 settingsSecure.ssl = new Settings.SslSettings()
 settingsSecure.ssl.enabled = true
 settingsSecure.ssl.sslEnabledProtocols = ["TLSv1.2"]
