@@ -76,7 +76,7 @@ if (!securePropsFile.exists()) {
 }
 
 def settingsSecure = Settings.read("${settingsFile}")
-def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath.replace("\\.this-definitely-does-not-exist", "").replace("/.this-definitely-does-not-exist","")
+def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath.replace("\\.this-definitely-does-not-exist", "").replace("tinkerpop/.this-definitely-does-not-exist","")
 settingsSecure.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
