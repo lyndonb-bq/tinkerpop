@@ -66,7 +66,7 @@ project.setContextValue("gremlin.server", server)
 log.info("Gremlin Server without authentication started on port 45940")
 
 
-def securePropsFile = new File("${projectBaseDir}/target/tinkergraph-credentials.properties")
+def securePropsFile = new File("${projectBaseDir}${projectBaseDir}/target/tinkergraph-credentials.properties")
 if (!securePropsFile.exists()) {
     securePropsFile.createNewFile()
     securePropsFile << "gremlin.graph=org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph\n"
