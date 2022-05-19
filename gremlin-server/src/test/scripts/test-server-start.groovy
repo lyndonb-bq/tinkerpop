@@ -62,12 +62,16 @@ settings.port = 45940
 def server = new GremlinServer(settings)
 server.start().join()
 
+def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath
+        .replace("\\.this-definitely-does-not-exist", "") // Windows
+        .replace("tinkerpop/.this-definitely-does-not-exist","") // Unix
+
 project.setContextValue("gremlin.server", server)
 log.info("Gremlin Server without authentication started on port 45940")
-log.info("${projectBaseDir}")
+log.info("${platformAgnosticBaseDirPath}")
 
 
-def securePropsFile = new File("${projectBaseDir}/target/tinkergraph-credentials.properties")
+def securePropsFile = new File("${platformAgnosticBaseDirPath}/target/tinkergraph-credentials.properties")
 if (!securePropsFile.exists()) {
     securePropsFile.createNewFile()
     securePropsFile << "gremlin.graph=org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph\n"
@@ -77,7 +81,6 @@ if (!securePropsFile.exists()) {
 }
 
 def settingsSecure = Settings.read("${settingsFile}")
-def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath.replace("\\.this-definitely-does-not-exist", "").replace("tinkerpop/.this-definitely-does-not-exist","")
 settingsSecure.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
@@ -101,11 +104,11 @@ project.setContextValue("gremlin.server.secure", serverSecure)
 log.info("Gremlin Server with password authentication started on port 45941")
 
 
-def kdcServer = new KdcFixture(projectBaseDir)
+def kdcServer = new KdcFixture(platformAgnosticBaseDirPath)
 kdcServer.setUp()
 
 project.setContextValue("gremlin.server.kdcserver", kdcServer)
-log.info("KDC started with configuration ${projectBaseDir}/target/kdc/krb5.conf")
+log.info("KDC started with configuration ${platformAgnosticBaseDirPath}/target/kdc/krb5.conf")
 
 def settingsKrb5 = Settings.read("${settingsFile}")
 settingsKrb5.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
