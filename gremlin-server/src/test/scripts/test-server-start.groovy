@@ -48,23 +48,25 @@ if (testTransactions) {
 log.info("Starting Gremlin Server instances for native testing of ${executionName}")
 log.info("Transactions validated (enabled with -DincludeNeo4j and only available on port 45940): " + testTransactions)
 
-def settings = Settings.read("${settingsFile}")
-settings.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settings.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settings.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settings.graphs.crew = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settings.graphs.grateful = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settings.graphs.sink = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-if (testTransactions) settings.graphs.tx = gremlinServerDir + "/src/test/scripts/neo4j-empty.properties"
-settings.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [gremlinServerDir + "/src/test/scripts/generate-all.groovy"]
+def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath
+        .replace("\\.this-definitely-does-not-exist", "") // Windows
+        .replace("/.this-definitely-does-not-exist","") // Unix
+def platformAgnosticGremlinServerDir = platformAgnosticBaseDirPath + "/gremlin-server"
+def platformAgnosticSettingsFile = platformAgnosticGremlinServerDir + "/src/test/resources/org/apache/tinkerpop/gremlin/server/gremlin-server-integration.yaml"
+
+def settings = Settings.read("${platformAgnosticSettingsFile}")
+settings.graphs.graph = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settings.graphs.classic = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settings.graphs.modern = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settings.graphs.crew = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settings.graphs.grateful = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settings.graphs.sink = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+if (testTransactions) settings.graphs.tx = platformAgnosticGremlinServerDir + "/src/test/scripts/neo4j-empty.properties"
+settings.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [platformAgnosticGremlinServerDir + "/src/test/scripts/generate-all.groovy"]
 settings.port = 45940
 
 def server = new GremlinServer(settings)
 server.start().join()
-
-def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath
-        .replace("\\.this-definitely-does-not-exist", "") // Windows
-        .replace("tinkerpop/.this-definitely-does-not-exist","") // Unix
 
 project.setContextValue("gremlin.server", server)
 log.info("Gremlin Server without authentication started on port 45940")
@@ -76,25 +78,26 @@ if (!securePropsFile.exists()) {
     securePropsFile.createNewFile()
     securePropsFile << "gremlin.graph=org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph\n"
     securePropsFile << "gremlin.tinkergraph.vertexIdManager=LONG\n"
-    securePropsFile << "gremlin.tinkergraph.graphLocation=${gremlinServerDir}/data/credentials.kryo\n"
+    securePropsFile << "gremlin.tinkergraph.graphLocation=${platformAgnosticGremlinServerDir}/data/credentials.kryo\n"
     securePropsFile << "gremlin.tinkergraph.graphFormat=gryo"
 }
 
-def settingsSecure = Settings.read("${settingsFile}")
-settingsSecure.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.graphs.crew = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.graphs.grateful = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.graphs.sink = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [gremlinServerDir + "/src/test/scripts/generate-all.groovy"]
+def settingsSecure = Settings.read("${platformAgnosticSettingsFile}")
+settingsSecure.graphs.graph = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsSecure.graphs.classic = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsSecure.graphs.modern = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsSecure.graphs.crew = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsSecure.graphs.grateful = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsSecure.graphs.sink = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsSecure.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [platformAgnosticGremlinServerDir + "/src/test/scripts/generate-all.groovy"]
 settingsSecure.port = 45941
 settingsSecure.authentication.authenticator = "org.apache.tinkerpop.gremlin.server.auth.SimpleAuthenticator"
 settingsSecure.authentication.config = [credentialsDb: platformAgnosticBaseDirPath + "/target/tinkergraph-credentials.properties"]
+log.warn(settingsSecure.authentication.config.get("credentialsDb") + "lmaooo")
 settingsSecure.ssl = new Settings.SslSettings()
 settingsSecure.ssl.enabled = true
 settingsSecure.ssl.sslEnabledProtocols = ["TLSv1.2"]
-settingsSecure.ssl.keyStore = gremlinServerDir + "/src/test/resources/server-key.jks"
+settingsSecure.ssl.keyStore = platformAgnosticGremlinServerDir + "/src/test/resources/server-key.jks"
 settingsSecure.ssl.keyStorePassword = "changeit"
 
 def serverSecure = new GremlinServer(settingsSecure)
@@ -110,14 +113,14 @@ kdcServer.setUp()
 project.setContextValue("gremlin.server.kdcserver", kdcServer)
 log.info("KDC started with configuration ${platformAgnosticBaseDirPath}/target/kdc/krb5.conf")
 
-def settingsKrb5 = Settings.read("${settingsFile}")
-settingsKrb5.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.graphs.crew = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.graphs.grateful = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.graphs.sink = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [gremlinServerDir + "/src/test/scripts/generate-all.groovy"]
+def settingsKrb5 = Settings.read("${platformAgnosticSettingsFile}")
+settingsKrb5.graphs.graph = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsKrb5.graphs.classic = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsKrb5.graphs.modern = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsKrb5.graphs.crew = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsKrb5.graphs.grateful = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsKrb5.graphs.sink = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
+settingsKrb5.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"].files = [platformAgnosticGremlinServerDir + "/src/test/scripts/generate-all.groovy"]
 settingsKrb5.port = 45942
 settingsKrb5.authentication.authenticator = "org.apache.tinkerpop.gremlin.server.auth.Krb5Authenticator"
 settingsKrb5.authentication.config = [
