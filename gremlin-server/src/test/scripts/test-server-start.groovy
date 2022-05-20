@@ -50,8 +50,8 @@ log.info("Transactions validated (enabled with -DincludeNeo4j and only available
 
 def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath
         .replace("\\.this-definitely-does-not-exist", "") // Windows
+        .replace("\\", "/") // Windows
         .replace("/.this-definitely-does-not-exist","") // Unix
-        .replace("\\", "/")
 def platformAgnosticGremlinServerDir = platformAgnosticBaseDirPath + "/gremlin-server"
 def platformAgnosticSettingsFile = platformAgnosticGremlinServerDir + "/src/test/resources/org/apache/tinkerpop/gremlin/server/gremlin-server-integration.yaml"
 
@@ -71,7 +71,6 @@ server.start().join()
 
 project.setContextValue("gremlin.server", server)
 log.info("Gremlin Server without authentication started on port 45940")
-log.info("${platformAgnosticBaseDirPath}")
 
 
 def securePropsFile = new File("${platformAgnosticBaseDirPath}/target/tinkergraph-credentials.properties")
@@ -94,7 +93,6 @@ settingsSecure.scriptEngines["gremlin-groovy"].plugins["org.apache.tinkerpop.gre
 settingsSecure.port = 45941
 settingsSecure.authentication.authenticator = "org.apache.tinkerpop.gremlin.server.auth.SimpleAuthenticator"
 settingsSecure.authentication.config = [credentialsDb: platformAgnosticBaseDirPath + "/target/tinkergraph-credentials.properties"]
-log.warn(settingsSecure.authentication.config.get("credentialsDb") + "lmaooo")
 settingsSecure.ssl = new Settings.SslSettings()
 settingsSecure.ssl.enabled = true
 settingsSecure.ssl.sslEnabledProtocols = ["TLSv1.2"]

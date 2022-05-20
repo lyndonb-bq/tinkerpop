@@ -118,8 +118,8 @@ limitations under the License.
                                 <script>
                                     def mavenVersion = "${project.version}"
                                     def versionForJs = mavenVersion.replace("-SNAPSHOT", "-alpha1")
-                                    def path = new File(".").absolutePath.replace("\\.", "")
-                                    def file = new File(path + "/gremlin-javascript/src/main/javascript/gremlin-javascript/package.json")
+                                    def platformAgnosticBaseDirPath = new File(".").absolutePath.replace("\\.", "").replace("\\", "/")
+                                    def file = new File(platformAgnosticBaseDirPath + "/gremlin-javascript/src/main/javascript/gremlin-javascript/package.json")
                                     file.write(file.getText("UTF-8").replaceFirst(/"version": "(.*)",/, "\"version\": \"" + versionForJs + "\","))
                                 </script>
                             </scripts>
@@ -138,20 +138,8 @@ limitations under the License.
                                     <value>${skipTests}</value>
                                 </property>
                                 <property>
-                                    <name>gremlinServerDir</name>
-                                    <value>${gremlin.server.dir}</value>
-                                </property>
-                                <property>
-                                    <name>settingsFile</name>
-                                    <value>${gremlin.server.dir}/src/test/resources/org/apache/tinkerpop/gremlin/server/gremlin-server-integration.yaml</value>
-                                </property>
-                                <property>
                                     <name>executionName</name>
                                     <value>${project.name}</value>
-                                </property>
-                                <property>
-                                    <name>projectBaseDir</name>
-                                    <value>${project.basedir}</value>
                                 </property>
                             </properties>
                             <scripts>
