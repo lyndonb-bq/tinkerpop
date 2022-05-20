@@ -138,8 +138,20 @@ limitations under the License.
                                     <value>${skipTests}</value>
                                 </property>
                                 <property>
+                                    <name>gremlinServerDir</name>
+                                    <value>${gremlin.server.dir}</value>
+                                </property>
+                                <property>
+                                    <name>settingsFile</name>
+                                    <value>${gremlin.server.dir}/src/test/resources/org/apache/tinkerpop/gremlin/server/gremlin-server-integration.yaml</value>
+                                </property>
+                                <property>
                                     <name>executionName</name>
                                     <value>${project.name}</value>
+                                </property>
+                                <property>
+                                    <name>projectBaseDir</name>
+                                    <value>${project.basedir}</value>
                                 </property>
                             </properties>
                             <scripts>
