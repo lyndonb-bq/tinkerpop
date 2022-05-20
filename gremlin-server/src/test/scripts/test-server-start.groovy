@@ -51,6 +51,7 @@ log.info("Transactions validated (enabled with -DincludeNeo4j and only available
 def platformAgnosticBaseDirPath = new File(".this-definitely-does-not-exist").absolutePath
         .replace("\\.this-definitely-does-not-exist", "") // Windows
         .replace("/.this-definitely-does-not-exist","") // Unix
+        .replace("\\", "/")
 def platformAgnosticGremlinServerDir = platformAgnosticBaseDirPath + "/gremlin-server"
 def platformAgnosticSettingsFile = platformAgnosticGremlinServerDir + "/src/test/resources/org/apache/tinkerpop/gremlin/server/gremlin-server-integration.yaml"
 
