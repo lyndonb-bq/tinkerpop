@@ -23,8 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Gremlin.Net.Driver;
 using Gremlin.Net.Driver.Exceptions;
@@ -179,8 +179,7 @@ namespace Gremlin.Net.IntegrationTest.Driver
 
             Assert.NotNull(resultSet.StatusAttributes);
 
-            var values = (JsonElement) resultSet.StatusAttributes["@value"];
-            Assert.True(values[0].ToString().Equals("host"));
+            Assert.True(resultSet.StatusAttributes.First().Key == "host");
         }
 
         [Fact]

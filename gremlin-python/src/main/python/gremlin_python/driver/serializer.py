@@ -97,9 +97,9 @@ class GraphSONMessageSerializer(object):
     """
 
     # KEEP TRACK OF CURRENT DEFAULTS
-    DEFAULT_READER_CLASS = graphsonV3d0.GraphSONReader
-    DEFAULT_WRITER_CLASS = graphsonV3d0.GraphSONWriter
-    DEFAULT_VERSION = b"application/vnd.gremlin-v3.0+json"
+    DEFAULT_READER_CLASS = graphbinaryV1.GraphBinaryReader
+    DEFAULT_WRITER_CLASS = graphbinaryV1.GraphBinaryWriter
+    DEFAULT_VERSION = b"application/vnd.graphbinary-v1.0"
 
     def __init__(self, reader=None, writer=None, version=None):
         if not version:
