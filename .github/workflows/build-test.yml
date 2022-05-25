@@ -188,11 +188,6 @@ jobs:
         run: |
           touch gremlin-dotnet/src/.glv
           touch gremlin-dotnet/test/.glv
-      - name: create .glv files Windows
-        if: contains(matrix.os, 'windows')
-        run: |
-          type nul > gremlin-dotnet/src/.glv
-          type nul > gremlin-dotnet/test/.glv
       - name: Build with Maven
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-:gremlint -q -DskipTests -Dci
