@@ -59,10 +59,12 @@ class DriverRemoteConnection(RemoteConnection):
         # so that they can be closed if this parent session is closed.
         self.__spawned_sessions = []
 
-        if message_serializer is None:
+        if message_serializer is None and (graphson_reader is not None or graphson_writer is not None):
             message_serializer = serializer.GraphSONMessageSerializer(
                 reader=graphson_reader,
                 writer=graphson_writer)
+        else:
+            message_serializer = serializer.graphbinaryV1()
         self._client = client.Client(url, traversal_source,
                                      protocol_factory=protocol_factory,
                                      transport_factory=transport_factory,
