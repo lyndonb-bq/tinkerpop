@@ -185,8 +185,15 @@ jobs:
           dotnet-version: '6.0.x'
       - name: Build with Maven
         run: |
-          touch gremlin-dotnet/src/.glv
-          touch gremlin-dotnet/test/.glv
+          if [ "$RUNNER_OS" == "Linux" ]; then
+              touch gremlin-dotnet/src/.glv
+              touch gremlin-dotnet/test/.glv
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+              type nul > gremlin-dotnet/src/.glv
+              type nul > gremlin-dotnet/test/.glv
+          else
+              echo "$RUNNER_OS not supported"
+              exit 1
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-:gremlint -q -DskipTests -Dci
           mvn verify -pl :gremlin-dotnet,:gremlin-dotnet-tests -P gremlin-dotnet -DincludeNeo4j
 #  neo4j-gremlin:
