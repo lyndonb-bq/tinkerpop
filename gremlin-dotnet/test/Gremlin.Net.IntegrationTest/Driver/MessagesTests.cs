@@ -119,7 +119,8 @@ namespace Gremlin.Net.IntegrationTest.Driver
                 evaluationStopWatch.Stop();
                 Assert.Contains("ServerTimeout", thrownException.Message);
                 Assert.Contains(timeOutInMs.ToString(), thrownException.Message);
-                Assert.True(evaluationStopWatch.ElapsedMilliseconds <= scriptSleepTimeInMs);
+                Assert.True(evaluationStopWatch.ElapsedMilliseconds < scriptSleepTimeInMs,
+                    $"Actual elapsed {evaluationStopWatch.ElapsedMilliseconds}");
             }
         }
 
