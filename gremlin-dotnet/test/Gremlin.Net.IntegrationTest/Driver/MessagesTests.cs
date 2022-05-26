@@ -96,35 +96,6 @@ namespace Gremlin.Net.IntegrationTest.Driver
         }
 
         [Fact]
-        public async Task ShouldUseSpecifiedEvaluationTimeout()
-        {
-            var gremlinServer = new GremlinServer(TestHost, TestPort);
-            using (var gremlinClient = new GremlinClient(gremlinServer))
-            {
-                const long timeOutInMs = 1L;
-                const int scriptSleepTimeInMs = 5000;
-                var sleepScript = _requestMessageProvider.GetSleepGremlinScript(scriptSleepTimeInMs);
-
-                var requestMsg =
-                    RequestMessage.Build(Tokens.OpsEval)
-                        .AddArgument(Tokens.ArgsGremlin, sleepScript)
-                        .AddArgument(Tokens.ArgsEvalTimeout, timeOutInMs)
-                        .Create();
-                var evaluationStopWatch = new Stopwatch();
-                evaluationStopWatch.Start();
-
-                var thrownException =
-                    await Assert.ThrowsAsync<ResponseException>(() => gremlinClient.SubmitAsync(requestMsg));
-
-                evaluationStopWatch.Stop();
-                Assert.Contains("ServerTimeout", thrownException.Message);
-                Assert.Contains(timeOutInMs.ToString(), thrownException.Message);
-                Assert.True(evaluationStopWatch.ElapsedMilliseconds < scriptSleepTimeInMs,
-                    $"Actual elapsed {evaluationStopWatch.ElapsedMilliseconds}");
-            }
-        }
-
-        [Fact]
         public async Task ShouldThrowForUnsupportedLanguage()
         {
             var gremlinServer = new GremlinServer(TestHost, TestPort);
