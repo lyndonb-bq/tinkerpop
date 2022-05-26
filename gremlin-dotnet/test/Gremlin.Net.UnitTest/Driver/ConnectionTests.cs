@@ -130,10 +130,12 @@ namespace Gremlin.Net.UnitTest.Driver
             await Assert.ThrowsAsync<InvalidOperationException>(() => connection.SubmitAsync<dynamic>(request));
         }
 
-        [Ignore]
         [Fact]
         public async Task ShouldHandleCloseMessageForInFlightRequestsAsync()
         {
+            // GitHub actions fails for this test on Windows
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+
             // Tests that in-flight requests will get notified if a connection close message is received.
             Uri uri = new Uri("wss://localhost:8182");
             WebSocketReceiveResult closeResult = new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.EndpointUnavailable, "Server shutdown");

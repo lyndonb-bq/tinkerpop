@@ -95,10 +95,12 @@ namespace Gremlin.Net.IntegrationTest.Driver
             }
         }
 
-        [Ignore]
         [Fact]
         public async Task ShouldUseSpecifiedEvaluationTimeout()
         {
+            // GitHub actions fails for this test on Windows
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
+
             var gremlinServer = new GremlinServer(TestHost, TestPort);
             using (var gremlinClient = new GremlinClient(gremlinServer))
             {
