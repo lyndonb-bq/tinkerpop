@@ -130,54 +130,6 @@ namespace Gremlin.Net.UnitTest.Driver
             await Assert.ThrowsAsync<InvalidOperationException>(() => connection.SubmitAsync<dynamic>(request));
         }
 
-        [Fact]
-        public async Task ShouldHandleCloseMessageForInFlightRequestsAsync()
-        {
-            // Tests that in-flight requests will get notified if a connection close message is received.
-            Uri uri = new Uri("wss://localhost:8182");
-            WebSocketReceiveResult closeResult = new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.EndpointUnavailable, "Server shutdown");
-
-            var receiveSempahore = new SemaphoreSlim(0, 1);
-            var mockedClientWebSocket = new Mock<IClientWebSocket>();
-            mockedClientWebSocket
-                .Setup(m => m.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()))
-                .Returns(async () =>
-                {
-                    await receiveSempahore.WaitAsync();
-                    mockedClientWebSocket.Setup(m => m.State).Returns(WebSocketState.CloseReceived);
-                    return closeResult;
-                });
-            mockedClientWebSocket.Setup(m => m.State).Returns(WebSocketState.Open);
-            mockedClientWebSocket
-                .SetupGet(m => m.Options).Returns(new ClientWebSocket().Options);
-
-            Connection connection = GetConnection(mockedClientWebSocket, uri);
-            await connection.ConnectAsync(CancellationToken.None);
-
-            // Create two in-flight requests that will block on waiting for a response.
-            RequestMessage requestMsg1 = RequestMessage.Build("gremlin").Create();
-            RequestMessage requestMsg2 = RequestMessage.Build("gremlin").Create();
-            Task request1 = connection.SubmitAsync<dynamic>(requestMsg1);
-            Task request2 = connection.SubmitAsync<dynamic>(requestMsg2);
-
-            // Confirm the requests are in-flight.
-            Assert.Equal(2, connection.NrRequestsInFlight);
-
-            // Release the connection close message.
-            receiveSempahore.Release();
-
-            // Assert that both requests get notified with the closed exception.
-            await AssertExpectedConnectionClosedException(closeResult.CloseStatus, closeResult.CloseStatusDescription, () => request1);
-            await AssertExpectedConnectionClosedException(closeResult.CloseStatus, closeResult.CloseStatusDescription, () => request2);
-
-            Assert.False(connection.IsOpen);
-            Assert.Equal(0, connection.NrRequestsInFlight);
-            mockedClientWebSocket.Verify(m => m.ConnectAsync(uri, It.IsAny<CancellationToken>()), Times.Once);
-            mockedClientWebSocket.Verify(m => m.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mockedClientWebSocket.Verify(m => m.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-
         private static Connection GetConnection(Mock<IClientWebSocket> mockedClientWebSocket, Uri uri)
         {
             return new Connection(
