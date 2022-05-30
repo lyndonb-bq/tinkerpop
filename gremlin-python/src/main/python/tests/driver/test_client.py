@@ -47,11 +47,11 @@ def test_connection(connection):
 
 def test_client_message_too_big(client):
     try:
-        client = Client("http://localhost", 'g', max_content_length=1024)
-        client.submit("1+1").all().result()
+        client = Client('ws://localhost:45940/gremlin', 'g', max_content_length=1024)
+        client.submit("\" \".repeat(2000)").all().result()
         assert False
-    except Exception:
-        assert True
+    except Exception as ex:
+        assert ex.args[0] == "Received error on read: 'Message size 2080 exceeds limit 1024'"
     finally:
         client.close()
 

@@ -247,6 +247,10 @@ class LongIO(_GraphBinaryTypeIO):
         if obj < -9223372036854775808 or obj > 9223372036854775807:
             raise Exception("TODO: don't forget bigint")
         else:
+            if obj < -2147483648 or obj > 2147483647:
+                cls.graphbinary_type = DataType.long
+                cls.byte_format_pack = int64_pack
+                cls.byte_format_unpack = int64_unpack
             cls.prefix_bytes(cls.graphbinary_type, as_value, nullable, to_extend)
             to_extend.extend(cls.byte_format_pack(obj))
             return to_extend

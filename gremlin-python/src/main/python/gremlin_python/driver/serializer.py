@@ -24,6 +24,7 @@ import struct
 import uuid
 import io
 
+from gremlin_python.process import traversal
 from gremlin_python.structure.io import graphbinaryV1
 from gremlin_python.structure.io import graphsonV2d0
 from gremlin_python.structure.io import graphsonV3d0
@@ -256,7 +257,8 @@ class GraphBinarySerializersV1(object):
             # just works but python 2 bytearray is bound to ByteBufferType so it writes DataType.bytebuffer
             # rather than DataType.bytecode and the server gets confused. special casing this for now until
             # it can be refactored
-            if k == "gremlin":
+            # todo: WTF??? handle byte array/buffer
+            if k == "gremlin" and isinstance(v, bytearray):
                 ba.extend(v)
             else:
                 self._graphbinary_writer.to_dict(v, ba)
