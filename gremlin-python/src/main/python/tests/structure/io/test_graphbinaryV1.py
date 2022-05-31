@@ -21,7 +21,7 @@ import datetime
 import uuid
 import math
 
-from gremlin_python.statics import timestamp, long, SingleByte, SingleChar, ByteBufferType
+from gremlin_python.statics import timestamp, long, bigint, SingleByte, SingleChar, ByteBufferType
 from gremlin_python.structure.graph import Vertex, Edge, Property, VertexProperty, Path
 from gremlin_python.structure.io.graphbinaryV1 import GraphBinaryWriter, GraphBinaryReader
 from gremlin_python.process.traversal import Barrier, Binding, Bytecode, Merge, Direction
@@ -52,7 +52,7 @@ class TestGraphSONWriter(object):
         assert x == output
 
     def test_bigint(self):
-        x = 0x1000_0000_0000_0000_0000
+        x = bigint(0x1000_0000_0000_0000_0000)
         output = self.graphbinary_reader.read_object(self.graphbinary_writer.write_object(x))
         assert x == output
 

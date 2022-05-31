@@ -20,7 +20,7 @@ under the License.
 import datetime
 import uuid
 
-from gremlin_python.driver.serializer import GraphSONSerializersV2d0
+from gremlin_python.driver.serializer import GraphSONSerializersV2d0, GraphBinarySerializersV1
 from gremlin_python.structure.graph import Graph
 from gremlin_python.statics import *
 
@@ -66,6 +66,9 @@ def test_uuid(remote_connection):
 
 
 def test_bigint(remote_connection):
+    if not isinstance(remote_connection._client._message_serializer, GraphBinarySerializersV1):
+        return
+
     g = Graph().traversal().withRemote(remote_connection)
     big = bigint(0x1000_0000_0000_0000_0000)
     resp = g.addV('test_vertex').property('bigint', big).toList()
