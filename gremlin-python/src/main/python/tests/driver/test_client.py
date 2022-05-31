@@ -27,6 +27,7 @@ from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.strategies import OptionsStrategy
 from gremlin_python.structure.graph import Graph
 from gremlin_python.driver.aiohttp.transport import AiohttpTransport
+from gremlin_python.statics import bigint
 from asyncio import TimeoutError
 
 __author__ = 'David M. Brown (davebshow@gmail.com)'
@@ -253,7 +254,7 @@ def test_client_bytecode_with_long(client):
 
 def test_client_bytecode_with_bigint(client):
     g = Graph().traversal()
-    t = g.V().has('age', 0x1000_0000_0000_0000_0000).count()
+    t = g.V().has('age', bigint(0x1000_0000_0000_0000_0000)).count()
     message = RequestMessage('traversal', 'bytecode', {'gremlin': t.bytecode, 'aliases': {'g': 'gmodern'}})
     result_set = client.submit(message)
     results = []
