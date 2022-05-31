@@ -25,9 +25,14 @@ class long(int):
     pass
 
 
+class bigint(int):
+    pass
+
+
 FloatType = float
 IntType = int
 LongType = long
+BigIntType = bigint
 TypeType = type
 ListType = list
 DictType = dict

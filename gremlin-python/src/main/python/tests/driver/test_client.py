@@ -240,9 +240,20 @@ def test_multi_thread_pool(client):
     assert results[3][0][0].object == 6
 
 
-def test_client_bytecode_with_int(client):
+def test_client_bytecode_with_long(client):
     g = Graph().traversal()
     t = g.V().has('age', 851401972585122).count()
+    message = RequestMessage('traversal', 'bytecode', {'gremlin': t.bytecode, 'aliases': {'g': 'gmodern'}})
+    result_set = client.submit(message)
+    results = []
+    for result in result_set:
+        results += result
+    assert len(results) == 1
+
+
+def test_client_bytecode_with_bigint(client):
+    g = Graph().traversal()
+    t = g.V().has('age', 0x1000_0000_0000_0000_0000).count()
     message = RequestMessage('traversal', 'bytecode', {'gremlin': t.bytecode, 'aliases': {'g': 'gmodern'}})
     result_set = client.submit(message)
     results = []

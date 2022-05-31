@@ -51,6 +51,11 @@ class TestGraphSONWriter(object):
         output = self.graphbinary_reader.read_object(self.graphbinary_writer.write_object(x))
         assert x == output
 
+    def test_bigint(self):
+        x = 0x1000_0000_0000_0000_0000
+        output = self.graphbinary_reader.read_object(self.graphbinary_writer.write_object(x))
+        assert x == output
+
     def test_float(self):
         x = float(100.001)
         output = self.graphbinary_reader.read_object(self.graphbinary_writer.write_object(x))

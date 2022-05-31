@@ -30,8 +30,8 @@ from struct import pack, unpack
 from aenum import Enum
 from datetime import timedelta
 from gremlin_python import statics
-from gremlin_python.statics import FloatType, FunctionType, IntType, LongType, TypeType, DictType, ListType, SetType, \
-                                   SingleByte, ByteBufferType, GremlinType, SingleChar
+from gremlin_python.statics import FloatType, FunctionType, IntType, LongType, BigIntType, TypeType, DictType, \
+                                   ListType, SetType, SingleByte, ByteBufferType, GremlinType, SingleChar
 from gremlin_python.process.traversal import Barrier, Binding, Bytecode, Cardinality, Column, Direction, Merge, \
                                              Operator, Order, Pick, Pop, P, Scope, TextP, Traversal, Traverser, \
                                              TraversalStrategy, T
@@ -46,7 +46,6 @@ log = logging.getLogger(__name__)
 # not a dict.
 _serializers = OrderedDict()
 _deserializers = {}
-
 
 class DataType(Enum):
     null = 0xfe
@@ -84,7 +83,7 @@ class DataType(Enum):
     t = 0x20
     traverser = 0x21
     bigdecimal = 0x22             # todo
-    biginteger = 0x23             # todo
+    biginteger = 0x23
     byte = 0x24
     bytebuffer = 0x25
     short = 0x26                  # todo
@@ -245,19 +244,19 @@ class LongIO(_GraphBinaryTypeIO):
     @classmethod
     def dictify(cls, obj, writer, to_extend, as_value=False, nullable=True):
         if obj < -9223372036854775808 or obj > 9223372036854775807:
-            raise Exception("TODO: don't forget bigint")
+            raise Exception("Value too big for long, please use bigint Gremlin type")
         else:
+            # workaround to write long without explicit type specification
             if obj < -2147483648 or obj > 2147483647:
                 cls.graphbinary_type = DataType.long
                 cls.byte_format_pack = int64_pack
-                cls.byte_format_unpack = int64_unpack
             cls.prefix_bytes(cls.graphbinary_type, as_value, nullable, to_extend)
             to_extend.extend(cls.byte_format_pack(obj))
             return to_extend
 
     @classmethod
     def objectify(cls, buff, reader, nullable=True):
-            return cls.is_null(buff, reader, lambda b, r: int64_unpack(buff.read(8)), nullable)
+        return cls.is_null(buff, reader, lambda b, r: int64_unpack(buff.read(8)), nullable)
 
 
 class IntIO(LongIO):
@@ -270,6 +269,37 @@ class IntIO(LongIO):
     @classmethod
     def objectify(cls, buff, reader, nullable=True):
         return cls.is_null(buff, reader, lambda b, r: cls.read_int(b), nullable)
+
+
+class BigIntIO(_GraphBinaryTypeIO):
+
+    python_type = BigIntType
+    graphbinary_type = DataType.biginteger
+
+    @classmethod
+    def dictify(cls, obj, writer, to_extend, as_value=False, nullable=True):
+        cls.prefix_bytes(cls.graphbinary_type, as_value, nullable, to_extend)
+        length = (obj.bit_length() + 7) // 8
+        b = obj.to_bytes(length, byteorder='big')
+        if obj > 0:
+            to_extend.extend(int32_pack(length + 1))
+            to_extend.extend(int8_pack(0))
+            to_extend.extend(b)
+        else:
+            # handle negative
+            to_extend.extend(int32_pack(length))
+            to_extend.extend(b)
+        return to_extend
+
+    # todo: copy from str code
+    @classmethod
+    def _read_arr(cls, buff):
+        size = cls.read_int(buff)
+        return int.from_bytes(buff.read(size), byteorder='big')
+
+    @classmethod
+    def objectify(cls, buff, reader, nullable=False):
+        return cls.is_null(buff, reader, lambda b, r: cls._read_arr(b), nullable)
 
 
 class DateIO(_GraphBinaryTypeIO):
