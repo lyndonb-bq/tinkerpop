@@ -81,7 +81,13 @@ class GremlinType(object):
     """
     def __init__(self, gremlin_type):
         self.gremlin_type = gremlin_type
-        
+
+
+class BigDecimal(object):
+    def __init__(self, scale, unscaled_value):
+        self.scale = scale
+        self.unscaled_value = unscaled_value
+
 
 staticMethods = {}
 staticEnums = {}

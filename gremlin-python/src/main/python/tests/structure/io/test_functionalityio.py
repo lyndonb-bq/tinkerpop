@@ -113,6 +113,23 @@ def test_bigint_negative(remote_connection):
         g.V(vid).drop().iterate()
 
 
+def test_bigdecimal(remote_connection):
+    if not isinstance(remote_connection._client._message_serializer, GraphBinarySerializersV1):
+        return
+
+    g = Graph().traversal().withRemote(remote_connection)
+    bigdecimal = BigDecimal(101, 235)
+    resp = g.addV('test_vertex').property('bigdecimal', bigdecimal).toList()
+    vid = resp[0].id
+    try:
+        bigdecimal_prop = g.V(vid).properties('bigdecimal').toList()[0]
+        assert isinstance(bigdecimal_prop.value, BigDecimal)
+        assert bigdecimal_prop.value.scale == bigdecimal.scale
+        assert bigdecimal_prop.value.unscaled_value == bigdecimal.unscaled_value
+    finally:
+        g.V(vid).drop().iterate()
+
+
 def test_odd_bits(remote_connection):
     if not isinstance(remote_connection._client._message_serializer, GraphSONSerializersV2d0):
         g = Graph().traversal().withRemote(remote_connection)
