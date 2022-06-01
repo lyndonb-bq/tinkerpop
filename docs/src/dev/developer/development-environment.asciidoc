@@ -50,7 +50,7 @@ that TinkerPop's build system will only allow for a minimum build at best. +
  +
  For Hadoop Gremlin to work on Windows, the `winutils.exe` binary needs to be downloaded and placed in local folder in
  the following file structure: `hadoop/bin/winutils.exe` and `HADOOP_HOME` must point to the `hadoop` folder as an
- environment variable.
+ environment variable. The binary for Hadoop-2.7.7 can be found https://github.com/cdarlint/winutils/blob/master/hadoop-2.7.7/bin/winutils.exe[here]
 
 [[groovy-environment]]
 === Groovy Environment
