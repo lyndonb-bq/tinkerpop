@@ -195,8 +195,8 @@ jobs:
         if: contains(matrix.os, 'windows')
         shell: wsl-bash {0}
         run: |
-          wsl-bash touch gremlin-dotnet/src/.glv
-          wsl-bash touch gremlin-dotnet/test/.glv
+          touch gremlin-dotnet/src/.glv
+          touch gremlin-dotnet/test/.glv
       - name: Build with Maven
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-:gremlint -q -DskipTests -Dci
