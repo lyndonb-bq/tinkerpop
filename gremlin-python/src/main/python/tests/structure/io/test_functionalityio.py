@@ -65,12 +65,28 @@ def test_uuid(remote_connection):
         g.V(vid).drop().iterate()
 
 
-def test_bigint(remote_connection):
+def test_bigint_positive(remote_connection):
     if not isinstance(remote_connection._client._message_serializer, GraphBinarySerializersV1):
         return
 
     g = Graph().traversal().withRemote(remote_connection)
     big = bigint(0x1000_0000_0000_0000_0000)
+    resp = g.addV('test_vertex').property('bigint', big).toList()
+    vid = resp[0].id
+    try:
+        bigint_prop = g.V(vid).properties('bigint').toList()[0]
+        assert isinstance(bigint_prop.value, int)
+        assert bigint_prop.value == big
+    finally:
+        g.V(vid).drop().iterate()
+
+
+def test_bigint_negative(remote_connection):
+    if not isinstance(remote_connection._client._message_serializer, GraphBinarySerializersV1):
+        return
+
+    g = Graph().traversal().withRemote(remote_connection)
+    big = bigint(-0x1000_0000_0000_0000_0000)
     resp = g.addV('test_vertex').property('bigint', big).toList()
     vid = resp[0].id
     try:

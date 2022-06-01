@@ -280,22 +280,22 @@ class BigIntIO(_GraphBinaryTypeIO):
     def dictify(cls, obj, writer, to_extend, as_value=False, nullable=True):
         cls.prefix_bytes(cls.graphbinary_type, as_value, nullable, to_extend)
         length = (obj.bit_length() + 7) // 8
-        b = obj.to_bytes(length, byteorder='big')
         if obj > 0:
+            b = obj.to_bytes(length, byteorder='big')
             to_extend.extend(int32_pack(length + 1))
             to_extend.extend(int8_pack(0))
             to_extend.extend(b)
         else:
             # handle negative
+            b = obj.to_bytes(length, byteorder='big', signed=True)
             to_extend.extend(int32_pack(length))
             to_extend.extend(b)
         return to_extend
 
-    # todo: copy from str code
     @classmethod
     def _read_arr(cls, buff):
         size = cls.read_int(buff)
-        return int.from_bytes(buff.read(size), byteorder='big')
+        return int.from_bytes(buff.read(size), byteorder='big', signed=True)
 
     @classmethod
     def objectify(cls, buff, reader, nullable=False):
