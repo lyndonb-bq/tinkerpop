@@ -190,9 +190,11 @@ jobs:
           touch gremlin-dotnet/test/.glv
       - name: create .glv files Windows
         if: contains(matrix.os, 'windows')
+        uses: Vampire/setup-wsl@v1
+        shell: wsl-bash {0}
         run: |
-          wsl touch gremlin-dotnet/src/.glv
-          wsl touch gremlin-dotnet/test/.glv
+          wsl-bash touch gremlin-dotnet/src/.glv
+          wsl-bash touch gremlin-dotnet/test/.glv
       - name: Build with Maven
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-:gremlint -q -DskipTests -Dci
