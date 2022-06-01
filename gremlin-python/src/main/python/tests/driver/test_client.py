@@ -27,7 +27,7 @@ from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.strategies import OptionsStrategy
 from gremlin_python.structure.graph import Graph
 from gremlin_python.driver.aiohttp.transport import AiohttpTransport
-from gremlin_python.statics import bigint
+from gremlin_python.statics import *
 from asyncio import TimeoutError
 
 __author__ = 'David M. Brown (davebshow@gmail.com)'
@@ -243,7 +243,7 @@ def test_multi_thread_pool(client):
 
 def test_client_bytecode_with_long(client):
     g = Graph().traversal()
-    t = g.V().has('age', 851401972585122).count()
+    t = g.V().has('age', long(851401972585122)).count()
     message = RequestMessage('traversal', 'bytecode', {'gremlin': t.bytecode, 'aliases': {'g': 'gmodern'}})
     result_set = client.submit(message)
     results = []

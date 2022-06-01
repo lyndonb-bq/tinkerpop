@@ -29,7 +29,12 @@ class bigint(int):
     pass
 
 
+class short(int):
+    pass
+
+
 FloatType = float
+ShortType = short
 IntType = int
 LongType = long
 BigIntType = bigint
