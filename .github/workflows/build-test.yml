@@ -188,9 +188,11 @@ jobs:
         run: |
           touch gremlin-dotnet/src/.glv
           touch gremlin-dotnet/test/.glv
-      - name: create .glv files Windows
+      - name: Setup WSL if Windows
         if: contains(matrix.os, 'windows')
         uses: Vampire/setup-wsl@v1
+      - name: create .glv files Windows
+        if: contains(matrix.os, 'windows')
         shell: wsl-bash {0}
         run: |
           wsl-bash touch gremlin-dotnet/src/.glv
