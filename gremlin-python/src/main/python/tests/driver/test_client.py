@@ -52,7 +52,8 @@ def test_client_message_too_big(client):
         client.submit("\" \".repeat(2000)").all().result()
         assert False
     except Exception as ex:
-        assert ex.args[0] == "Received error on read: 'Message size 2080 exceeds limit 1024'"
+        assert ex.args[0].startswith("Received error on read: 'Message size") \
+               and ex.args[0].endswith("exceeds limit 1024'")
     finally:
         client.close()
 
