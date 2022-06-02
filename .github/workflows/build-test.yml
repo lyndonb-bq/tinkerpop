@@ -13,7 +13,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Build with Maven
-        run: mvn clean install -DskipTests -Dci --batch-mode -D"org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener"="warn" -rf :hadoop-gremlin
+        run: mvn clean install -DskipTests -Dci --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
   java-jdk11:
     name: mvn clean install - jdk11
     timeout-minutes: 45
