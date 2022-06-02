@@ -48,6 +48,7 @@ log = logging.getLogger(__name__)
 _serializers = OrderedDict()
 _deserializers = {}
 
+
 class DataType(Enum):
     null = 0xfe
     int = 0x01
