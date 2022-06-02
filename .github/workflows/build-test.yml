@@ -4,7 +4,10 @@ jobs:
   smoke:
     name: smoke
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
