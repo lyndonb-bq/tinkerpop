@@ -24,7 +24,6 @@ import struct
 import uuid
 import io
 
-from gremlin_python.process import traversal
 from gremlin_python.structure.io import graphbinaryV1
 from gremlin_python.structure.io import graphsonV2d0
 from gremlin_python.structure.io import graphsonV3d0
