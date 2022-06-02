@@ -21,11 +21,11 @@ jobs:
           md hadoop/bin
           cd hadoop/bin
           curl https://github.com/cdarlint/winutils/raw/master/hadoop-2.7.7/bin/winutils.exe -o winutils.exe
-          cd ../..
-          $env:HADOOP_HOME=$PWD.Path + '\hadoop'
-          echo $env:HADOOP_HOME
       - name: Build with Maven
         run: |
+          $env:HADOOP_HOME=$PWD.Path + '\hadoop'
+          echo "HADOOP_HOME:"
+          echo $env:HADOOP_HOME 
           mvn clean install -rf :hadoop-gremlin
 #          mvn clean install -DskipTests -Dci --batch-mode -D"org.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener"="warn" -rf:hadoop-gremlin
 #  java-jdk11:
