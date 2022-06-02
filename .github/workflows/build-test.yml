@@ -22,7 +22,8 @@ jobs:
           cd hadoop/bin
           curl https://github.com/cdarlint/winutils/raw/master/hadoop-2.7.7/bin/winutils.exe -o winutils.exe
           cd ../..
-          $env:HADOOP_HOME = $PWD.Path + '\hadoop'
+          $env:HADOOP_HOME=$PWD.Path + '\hadoop'
+          echo $env:HADOOP_HOME
       - name: Build with Maven
         run: |
           mvn clean install -rf :hadoop-gremlin
