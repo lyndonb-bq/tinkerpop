@@ -257,7 +257,6 @@ class GraphBinarySerializersV1(object):
             # just works but python 2 bytearray is bound to ByteBufferType so it writes DataType.bytebuffer
             # rather than DataType.bytecode and the server gets confused. special casing this for now until
             # it can be refactored
-            # todo: WTF??? handle byte array/buffer
             if k == "gremlin" and isinstance(v, bytearray):
                 ba.extend(v)
             else:
