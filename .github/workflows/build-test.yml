@@ -180,6 +180,7 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: '6.0.x'
+      - name: Build with Maven
         run: |
           touch gremlin-dotnet/src/.glv
           touch gremlin-dotnet/test/.glv
