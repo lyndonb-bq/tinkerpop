@@ -133,9 +133,6 @@ namespace Gremlin.Net.UnitTest.Driver
         [Fact]
         public async Task ShouldHandleCloseMessageForInFlightRequestsAsync()
         {
-            // GitHub actions fails for this test on Windows
-            if (System.OperatingSystem.IsWindows()) return;
-
             // Tests that in-flight requests will get notified if a connection close message is received.
             Uri uri = new Uri("wss://localhost:8182");
             WebSocketReceiveResult closeResult = new WebSocketReceiveResult(0, WebSocketMessageType.Close, true, WebSocketCloseStatus.EndpointUnavailable, "Server shutdown");
