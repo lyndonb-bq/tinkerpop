@@ -90,11 +90,11 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Build with Maven Windows
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-gremlin-dotnet,-:gremlin-dotnet-source,-:gremlin-dotnet-tests,-:gremlint -q -DskipTests -Dci
       - name: Build with Maven Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-gremlin-dotnet,-:gremlin-dotnet-source,-:gremlin-dotnet-tests,-:gremlint -q -DskipTests -Dci
           mvn verify -pl :spark-gremlin -DskipTests -DskipIntegrationTests=false '-Dit.test=*IntegrateTest,!SparkGryoSerializerGraphComputerProcessIntegrateTest'
@@ -111,11 +111,11 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Build with Maven Windows
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-gremlin-dotnet,-:gremlin-dotnet-source,-:gremlin-dotnet-tests,-:gremlint -q -DskipTests -Dci
       - name: Build with Maven Ubuntu
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: |
           mvn clean install -pl -:gremlin-javascript,-:gremlin-python,-gremlin-dotnet,-:gremlin-dotnet-source,-:gremlin-dotnet-tests,-:gremlint -q -DskipTests -Dci
           mvn verify -pl :spark-gremlin -DskipTests -DskipIntegrationTests=false -Dit.test=SparkGryoSerializerGraphComputerProcessIntegrateTest
