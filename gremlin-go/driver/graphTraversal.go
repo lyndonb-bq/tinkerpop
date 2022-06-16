@@ -696,6 +696,13 @@ func (t *Transaction) Begin() (*GraphTraversalSource, error) {
 		graph:            t.g.graph,
 		bytecode:         t.g.bytecode,
 		remoteConnection: t.sessionBasedConnection}
+	// no op
+	errs := gts.V().Iterate()
+	err = <-errs
+	if err != nil {
+		return nil, err
+	}
+	// no op
 	return gts, nil
 }
 
