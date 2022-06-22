@@ -20,6 +20,7 @@ port: 45941
 evaluationTimeout: 30000
 graphs: {
   graph: conf/tinkergraph-empty.properties,
+  immutable: scripts/tinkergraph-empty.properties,
   classic: conf/tinkergraph-empty.properties,
   modern: conf/tinkergraph-empty.properties,
   crew: conf/tinkergraph-empty.properties,
@@ -65,3 +66,10 @@ authentication: {
   authenticator: org.apache.tinkerpop.gremlin.server.auth.SimpleAuthenticator,
   config: {
     credentialsDb: conf/tinkergraph-credentials.properties}}
+ssl: {
+  enabled: true,
+  sslEnabledProtocols: [TLSv1.2],
+  # You must configure a keyStore!
+  keyStore: /opt/test/resources/server-key.jks,
+  keyStorePassword: changeit
+}
