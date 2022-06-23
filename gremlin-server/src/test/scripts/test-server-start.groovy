@@ -85,7 +85,6 @@ if (!securePropsFile.exists()) {
 
 def settingsSecure = Settings.read("${platformAgnosticSettingsFile}")
 settingsSecure.graphs.graph = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsSecure.graphs.immutable = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.classic = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.modern = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsSecure.graphs.crew = platformAgnosticGremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
@@ -116,7 +115,6 @@ log.info("KDC started with configuration ${projectBaseDir}/target/kdc/krb5.conf"
 
 def settingsKrb5 = Settings.read("${settingsFile}")
 settingsKrb5.graphs.graph = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
-settingsKrb5.graphs.immutable = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsKrb5.graphs.classic = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsKrb5.graphs.modern = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
 settingsKrb5.graphs.crew = gremlinServerDir + "/src/test/scripts/tinkergraph-empty.properties"
