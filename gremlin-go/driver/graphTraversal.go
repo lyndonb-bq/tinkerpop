@@ -20,6 +20,7 @@ under the License.
 package gremlingo
 
 import (
+	"math"
 	"sync"
 )
 
@@ -587,7 +588,8 @@ func (g *GraphTraversal) TimeLimit(args ...interface{}) *GraphTraversal {
 
 // Times adds the times step to the GraphTraversal.
 func (g *GraphTraversal) Times(args ...interface{}) *GraphTraversal {
-	g.Bytecode.AddStep("times", args...)
+	// Gremlin server only accepts times step with integer argument values
+	g.Bytecode.AddStep("times", int32Args(args)...)
 	return g
 }
 
@@ -667,6 +669,34 @@ func (g *GraphTraversal) With(args ...interface{}) *GraphTraversal {
 func (g *GraphTraversal) Write(args ...interface{}) *GraphTraversal {
 	g.Bytecode.AddStep("write", args...)
 	return g
+}
+
+func int32Args(args ...interface{}) []interface{} {
+	for i, arg := range args {
+		switch val := arg.(type) {
+		case uint:
+			if val <= math.MaxInt32 {
+				args[i] = int32(val)
+			}
+		case uint32:
+			if val <= math.MaxInt32 {
+				args[i] = int32(val)
+			}
+		case uint64:
+			if val <= math.MaxInt32 {
+				args[i] = int32(val)
+			}
+		case int:
+			if val <= math.MaxInt32 && val >= math.MinInt32 {
+				args[i] = int32(val)
+			}
+		case int64:
+			if val <= math.MaxInt32 && val >= math.MinInt32 {
+				args[i] = int32(val)
+			}
+		}
+	}
+	return args
 }
 
 type Transaction struct {
