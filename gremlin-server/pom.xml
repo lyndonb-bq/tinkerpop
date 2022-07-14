@@ -148,6 +148,33 @@ limitations under the License.
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
+            <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <groupId>org.codehaus.mojo</groupId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <id>build-image</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>docker</executable>
+                            <arguments>
+                                <argument>build</argument>
+                                <argument>-f</argument>
+                                <argument>./Dockerfile</argument>
+                                <argument>--build-arg</argument>
+                                <argument>GREMLIN_SERVER_DIR=target/apache-tinkerpop-${project.artifactId}-${project.version}-standalone</argument>
+                                <argument>-t</argument>
+                                <argument>tinkerpop/gremlin-server:${project.version}</argument>
+                                <argument>.</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -159,9 +186,9 @@ limitations under the License.
             <id>linux</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
-                <os>
+                <!--<os>
                     <family>unix</family>
-                </os>
+                </os>-->
             </activation>
             <build>
                 <plugins>
